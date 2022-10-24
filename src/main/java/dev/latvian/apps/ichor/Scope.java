@@ -1,7 +1,9 @@
 package dev.latvian.apps.ichor;
 
+import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.AssignType;
 import dev.latvian.apps.ichor.util.RootScope;
+import dev.latvian.apps.ichor.util.ScopeImpl;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
@@ -106,5 +108,19 @@ public interface Scope {
 		while (s != null);
 
 		return AssignType.NONE;
+	}
+
+	default void add(Prototype prototype) {
+		declareMember(prototype.getPrototypeName(), prototype, AssignType.IMMUTABLE);
+	}
+
+	default void add(Class<?> type) {
+		add(getRootScope().context.getClassPrototype(type));
+	}
+
+	default Scope createChildScope() {
+		var scope = new ScopeImpl();
+		scope.setParentScope(this);
+		return scope;
 	}
 }

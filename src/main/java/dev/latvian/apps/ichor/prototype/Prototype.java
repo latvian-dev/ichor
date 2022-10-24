@@ -1,146 +1,54 @@
 package dev.latvian.apps.ichor.prototype;
 
 import dev.latvian.apps.ichor.Context;
-import dev.latvian.apps.ichor.Ref;
-import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.error.IchorError;
+import dev.latvian.apps.ichor.Special;
+import dev.latvian.apps.ichor.js.NumberJS;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public class Prototype implements PrototypeSupplier, Ref {
-	public final String name;
-	private PrototypeConstructor constructor;
-	private Map<String, PrototypeProperty> properties;
-	private Map<String, PrototypeProperty> staticProperties;
-	private Map<String, PrototypeFunction> functions;
-	private Map<String, PrototypeFunction> staticFunctions;
-	private PrototypeToString toString;
-	private PrototypeToNumber toNumber;
-	private PrototypeToBoolean toBoolean;
-
-	public Prototype(String n) {
-		name = n;
-	}
+public interface Prototype extends PrototypeSupplier {
 
 	@Override
-	public String toString() {
-		return name;
-	}
-
-	@Override
-	public final Prototype getPrototype() {
+	default Prototype getPrototype() {
 		return this;
 	}
 
-	// Builder //
+	String getPrototypeName();
 
-	public Prototype constructor(PrototypeConstructor c) {
-		constructor = c;
-		return this;
+	@Nullable
+	default Object get(Context cx, String name, @Nullable Object self) {
+		return Special.NOT_FOUND;
 	}
 
-	public Prototype property(String name, PrototypeProperty value) {
-		if (properties == null) {
-			properties = new HashMap<>(1);
-		}
-
-		properties.put(name, value);
-		return this;
+	default boolean set(Context cx, String name, @Nullable Object self, @Nullable Object value) {
+		return false;
 	}
 
-	public Prototype staticProperty(String name, StaticPrototypeProperty value) {
-		if (staticProperties == null) {
-			staticProperties = new HashMap<>(1);
-		}
-
-		staticProperties.put(name, value);
-		return this;
-	}
-
-	public Prototype function(String name, PrototypeFunction value) {
-		if (functions == null) {
-			functions = new HashMap<>(1);
-		}
-
-		functions.put(name, value);
-		return this;
-	}
-
-	public Prototype staticFunction(String name, StaticPrototypeFunction value) {
-		if (staticFunctions == null) {
-			staticFunctions = new HashMap<>(1);
-		}
-
-		staticFunctions.put(name, value);
-		return this;
-	}
-
-	public Prototype toString(PrototypeToString value) {
-		toString = value;
-		return this;
-	}
-
-	public Prototype toNumber(PrototypeToNumber value) {
-		toNumber = value;
-		return this;
-	}
-
-	public Prototype toBoolean(PrototypeToBoolean value) {
-		toBoolean = value;
-		return this;
-	}
-
-	// Methods //
-
-	public Object construct(Context cx, Scope scope, Object[] args, boolean hasNew) {
-		if (constructor != null) {
-			return constructor.construct(cx, scope, args, hasNew);
-		}
-
-		throw new IchorError("No constructor for " + name);
+	default boolean delete(Context cx, String name, @Nullable Object self) {
+		return false;
 	}
 
 	@Nullable
-	public PrototypeProperty getProperty(String name, boolean isStatic) {
-		if (isStatic) {
-			return staticProperties == null ? null : staticProperties.get(name);
-		}
-
-		return properties == null ? null : properties.get(name);
+	default Object get(Context cx, int index, @Nullable Object self) {
+		return Special.NOT_FOUND;
 	}
 
-	@Nullable
-	public PrototypeFunction getFunction(String name, boolean isStatic) {
-		if (isStatic) {
-			return staticFunctions == null ? null : staticFunctions.get(name);
-		}
-
-		return functions == null ? null : functions.get(name);
+	default boolean set(Context cx, int index, @Nullable Object self, @Nullable Object value) {
+		return false;
 	}
 
-	public String toString(Context cx, Scope scope, Object self) {
-		if (toString == null) {
-			toString = PrototypeToString.DEFAULT;
-		}
-
-		return toString.toString(cx, scope, self);
+	default boolean delete(Context cx, int index, @Nullable Object self) {
+		return false;
 	}
 
-	public double toNumber(Context cx, Scope scope, Object self) {
-		if (toNumber == null) {
-			toNumber = PrototypeToNumber.DEFAULT;
-		}
-
-		return toNumber.toNumber(cx, scope, self);
+	default String asString(Context cx, Object self) {
+		return self.toString();
 	}
 
-	public boolean toBoolean(Context cx, Scope scope, Object self) {
-		if (toBoolean == null) {
-			toBoolean = PrototypeToBoolean.DEFAULT;
-		}
+	default Number asNumber(Context cx, Object self) {
+		return NumberJS.ONE;
+	}
 
-		return toBoolean.toBoolean(cx, scope, self);
+	default Boolean asBoolean(Context cx, Object self) {
+		return Boolean.TRUE;
 	}
 }

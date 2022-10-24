@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 public final class Signature {
 	public static final Signature EMPTY = new Signature();
+	private static final Signature ONE_ANY = new Signature(Void.TYPE);
 	private static final Signature ONE_OBJECT = new Signature(Object.class);
 	private static final Signature ONE_OBJECT_ARRAY = new Signature(Object[].class);
 	private static final Signature ONE_STRING = new Signature(String.class);
@@ -23,6 +24,8 @@ public final class Signature {
 		} else if (types.length == 1) {
 			if (types[0] == Object.class) {
 				return ONE_OBJECT;
+			} else if (types[0] == Void.TYPE) {
+				return ONE_ANY;
 			} else if (types[0] == ONE_OBJECT_ARRAY.types[0]) {
 				return ONE_OBJECT_ARRAY;
 			} else if (types[0] == String.class) {
@@ -53,6 +56,16 @@ public final class Signature {
 		return executable.getParameterCount() == 0 ? EMPTY : of(executable.getParameterTypes());
 	}
 
+	public static Signature ofArgs(Object[] args) {
+		var types = new Class[args.length];
+
+		for (int i = 0; i < args.length; i++) {
+			types[i] = args[i] == null ? Void.TYPE : args[i].getClass();
+		}
+
+		return of(types);
+	}
+
 	public final Class<?>[] types;
 	private int hashCode;
 	private String toString;
@@ -76,7 +89,19 @@ public final class Signature {
 
 	@Override
 	public boolean equals(Object obj) {
-		return obj == this || obj instanceof Signature s && Arrays.equals(types, s.types);
+		if (obj == this) {
+			return true;
+		} else if (obj instanceof Signature s && types.length == s.types.length) {
+			for (int i = 0; i < types.length; i++) {
+				if (types[i] != s.types[i] && types[i] != Void.TYPE && s.types[i] != Void.TYPE) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override

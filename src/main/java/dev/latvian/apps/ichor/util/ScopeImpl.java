@@ -9,11 +9,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class SimpleScope implements Scope {
+public class ScopeImpl implements Scope {
 	private Scope parent;
-	private Map<String, Object> members;
+	private Map<String, Slot> members;
 
-	public SimpleScope() {
+	public ScopeImpl() {
 	}
 
 	@Override
@@ -28,45 +28,51 @@ public class SimpleScope implements Scope {
 
 	@Override
 	public Object getDeclaredMember(String name) {
-		var v = members == null ? Special.NOT_FOUND : members.getOrDefault(name, Special.NOT_FOUND);
-
-		if (v instanceof ImmutableMember) {
-			return ((ImmutableMember) v).value();
-		}
-
-		return v;
+		var slot = members == null ? null : members.get(name);
+		return slot == null ? Special.NOT_FOUND : slot.value;
 	}
 
 	@Override
 	public void declareMember(String name, Object value, AssignType type) {
-		if (type == AssignType.NONE) {
-			var v = members == null ? Special.NOT_FOUND : members.getOrDefault(name, Special.NOT_FOUND);
+		var slot = members == null ? null : members.get(name);
 
-			if (v == Special.NOT_FOUND) {
+		if (type == AssignType.NONE) {
+			if (slot == null) {
 				throw new IchorError("Member " + name + " not found");
-			} else if (v instanceof ImmutableMember) {
+			} else if (slot.immutable) {
 				throw new IchorError("Can't reassign constant " + name);
 			} else {
-				members.put(name, value);
+				slot.value = value;
+				slot.prototype = null;
 			}
 		} else {
-			if (members == null) {
-				members = new HashMap<>(1);
+			if (slot == null) {
+				slot = new Slot();
+
+				if (members == null) {
+					members = new HashMap<>(1);
+				}
+
+				members.put(name, slot);
 			}
 
-			members.put(name, type == AssignType.IMMUTABLE ? new ImmutableMember(value) : value);
+			slot.value = value;
+			slot.immutable = type == AssignType.IMMUTABLE;
+			slot.prototype = null;
 		}
 	}
 
 	@Override
 	public AssignType hasDeclaredMember(String name) {
-		var v = members == null ? Special.NOT_FOUND : members.getOrDefault(name, Special.NOT_FOUND);
+		var slot = members == null ? null : members.get(name);
 
-		if (v instanceof ImmutableMember) {
+		if (slot == null) {
+			return AssignType.NONE;
+		} else if (slot.immutable) {
 			return AssignType.IMMUTABLE;
+		} else {
+			return AssignType.MUTABLE;
 		}
-
-		return v == Special.NOT_FOUND ? AssignType.NONE : AssignType.MUTABLE;
 	}
 
 	@Override

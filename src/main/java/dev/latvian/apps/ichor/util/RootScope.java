@@ -5,7 +5,7 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.error.IchorError;
 import org.jetbrains.annotations.Nullable;
 
-public class RootScope extends SimpleScope {
+public class RootScope extends ScopeImpl {
 	public final Context context;
 
 	public RootScope(Context cx) {
