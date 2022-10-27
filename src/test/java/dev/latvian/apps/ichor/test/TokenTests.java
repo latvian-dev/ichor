@@ -1,6 +1,7 @@
 package dev.latvian.apps.ichor.test;
 
 import dev.latvian.apps.ichor.token.KeywordToken;
+import dev.latvian.apps.ichor.token.LiteralToken;
 import dev.latvian.apps.ichor.token.NameToken;
 import dev.latvian.apps.ichor.token.NumberToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
@@ -18,7 +19,7 @@ public class TokenTests {
 		System.out.println("--- Token Test ---");
 		System.out.println("Input: " + input);
 		var tokenStream = new TokenStream(input);
-		var tokens = tokenStream.getTokens().stream().map(PositionedToken::token).filter(t -> t != SymbolToken.EOL).toArray(Token[]::new);
+		var tokens = tokenStream.getTokens().stream().map(PositionedToken::token).toArray(Token[]::new);
 		System.out.println("Expected: " + Arrays.toString(match));
 		System.out.println("Parsed:   " + Arrays.toString(tokens));
 		Assertions.assertArrayEquals(match, tokens);
@@ -78,7 +79,7 @@ public class TokenTests {
 						    }
 						""",
 				KeywordToken.LET, new NameToken("x"), SymbolToken.SET, NumberToken.of(4.444), SymbolToken.SEMI,
-				KeywordToken.WHILE, SymbolToken.LP, KeywordToken.TRUE, SymbolToken.RP, SymbolToken.LC,
+				KeywordToken.WHILE, SymbolToken.LP, LiteralToken.TRUE, SymbolToken.RP, SymbolToken.LC,
 				KeywordToken.IF, SymbolToken.LP, SymbolToken.ADD1, new NameToken("x"), SymbolToken.GTE, NumberToken.of(10), SymbolToken.RP, SymbolToken.LC,
 				KeywordToken.BREAK, SymbolToken.SEMI,
 				SymbolToken.RC,

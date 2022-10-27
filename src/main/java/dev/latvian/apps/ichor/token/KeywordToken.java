@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public enum KeywordToken implements Token {
+public enum KeywordToken implements StaticToken {
 	ARGUMENTS("arguments"),
 	AS("as"),
 	ASYNC("async"),
@@ -74,5 +74,14 @@ public enum KeywordToken implements Token {
 	@Override
 	public String toString() {
 		return name;
+	}
+
+	public Token toLiteralOrSelf() {
+		return switch (this) {
+			case NULL -> LiteralToken.NULL;
+			case TRUE -> LiteralToken.TRUE;
+			case FALSE -> LiteralToken.FALSE;
+			default -> this;
+		};
 	}
 }

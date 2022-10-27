@@ -1,6 +1,9 @@
 package dev.latvian.apps.ichor.token;
 
-public record StringToken(String string) implements Token {
+import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Frame;
+
+public record StringToken(String value) implements Token, Evaluable {
 	public static final StringToken EMPTY = new StringToken("");
 
 	public static StringToken of(String string) {
@@ -9,6 +12,21 @@ public record StringToken(String string) implements Token {
 
 	@Override
 	public String toString() {
-		return '"' + string.replace("\\", "\\\\").replace("\"", "\\\"") + '"';
+		return '"' + value.replace("\\", "\\\\").replace("\"", "\\\"") + '"';
+	}
+
+	@Override
+	public Object eval(Frame frame) {
+		return value;
+	}
+
+	@Override
+	public boolean isPrimary() {
+		return true;
+	}
+
+	@Override
+	public Object getPrimaryValue() {
+		return value;
 	}
 }

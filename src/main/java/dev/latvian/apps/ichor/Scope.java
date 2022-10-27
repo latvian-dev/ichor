@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor;
 
+import dev.latvian.apps.ichor.error.IchorError;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.AssignType;
 import dev.latvian.apps.ichor.util.RootScope;
@@ -91,6 +92,8 @@ public interface Scope {
 			s = getParentScope();
 		}
 		while (s != null);
+
+		throw new IchorError("Member " + name + " not found");
 	}
 
 	default AssignType hasMember(String name) {

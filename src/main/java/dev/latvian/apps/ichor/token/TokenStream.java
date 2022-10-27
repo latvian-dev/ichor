@@ -22,7 +22,17 @@ public class TokenStream {
 	}
 
 	private char read() {
-		return pos >= input.length ? 0 : input[pos++];
+		if (pos >= input.length) {
+			return 0;
+		}
+
+		char c = input[pos++];
+
+		if (c == '\n') {
+			line++;
+		}
+
+		return c;
 	}
 
 	private boolean readIf(char c) {
@@ -32,6 +42,20 @@ public class TokenStream {
 		}
 
 		return false;
+	}
+
+	private char readSkippingWhitespace() {
+		char t = read();
+
+		while (t <= ' ') {
+			if (t == 0) {
+				return 0;
+			} else {
+				t = read();
+			}
+		}
+
+		return t;
 	}
 
 	private Token error(String msg) {
@@ -47,19 +71,35 @@ public class TokenStream {
 	}
 
 	private Token readToken() {
-		var t = read();
+		var t = readSkippingWhitespace();
 
-		while (t <= ' ') {
-			if (t == 0) {
-				return SymbolToken.EOF;
-			} else if (t == '\n') {
-				return SymbolToken.EOL;
-			} else {
-				t = read();
+		if (t == '/') {
+			if (peek(1) == '/') {
+				while (true) {
+					t = read();
+
+					if (t == '\n') {
+						t = readSkippingWhitespace();
+						break;
+					}
+				}
+			} else if (peek(1) == '*') {
+				read();
+
+				while (true) {
+					t = read();
+
+					if (t == '*' && peek(1) == '/') {
+						read();
+						t = readSkippingWhitespace();
+						break;
+					}
+				}
 			}
 		}
 
 		return switch (t) {
+			case 0 -> SymbolToken.EOF;
 			case '.' -> {
 				if (isDigit(peek(1))) {
 					yield readNumber();
@@ -74,17 +114,17 @@ public class TokenStream {
 			case ']' -> SymbolToken.RS;
 			case '{' -> SymbolToken.LC;
 			case '}' -> SymbolToken.RC;
+			case '=' -> readIf('>') ? SymbolToken.ARROW : readIf('=') ? readIf('=') ? SymbolToken.SEQ : SymbolToken.EQ : SymbolToken.SET;
 			case '+' -> readIf('=') ? SymbolToken.ADD_SET : readIf('+') ? SymbolToken.ADD1 : SymbolToken.ADD;
 			case '-' -> readIf('=') ? SymbolToken.SUB_SET : readIf('-') ? SymbolToken.SUB1 : SymbolToken.SUB;
-			case '*' -> readIf('=') ? SymbolToken.MUL_SET : readIf('/') ? SymbolToken.RB_COMMENT : SymbolToken.MUL;
-			case '/' -> readIf('=') ? SymbolToken.DIV_SET : readIf('*') ? SymbolToken.LB_COMMENT : readIf('/') ? SymbolToken.COMMENT : SymbolToken.DIV;
+			case '*' -> readIf('=') ? SymbolToken.MUL_SET : readIf('*') ? SymbolToken.POW : SymbolToken.MUL;
+			case '/' -> readIf('=') ? SymbolToken.DIV_SET : SymbolToken.DIV;
 			case '%' -> readIf('=') ? SymbolToken.MOD_SET : SymbolToken.MOD;
-			case '=' -> readIf('>') ? SymbolToken.ARROW : readIf('=') ? readIf('=') ? SymbolToken.SEQ : SymbolToken.EQ : SymbolToken.SET;
 			case '!' -> readIf('=') ? readIf('=') ? SymbolToken.SNEQ : SymbolToken.NEQ : SymbolToken.NOT;
 			case '~' -> SymbolToken.BNOT;
-			case '<' -> readIf('<') ? SymbolToken.LSH : readIf('=') ? SymbolToken.LTE : SymbolToken.LT;
-			case '>' -> readIf('>') ? readIf('>') ? SymbolToken.URSH : SymbolToken.RSH : readIf('=') ? SymbolToken.GTE : SymbolToken.GT;
-			case '^' -> SymbolToken.XOR;
+			case '<' -> readIf('<') ? readIf('=') ? SymbolToken.LSH_SET : SymbolToken.LSH : readIf('=') ? SymbolToken.LTE : SymbolToken.LT;
+			case '>' -> readIf('>') ? readIf('>') ? readIf('=') ? SymbolToken.URSH_SET : SymbolToken.URSH : readIf('=') ? SymbolToken.RSH_SET : SymbolToken.RSH : readIf('=') ? SymbolToken.GTE : SymbolToken.GT;
+			case '^' -> readIf('=') ? SymbolToken.XOR_SET : SymbolToken.XOR;
 			case '?' -> readIf('.') ? SymbolToken.OC : readIf('?') ? SymbolToken.NC : SymbolToken.HOOK;
 			case '|' -> readIf('=') ? SymbolToken.BOR_SET : readIf('|') ? SymbolToken.OR : SymbolToken.BOR;
 			case '&' -> readIf('=') ? SymbolToken.BAND_SET : readIf('&') ? SymbolToken.AND : SymbolToken.BAND;
@@ -129,7 +169,7 @@ public class TokenStream {
 
 					var nameStr = new String(input, p, len);
 					var k = KeywordToken.MAP.get(nameStr);
-					yield k != null ? k : new NameToken(nameStr);
+					yield k != null ? k.toLiteralOrSelf() : new NameToken(nameStr);
 				} else {
 					yield error("Unexpected token: " + t);
 				}
@@ -211,11 +251,9 @@ public class TokenStream {
 
 			if (t == SymbolToken.EOF) {
 				return tokens;
-			} else if (t == SymbolToken.EOL) {
-				line++;
+			} else {
+				tokens.add(new PositionedToken(t, l, p));
 			}
-
-			tokens.add(new PositionedToken(t, l, p));
 		}
 	}
 
