@@ -82,7 +82,7 @@ public class Parser {
 
 		consume(SymbolToken.LC, "Expect '{' before class body.");
 
-		List<AstFunction> methods = new ArrayList<>();
+		var methods = new ArrayList<AstFunction>();
 
 		while (!check(SymbolToken.RC) && !isAtEnd()) {
 			methods.add(function());

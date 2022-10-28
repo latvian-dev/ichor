@@ -1,6 +1,4 @@
-# Ichor
-
-![](src/main/resources/ichor_128.png)
+# ![](icons/ichor_github_banner.png)
 
 Ichor is my attempt at making a JavaScript interpreter from scratch.
 
