@@ -2,7 +2,7 @@ package dev.latvian.apps.ichor.util;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Special;
-import dev.latvian.apps.ichor.error.IchorError;
+import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.js.java.JavaTypePrototype;
 
 import java.lang.reflect.Field;
@@ -32,18 +32,18 @@ public class JavaMembers {
 			try {
 				return beanGetter.invoke(self);
 			} catch (Exception ex) {
-				throw new IchorError(ex);
+				throw new ScriptError(ex);
 			}
 		}
 
 		if (field == null) {
-			throw new IchorError("No such field %s.%s".formatted(prototype, name));
+			throw new ScriptError("No such field %s.%s".formatted(prototype, name));
 		}
 
 		try {
 			return field.get(self);
 		} catch (Exception ex) {
-			throw new IchorError(ex);
+			throw new ScriptError(ex);
 		}
 	}
 
@@ -57,7 +57,7 @@ public class JavaMembers {
 						setter.method.invoke(self, o);
 						return;
 					} catch (Exception ex) {
-						throw new IchorError(ex);
+						throw new ScriptError(ex);
 					}
 				}
 			}
@@ -66,19 +66,19 @@ public class JavaMembers {
 		}
 
 		if (field == null) {
-			throw new IchorError("No such field %s.%s".formatted(prototype, name));
+			throw new ScriptError("No such field %s.%s".formatted(prototype, name));
 		}
 
 		try {
 			field.set(self, value);
 		} catch (Exception ex) {
-			throw new IchorError(ex);
+			throw new ScriptError(ex);
 		}
 	}
 
 	public Object invoke(Context cx, Object self, Object[] args) {
 		if (methods == null) {
-			throw new IchorError("No such method %s.%s".formatted(prototype, name));
+			throw new ScriptError("No such method %s.%s".formatted(prototype, name));
 		}
 
 		/*
@@ -97,6 +97,6 @@ public class JavaMembers {
 		}
 		 */
 
-		throw new IchorError("Methods aren't supported yet");
+		throw new ScriptError("Methods aren't supported yet");
 	}
 }

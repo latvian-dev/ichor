@@ -1,13 +1,13 @@
 package dev.latvian.apps.ichor.token;
 
-import dev.latvian.apps.ichor.error.IchorError;
+import dev.latvian.apps.ichor.error.ScriptError;
 
 public interface Token {
-	default boolean isPrimary() {
+	default boolean hasValue() {
 		return false;
 	}
 
-	default Object getPrimaryValue() {
-		throw new IchorError("Not a primary token!");
+	default Object getValue() {
+		throw new ScriptError("Not a primary token!");
 	}
 }

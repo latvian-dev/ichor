@@ -1,7 +1,7 @@
 package dev.latvian.apps.ichor.token;
 
 import dev.latvian.apps.ichor.Evaluable;
-import dev.latvian.apps.ichor.Frame;
+import dev.latvian.apps.ichor.Scope;
 
 public record StringToken(String value) implements Token, Evaluable {
 	public static final StringToken EMPTY = new StringToken("");
@@ -16,17 +16,17 @@ public record StringToken(String value) implements Token, Evaluable {
 	}
 
 	@Override
-	public Object eval(Frame frame) {
+	public Object eval(Scope scope) {
 		return value;
 	}
 
 	@Override
-	public boolean isPrimary() {
+	public boolean hasValue() {
 		return true;
 	}
 
 	@Override
-	public Object getPrimaryValue() {
+	public Object getValue() {
 		return value;
 	}
 }

@@ -1,6 +1,6 @@
 package dev.latvian.apps.ichor.token;
 
-import dev.latvian.apps.ichor.error.IchorError;
+import dev.latvian.apps.ichor.error.TokenStreamError;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,7 @@ public class TokenStream {
 
 	public TokenStream(String string) {
 		input = string.toCharArray();
-		line = 1;
+		line = 0;
 		pos = 0;
 	}
 
@@ -59,7 +59,7 @@ public class TokenStream {
 	}
 
 	private Token error(String msg) {
-		throw new IchorError(line + ":" + pos + ": " + msg);
+		throw new TokenStreamError(line + 1, pos + 1, msg);
 	}
 
 	private static boolean isDigit(char t) {

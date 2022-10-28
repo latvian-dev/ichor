@@ -1,7 +1,7 @@
 package dev.latvian.apps.ichor.token;
 
 import dev.latvian.apps.ichor.Evaluable;
-import dev.latvian.apps.ichor.Frame;
+import dev.latvian.apps.ichor.Scope;
 
 public record NameToken(String name) implements Token, Evaluable {
 	@Override
@@ -10,12 +10,12 @@ public record NameToken(String name) implements Token, Evaluable {
 	}
 
 	@Override
-	public Object eval(Frame frame) {
-		return frame.getScope().getMember(name);
+	public Object eval(Scope scope) {
+		return scope.getMember(name);
 	}
 
 	@Override
-	public String evalName(Frame frame) {
+	public String evalName(Scope scope) {
 		return name;
 	}
 }

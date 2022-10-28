@@ -1,7 +1,7 @@
 package dev.latvian.apps.ichor.js.java;
 
 import dev.latvian.apps.ichor.Context;
-import dev.latvian.apps.ichor.error.IchorError;
+import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 import dev.latvian.apps.ichor.prototype.PrototypeMember;
 import dev.latvian.apps.ichor.util.Signature;
@@ -31,7 +31,7 @@ public class JavaTypePrototype extends PrototypeBuilder {
 					for (var m : type.getDeclaredMethods()) {
 					}
 				} catch (Exception ex) {
-					throw new IchorError("Failed to load class " + type.getName(), ex);
+					throw new ScriptError("Failed to load class " + type.getName(), ex);
 				}
 			}
 		}

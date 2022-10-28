@@ -1,19 +1,19 @@
 package dev.latvian.apps.ichor;
 
-import dev.latvian.apps.ichor.error.IchorError;
+import dev.latvian.apps.ichor.error.ScriptError;
 
 public interface Evaluable {
-	Object eval(Frame frame);
+	Object eval(Scope scope);
 
-	default double evalNumber(Frame frame) {
-		return frame.getContext().asDouble(eval(frame));
+	default double evalNumber(Scope scope) {
+		return scope.root.context.asDouble(eval(scope));
 	}
 
-	default boolean evalBoolean(Frame frame) {
-		return frame.getContext().asBoolean(eval(frame));
+	default boolean evalBoolean(Scope scope) {
+		return scope.root.context.asBoolean(eval(scope));
 	}
 
-	default String evalName(Frame frame) {
-		throw new IchorError("Expected name!");
+	default String evalName(Scope scope) {
+		throw new ScriptError("Expected name!");
 	}
 }

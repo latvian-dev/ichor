@@ -1,52 +1,86 @@
 package dev.latvian.apps.ichor;
 
-import dev.latvian.apps.ichor.error.IchorError;
+import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.AssignType;
-import dev.latvian.apps.ichor.util.RootScope;
-import dev.latvian.apps.ichor.util.ScopeImpl;
-import org.jetbrains.annotations.Nullable;
+import dev.latvian.apps.ichor.util.Slot;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
-public interface Scope {
-	@Nullable
-	default Scope getParentScope() {
-		return null;
-	}
-
-	default RootScope getRootScope() {
-		Scope s = this;
-
-		while (s.getParentScope() != null) {
-			s = s.getParentScope();
-		}
-
-		return (RootScope) s;
-	}
+public class Scope {
+	public Scope parent;
+	public RootScope root;
+	private Map<String, Slot> members;
 
 	// Member Methods //
 
-	default Object getDeclaredMember(String name) {
+	public Object getDeclaredMember(String name) {
+		var slot = members == null ? null : members.get(name);
+		return slot == null ? Special.NOT_FOUND : slot.value;
+	}
+
+	public void declareMember(String name, Object value, AssignType type) {
+		var slot = members == null ? null : members.get(name);
+
+		if (type == AssignType.NONE) {
+			if (slot == null) {
+				throw new ScriptError("Member " + name + " not found");
+			} else if (slot.immutable) {
+				throw new ScriptError("Can't reassign constant " + name);
+			} else {
+				slot.value = value;
+				slot.prototype = null;
+			}
+		} else {
+			if (slot == null) {
+				slot = new Slot();
+
+				if (members == null) {
+					members = new HashMap<>(1);
+				}
+
+				members.put(name, slot);
+			}
+
+			slot.value = value;
+			slot.immutable = type == AssignType.IMMUTABLE;
+			slot.prototype = null;
+		}
+	}
+
+	public AssignType hasDeclaredMember(String name) {
+		var slot = members == null ? null : members.get(name);
+
+		if (slot == null) {
+			return AssignType.NONE;
+		} else if (slot.immutable) {
+			return AssignType.IMMUTABLE;
+		} else {
+			return AssignType.MUTABLE;
+		}
+	}
+
+	public Object deleteDeclaredMember(String name) {
+		if (members != null && members.containsKey(name)) {
+			var v = members.remove(name);
+
+			if (members.isEmpty()) {
+				members = null;
+			}
+
+			return v;
+		}
+
 		return Special.NOT_FOUND;
 	}
 
-	default void declareMember(String name, Object value, AssignType type) {
+	public Set<String> getDeclaredMemberNames() {
+		return members == null ? Set.of() : members.keySet();
 	}
 
-	default AssignType hasDeclaredMember(String name) {
-		return AssignType.NONE;
-	}
-
-	default Object deleteDeclaredMember(String name) {
-		return Special.NOT_FOUND;
-	}
-
-	default Set<String> getDeclaredMemberNames() {
-		return Set.of();
-	}
-
-	default void deleteAllDeclaredMembers() {
+	public void deleteAllDeclaredMembers() {
 		for (var id : Set.copyOf(getDeclaredMemberNames())) {
 			deleteDeclaredMember(id);
 		}
@@ -54,7 +88,7 @@ public interface Scope {
 
 	// Recursive Member Methods //
 
-	default Object getMember(String name) {
+	public Object getMember(String name) {
 		Scope s = this;
 
 		do {
@@ -64,14 +98,14 @@ public interface Scope {
 				return m;
 			}
 
-			s = getParentScope();
+			s = parent;
 		}
 		while (s != null);
 
 		return Special.UNDEFINED;
 	}
 
-	default void setMember(String name, Object value, AssignType type) {
+	public void setMember(String name, Object value, AssignType type) {
 		// type == NONE = replace existing member, error if not found (x = y)
 		// type == MUTABLE = create new mutable member (var x, let x)
 		// type == IMMUTABLE = create new immutable member (const x)
@@ -89,14 +123,14 @@ public interface Scope {
 				return;
 			}
 
-			s = getParentScope();
+			s = parent;
 		}
 		while (s != null);
 
-		throw new IchorError("Member " + name + " not found");
+		throw new ScriptError("Member " + name + " not found");
 	}
 
-	default AssignType hasMember(String name) {
+	public AssignType hasMember(String name) {
 		Scope s = this;
 
 		do {
@@ -106,24 +140,25 @@ public interface Scope {
 				return t;
 			}
 
-			s = getParentScope();
+			s = parent;
 		}
 		while (s != null);
 
 		return AssignType.NONE;
 	}
 
-	default void add(Prototype prototype) {
+	public void add(Prototype prototype) {
 		declareMember(prototype.getPrototypeName(), prototype, AssignType.IMMUTABLE);
 	}
 
-	default void add(Class<?> type) {
-		add(getRootScope().context.getClassPrototype(type));
+	public void add(Class<?> type) {
+		add(root.context.getClassPrototype(type));
 	}
 
-	default Scope createChildScope() {
-		var scope = new ScopeImpl();
-		scope.setParentScope(this);
+	public Scope createChildScope() {
+		var scope = new Scope();
+		scope.parent = this;
+		scope.root = root;
 		return scope;
 	}
 }

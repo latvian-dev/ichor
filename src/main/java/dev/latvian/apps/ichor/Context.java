@@ -1,6 +1,6 @@
 package dev.latvian.apps.ichor;
 
-import dev.latvian.apps.ichor.error.IchorError;
+import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.js.ArrayJS;
 import dev.latvian.apps.ichor.js.BooleanJS;
 import dev.latvian.apps.ichor.js.NumberJS;
@@ -10,12 +10,11 @@ import dev.latvian.apps.ichor.js.java.JavaClassJS;
 import dev.latvian.apps.ichor.js.java.JavaTypePrototype;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
-import dev.latvian.apps.ichor.util.RootScope;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class Context implements Frame {
+public class Context {
 	public final RootScope rootScope;
 	private Map<Class<?>, Prototype> classPrototypeCache;
 	private Map<String, Object> properties;
@@ -167,7 +166,7 @@ public class Context implements Frame {
 			return (T) Double.valueOf(asNumber(o).doubleValue());
 		}
 
-		throw new IchorError("Cannot cast " + o.getClass().getName() + " to " + toType.getName());
+		throw new ScriptError("Cannot cast " + o.getClass().getName() + " to " + toType.getName());
 	}
 
 	public Prototype getPrototype(Object o) {
@@ -229,15 +228,5 @@ public class Context implements Frame {
 		}
 
 		return p;
-	}
-
-	@Override
-	public final Context getContext() {
-		return this;
-	}
-
-	@Override
-	public final Scope getScope() {
-		return rootScope;
 	}
 }

@@ -13,13 +13,14 @@ public class ParserTests {
 		var tokenStream = new TokenStream(input);
 		var tokens = tokenStream.getTokens();
 		var parser = new Parser(tokens);
-		var stmts = parser.parse();
-		System.out.println("Parsed:   " + stmts);
-		Assertions.assertEquals(match, stmts.toString());
+		var result = parser.parse();
+		var resultStr = result.toString();
+		System.out.println("Parsed:   " + resultStr);
+		Assertions.assertEquals(match, resultStr);
 	}
 
 	@Test
 	public void number() {
-		testParser("var x = 4.0;", "[4.0]");
+		testParser("const x = 4.0;", "{x=4.0;}");
 	}
 }

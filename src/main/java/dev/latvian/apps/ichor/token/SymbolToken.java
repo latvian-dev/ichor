@@ -1,62 +1,101 @@
 package dev.latvian.apps.ichor.token;
 
-import dev.latvian.apps.ichor.parser.Precedence;
+import dev.latvian.apps.ichor.parser.expression.binary.AstAdd;
+import dev.latvian.apps.ichor.parser.expression.binary.AstAddSet;
+import dev.latvian.apps.ichor.parser.expression.binary.AstAnd;
+import dev.latvian.apps.ichor.parser.expression.binary.AstBinary;
+import dev.latvian.apps.ichor.parser.expression.binary.AstBitwiseAnd;
+import dev.latvian.apps.ichor.parser.expression.binary.AstBitwiseOr;
+import dev.latvian.apps.ichor.parser.expression.binary.AstBitwiseOrSet;
+import dev.latvian.apps.ichor.parser.expression.binary.AstDiv;
+import dev.latvian.apps.ichor.parser.expression.binary.AstDivSet;
+import dev.latvian.apps.ichor.parser.expression.binary.AstEq;
+import dev.latvian.apps.ichor.parser.expression.binary.AstGt;
+import dev.latvian.apps.ichor.parser.expression.binary.AstGte;
+import dev.latvian.apps.ichor.parser.expression.binary.AstLsh;
+import dev.latvian.apps.ichor.parser.expression.binary.AstLshSet;
+import dev.latvian.apps.ichor.parser.expression.binary.AstLt;
+import dev.latvian.apps.ichor.parser.expression.binary.AstLte;
+import dev.latvian.apps.ichor.parser.expression.binary.AstMod;
+import dev.latvian.apps.ichor.parser.expression.binary.AstModSet;
+import dev.latvian.apps.ichor.parser.expression.binary.AstMul;
+import dev.latvian.apps.ichor.parser.expression.binary.AstMulSet;
+import dev.latvian.apps.ichor.parser.expression.binary.AstNeq;
+import dev.latvian.apps.ichor.parser.expression.binary.AstNullishCoalescing;
+import dev.latvian.apps.ichor.parser.expression.binary.AstOr;
+import dev.latvian.apps.ichor.parser.expression.binary.AstPow;
+import dev.latvian.apps.ichor.parser.expression.binary.AstRsh;
+import dev.latvian.apps.ichor.parser.expression.binary.AstRshSet;
+import dev.latvian.apps.ichor.parser.expression.binary.AstSeq;
+import dev.latvian.apps.ichor.parser.expression.binary.AstSet;
+import dev.latvian.apps.ichor.parser.expression.binary.AstSneq;
+import dev.latvian.apps.ichor.parser.expression.binary.AstSub;
+import dev.latvian.apps.ichor.parser.expression.binary.AstSubSet;
+import dev.latvian.apps.ichor.parser.expression.binary.AstUrsh;
+import dev.latvian.apps.ichor.parser.expression.binary.AstUrshSet;
+import dev.latvian.apps.ichor.parser.expression.binary.AstXor;
+import dev.latvian.apps.ichor.parser.expression.binary.AstXorSet;
+import dev.latvian.apps.ichor.parser.expression.unary.AstAdd1B;
+import dev.latvian.apps.ichor.parser.expression.unary.AstBitwiseNot;
+import dev.latvian.apps.ichor.parser.expression.unary.AstNegate;
+import dev.latvian.apps.ichor.parser.expression.unary.AstSub1B;
+import dev.latvian.apps.ichor.parser.expression.unary.AstUnary;
 
 public enum SymbolToken implements StaticToken {
 	EOF("EOF"), // end of file
-	DOT(".", Precedence.POSTFIX), // dot
+	DOT("."), // dot
 	DDOT(".."), // double dot
 	TDOT("..."), // triple dot
 	COMMA(","), // comma
-	LP("(", Precedence.POSTFIX), // left parenthesis
-	RP(")", Precedence.POSTFIX), // right parenthesis
-	LS("[", Precedence.POSTFIX), // left square bracket
-	RS("]", Precedence.POSTFIX), // right square bracket
+	LP("("), // left parenthesis
+	RP(")"), // right parenthesis
+	LS("["), // left square bracket
+	RS("]"), // right square bracket
 	LC("{"), // left curly bracket
 	RC("}"), // right curly bracket
-	SET("=", Precedence.ASSIGNMENT), // set
-	ADD("+", Precedence.ADDITIVE), // addition
-	ADD_SET("+=", Precedence.ASSIGNMENT), // add and set
-	ADD1("++", Precedence.POSTFIX), // 1 addition
-	SUB("-", Precedence.ADDITIVE), // subtraction & negation
-	SUB_SET("-=", Precedence.ASSIGNMENT), // sub and set
-	SUB1("--", Precedence.POSTFIX), // 1 subtraction
-	MUL("*", Precedence.MULTIPLICATIVE), // multiplication
-	MUL_SET("*=", Precedence.ASSIGNMENT), // multiply and set
-	DIV("/", Precedence.MULTIPLICATIVE), // division
-	DIV_SET("/=", Precedence.ASSIGNMENT), // divide and set
-	MOD("%", Precedence.MULTIPLICATIVE), // modulo
-	MOD_SET("%=", Precedence.ASSIGNMENT), // modulo and set
-	NOT("!", Precedence.UNARY), // not
-	BNOT("~", Precedence.UNARY), // bitwise not
-	EQ("==", Precedence.EQUALITY), // equal
-	NEQ("!=", Precedence.EQUALITY), // not equal
-	SEQ("===", Precedence.EQUALITY), // shallow equal
-	SNEQ("!==", Precedence.EQUALITY), // shallow not equal
-	LT("<", Precedence.RELATIONAL), // less than
-	GT(">", Precedence.RELATIONAL), // greater than
-	LTE("<=", Precedence.RELATIONAL), // less than or equal
-	GTE(">=", Precedence.RELATIONAL), // greater than or equal
-	OR("||", Precedence.LOGICAL_OR), // or
-	AND("&&", Precedence.LOGICAL_AND), // and
-	BOR("|", Precedence.BITWISE_OR), // bitwise or
-	BOR_SET("|=", Precedence.ASSIGNMENT), // bitwise or and set
-	BAND("&", Precedence.BITWISE_AND), // bitwise and
-	BAND_SET("&=", Precedence.ASSIGNMENT), // bitwise and and set
-	XOR("^", Precedence.BITWISE_XOR), // exclusive or & bitwise exclusive or
-	XOR_SET("^=", Precedence.ASSIGNMENT), // exclusive or & bitwise exclusive or
-	LSH("<<", Precedence.SHIFT), // left shift
-	LSH_SET("<<=", Precedence.ASSIGNMENT), // left shift
-	RSH(">>", Precedence.SHIFT), // right shift
-	RSH_SET(">>=", Precedence.ASSIGNMENT), // right shift
-	URSH(">>>", Precedence.SHIFT), // unsigned right shift
-	URSH_SET(">>>=", Precedence.ASSIGNMENT), // unsigned right shift
-	POW("**", Precedence.EXPONENT), // power
-	HOOK("?", Precedence.CONDITIONAL), // hook
+	SET("=", AstSet::new), // set
+	ADD("+", AstAdd::new), // addition
+	ADD_SET("+=", AstAddSet::new), // add and set
+	ADD1("++", AstAdd1B::new), // 1 addition
+	SUB("-", AstSub::new), // subtraction & negation
+	SUB_SET("-=", AstSubSet::new), // sub and set
+	SUB1("--", AstSub1B::new), // 1 subtraction
+	MUL("*", AstMul::new), // multiplication
+	MUL_SET("*=", AstMulSet::new), // multiply and set
+	DIV("/", AstDiv::new), // division
+	DIV_SET("/=", AstDivSet::new), // divide and set
+	MOD("%", AstMod::new), // modulo
+	MOD_SET("%=", AstModSet::new), // modulo and set
+	NOT("!", AstNegate::new), // not
+	BNOT("~", AstBitwiseNot::new), // bitwise not
+	EQ("==", AstEq::new), // equal
+	NEQ("!=", AstNeq::new), // not equal
+	SEQ("===", AstSeq::new), // shallow equal
+	SNEQ("!==", AstSneq::new), // shallow not equal
+	LT("<", AstLt::new), // less than
+	GT(">", AstGt::new), // greater than
+	LTE("<=", AstLte::new), // less than or equal
+	GTE(">=", AstGte::new), // greater than or equal
+	OR("||", AstOr::new), // or
+	AND("&&", AstAnd::new), // and
+	BOR("|", AstBitwiseOr::new), // bitwise or
+	BOR_SET("|=", AstBitwiseOrSet::new), // bitwise or and set
+	BAND("&", AstBitwiseAnd::new), // bitwise and
+	BAND_SET("&=", AstBitwiseOrSet::new), // bitwise and and set
+	XOR("^", AstXor::new), // exclusive or & bitwise exclusive or
+	XOR_SET("^=", AstXorSet::new), // exclusive or & bitwise exclusive or
+	LSH("<<", AstLsh::new), // left shift
+	LSH_SET("<<=", AstLshSet::new), // left shift
+	RSH(">>", AstRsh::new), // right shift
+	RSH_SET(">>=", AstRshSet::new), // right shift
+	URSH(">>>", AstUrsh::new), // unsigned right shift
+	URSH_SET(">>>=", AstUrshSet::new), // unsigned right shift
+	POW("**", AstPow::new), // power
+	HOOK("?"), // hook
 	COL(":"), // colon
 	SEMI(";"), // semicolon
 	OC("?."), // optional chaining
-	NC("??", Precedence.EQUALITY), // nullish coalescing
+	NC("??", AstNullishCoalescing::new), // nullish coalescing
 	ARROW("=>"), // arrow
 
 	;
@@ -64,15 +103,21 @@ public enum SymbolToken implements StaticToken {
 	public static final int RIGHT_ASSOCIATIVE = 4;
 
 	public final String name;
-	public final Precedence precedence;
+	public AstUnary.Factory astUnary;
+	public AstBinary.Factory astBinary;
 
-	SymbolToken(String n, Precedence p) {
-		name = n;
-		precedence = p;
+	SymbolToken(String name) {
+		this.name = name;
 	}
 
-	SymbolToken(String n) {
-		this(n, Precedence.NONE);
+	SymbolToken(String name, AstUnary.Factory astUnary) {
+		this(name);
+		this.astUnary = astUnary;
+	}
+
+	SymbolToken(String name, AstBinary.Factory astBinary) {
+		this(name);
+		this.astBinary = astBinary;
 	}
 
 	@Override
