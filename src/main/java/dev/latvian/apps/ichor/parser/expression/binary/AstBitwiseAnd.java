@@ -1,14 +1,15 @@
 package dev.latvian.apps.ichor.parser.expression.binary;
 
-import dev.latvian.apps.ichor.parser.expression.AstExpression;
+import dev.latvian.apps.ichor.Scope;
 
 public class AstBitwiseAnd extends AstBinary {
-	public AstBitwiseAnd(AstExpression left, AstExpression right) {
-		super(left, right);
-	}
-
 	@Override
 	public void appendSymbol(StringBuilder builder) {
 		builder.append('&');
+	}
+
+	@Override
+	public Object eval(Scope scope) {
+		return scope.getContext().asInt(scope, left) & scope.getContext().asInt(scope, right);
 	}
 }

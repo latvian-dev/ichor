@@ -38,6 +38,16 @@ public record NumberToken(double value) implements Token, Evaluable {
 	}
 
 	@Override
+	public double evalDouble(Scope scope) {
+		return value;
+	}
+
+	@Override
+	public boolean evalBoolean(Scope scope) {
+		return value != 0D;
+	}
+
+	@Override
 	public boolean hasValue() {
 		return true;
 	}

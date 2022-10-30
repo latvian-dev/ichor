@@ -1,9 +1,10 @@
 package dev.latvian.apps.ichor.parser.expression;
 
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.parser.Ast;
 import dev.latvian.apps.ichor.token.PositionedToken;
 
-public abstract class AstExpression extends Ast {
+public abstract class AstExpression extends Ast implements Evaluable {
 	public static final AstExpression[] EMPTY_EXPRESSION_ARRAY = new AstExpression[0];
 
 	@Override

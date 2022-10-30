@@ -7,4 +7,9 @@ public class RootScope extends Scope {
 		context = cx;
 		root = this;
 	}
+
+	@Override
+	public Context getContext() {
+		return context;
+	}
 }

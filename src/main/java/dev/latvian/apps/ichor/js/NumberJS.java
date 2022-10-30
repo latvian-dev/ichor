@@ -1,18 +1,18 @@
 package dev.latvian.apps.ichor.js;
 
-import dev.latvian.apps.ichor.Context;
+import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 
 public class NumberJS {
-	public static final Number ZERO = 0D;
-	public static final Number ONE = 1D;
-	public static final Number NaN = Double.NaN;
+	public static final Double ZERO = 0D;
+	public static final Double ONE = 1D;
+	public static final Double NaN = Double.NaN;
 	public static final double MAX_SAFE_INTEGER = 9007199254740991.0;
 	public static final double MIN_SAFE_INTEGER = -MAX_SAFE_INTEGER;
 
 	public static final Prototype PROTOTYPE = PrototypeBuilder.create("Number")
-			.constructor((cx, args, hasNew) -> args.length == 0 ? NaN : cx.asNumber(args[0]))
+			.constructor((scope, args, hasNew) -> args.length == 0 ? NaN : scope.getContext().asNumber(scope, args[0]))
 			.asString((cx, self) -> self.toString())
 			.asNumber((cx, self) -> (Number) self)
 			.asBoolean((cx, self) -> ((Number) self).doubleValue() != 0D)
@@ -34,7 +34,7 @@ public class NumberJS {
 			.function("toExponential", NumberJS::toExponential)
 			.function("toPrecision", NumberJS::toPrecision);
 
-	private static Object isFinite(Context cx, Object self, Object[] args) {
+	private static Object isFinite(Scope scope, Object self, Object[] args) {
 		if (args.length == 0) {
 			return Boolean.FALSE;
 		} else if (args[0] instanceof Double n) {
@@ -43,11 +43,11 @@ public class NumberJS {
 			return !n.isInfinite() && !n.isNaN();
 		}
 
-		double d = cx.asDouble(args[0]);
+		double d = scope.root.context.asDouble(scope, args[0]);
 		return !Double.isInfinite(d) && !Double.isNaN(d);
 	}
 
-	private static Object isNaN(Context cx, Object self, Object[] args) {
+	private static Object isNaN(Scope scope, Object self, Object[] args) {
 		if (args.length == 0) {
 			return Boolean.TRUE;
 		} else if (args[0] instanceof Double n) {
@@ -55,46 +55,46 @@ public class NumberJS {
 		} else if (args[0] instanceof Float n) {
 			return n.isNaN();
 		} else {
-			double d = cx.asDouble(args[0]);
+			double d = scope.root.context.asDouble(scope, args[0]);
 			return Double.isNaN(d);
 		}
 	}
 
-	private static Object isInteger(Context cx, Object self, Object[] args) {
+	private static Object isInteger(Scope scope, Object self, Object[] args) {
 		if (args.length == 0) {
 			return false;
 		}
 
-		double d = cx.asDouble(args[0]);
+		double d = scope.root.context.asDouble(scope, args[0]);
 		return !Double.isInfinite(d) && !Double.isNaN(d) && (Math.floor(d) == d);
 	}
 
-	private static Object isSafeInteger(Context cx, Object self, Object[] args) {
+	private static Object isSafeInteger(Scope scope, Object self, Object[] args) {
 		if (args.length == 0) {
 			return false;
 		}
 
-		double d = cx.asDouble(args[0]);
+		double d = scope.root.context.asDouble(scope, args[0]);
 		return !Double.isInfinite(d) && !Double.isNaN(d) && (d <= MAX_SAFE_INTEGER) && (d >= MIN_SAFE_INTEGER) && (Math.floor(d) == d);
 	}
 
-	private static Object parseFloat(Context cx, Object self, Object[] args) {
-		return cx.asDouble(args[0]);
+	private static Object parseFloat(Scope scope, Object self, Object[] args) {
+		return scope.root.context.asDouble(scope, args[0]);
 	}
 
-	private static Object parseInt(Context cx, Object self, Object[] args) {
-		return cx.asInt(args[0]);
+	private static Object parseInt(Scope scope, Object self, Object[] args) {
+		return scope.root.context.asInt(scope, args[0]);
 	}
 
-	private static Object toFixed(Context cx, Object self, Object[] args) {
+	private static Object toFixed(Scope scope, Object self, Object[] args) {
 		return self.toString(); // FIXME
 	}
 
-	private static Object toExponential(Context cx, Object self, Object[] args) {
+	private static Object toExponential(Scope scope, Object self, Object[] args) {
 		return self.toString(); // FIXME
 	}
 
-	private static Object toPrecision(Context cx, Object self, Object[] args) {
+	private static Object toPrecision(Scope scope, Object self, Object[] args) {
 		return self.toString(); // FIXME
 	}
 }

@@ -5,7 +5,7 @@ import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 
 public class BooleanJS {
 	public static final Prototype PROTOTYPE = PrototypeBuilder.create("Boolean")
-			.constructor((cx, args, hasNew) -> args.length == 0 ? Boolean.FALSE : cx.asBoolean(args[0]))
+			.constructor((scope, args, hasNew) -> args.length == 0 ? Boolean.FALSE : scope.getContext().asBoolean(scope, args[0]))
 			.asString((cx, self) -> self.toString())
 			.asNumber((cx, self) -> (Boolean) self ? NumberJS.ONE : NumberJS.ZERO)
 			.asBoolean((cx, self) -> (Boolean) self);

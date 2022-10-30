@@ -1,26 +1,30 @@
 package dev.latvian.apps.ichor.parser;
 
+import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.error.ParseError;
-import dev.latvian.apps.ichor.parser.expression.AstAssign;
 import dev.latvian.apps.ichor.parser.expression.AstCall;
-import dev.latvian.apps.ichor.parser.expression.AstExpression;
 import dev.latvian.apps.ichor.parser.expression.AstGet;
+import dev.latvian.apps.ichor.parser.expression.AstGetBase;
+import dev.latvian.apps.ichor.parser.expression.AstGetByName;
+import dev.latvian.apps.ichor.parser.expression.AstGetByNameOptional;
 import dev.latvian.apps.ichor.parser.expression.AstGrouping;
 import dev.latvian.apps.ichor.parser.expression.AstLiteral;
 import dev.latvian.apps.ichor.parser.expression.AstSet;
 import dev.latvian.apps.ichor.parser.expression.AstSuper;
 import dev.latvian.apps.ichor.parser.expression.AstThis;
-import dev.latvian.apps.ichor.parser.expression.AstVarExpression;
-import dev.latvian.apps.ichor.parser.expression.binary.AstAnd;
-import dev.latvian.apps.ichor.parser.expression.binary.AstOr;
+import dev.latvian.apps.ichor.parser.expression.binary.AstBinary;
+import dev.latvian.apps.ichor.parser.expression.unary.AstAdd1R;
+import dev.latvian.apps.ichor.parser.expression.unary.AstSub1R;
+import dev.latvian.apps.ichor.parser.expression.unary.AstUnary;
 import dev.latvian.apps.ichor.parser.statement.AstBlock;
 import dev.latvian.apps.ichor.parser.statement.AstClass;
 import dev.latvian.apps.ichor.parser.statement.AstConstStatement;
 import dev.latvian.apps.ichor.parser.statement.AstExpressionStatement;
 import dev.latvian.apps.ichor.parser.statement.AstFunction;
 import dev.latvian.apps.ichor.parser.statement.AstIf;
+import dev.latvian.apps.ichor.parser.statement.AstInterpretableGroup;
 import dev.latvian.apps.ichor.parser.statement.AstReturn;
-import dev.latvian.apps.ichor.parser.statement.AstStatement;
 import dev.latvian.apps.ichor.parser.statement.AstVarStatement;
 import dev.latvian.apps.ichor.parser.statement.AstWhile;
 import dev.latvian.apps.ichor.token.KeywordToken;
@@ -28,11 +32,25 @@ import dev.latvian.apps.ichor.token.NameToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
 import dev.latvian.apps.ichor.token.StaticToken;
 import dev.latvian.apps.ichor.token.SymbolToken;
+import dev.latvian.apps.ichor.util.EvaluableFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Parser {
+	public static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
+	public static final String[] EMPTY_STRING_ARRAY = new String[0];
+
+	private static final StaticToken[] VAR_TOKENS = {KeywordToken.VAR, KeywordToken.LET, KeywordToken.CONST};
+	private static final StaticToken[] NC_TOKENS = {SymbolToken.NC};
+	private static final StaticToken[] AND_TOKENS = {SymbolToken.AND};
+	private static final StaticToken[] OR_TOKENS = {SymbolToken.OR};
+	private static final StaticToken[] EQUALITY_TOKENS = {SymbolToken.EQ, SymbolToken.NEQ, SymbolToken.SEQ, SymbolToken.SNEQ};
+	private static final StaticToken[] COMPARISON_TOKENS = {SymbolToken.LT, SymbolToken.GT, SymbolToken.LTE, SymbolToken.GTE};
+	private static final StaticToken[] ADDITIVE_TOKENS = {SymbolToken.ADD, SymbolToken.SUB};
+	private static final StaticToken[] MULTIPLICATIVE_TOKENS = {SymbolToken.MUL, SymbolToken.DIV, SymbolToken.MOD};
+	private static final StaticToken[] UNARY_TOKENS = {SymbolToken.NOT, SymbolToken.ADD, SymbolToken.SUB, SymbolToken.BNOT, SymbolToken.ADD1, SymbolToken.SUB1};
+
 	private final List<PositionedToken> tokens;
 	private int current;
 
@@ -41,58 +59,55 @@ public class Parser {
 		current = 0;
 	}
 
-	public AstBlock parse() {
-		var list = new ArrayList<AstStatement>();
+	public Interpretable parse() {
+		var list = new ArrayList<Interpretable>();
 
-		while (!isAtEnd()) {
+		while (canAdvance()) {
 			list.add(declaration());
 		}
 
-		var block = new AstBlock(list);
-		block.line = 0;
-		block.pos = 0;
-		return block;
+		return AstInterpretableGroup.optimized(list);
 	}
 
-	private AstExpression expression() {
+	private Evaluable expression() {
 		return assignment();
 	}
 
-	private AstStatement declaration() {
+	private Interpretable declaration() {
 		if (match(KeywordToken.CLASS)) {
 			return classDeclaration();
 		} else if (match(KeywordToken.FUNCTION)) {
 			return function();
-		} else if (match(KeywordToken.VAR, KeywordToken.LET, KeywordToken.CONST)) {
+		} else if (match(VAR_TOKENS)) {
 			return varDeclaration(previous().token() == KeywordToken.CONST);
 		} else {
 			return statement();
 		}
 	}
 
-	private AstStatement classDeclaration() {
-		var name = consumeName("Expect class name.");
+	private Interpretable classDeclaration() {
+		var name = consumeName("Expected class name");
 
-		AstVarExpression superclass = null;
+		AstGet superclass = null;
 
 		if (match(KeywordToken.EXTENDS)) {
-			consumeName("Expect superclass name.");
-			superclass = new AstVarExpression(previous().asString());
+			consumeName("Expected superclass name");
+			superclass = new AstGet(previous().asString());
 		}
 
-		consume(SymbolToken.LC, "Expect '{' before class body.");
+		consume(SymbolToken.LC, "Expected '{' before class body");
 
 		var methods = new ArrayList<AstFunction>();
 
-		while (!check(SymbolToken.RC) && !isAtEnd()) {
+		while (!check(SymbolToken.RC) && canAdvance()) {
 			methods.add(function());
 		}
 
-		consume(SymbolToken.RC, "Expect '}' after class body.");
+		consume(SymbolToken.RC, "Expected '}' after class body");
 		return new AstClass(name.asString(), superclass, methods.toArray(new AstFunction[0]));
 	}
 
-	private AstStatement statement() {
+	private Interpretable statement() {
 		if (match(KeywordToken.FOR)) {
 			return forStatement();
 		} else if (match(KeywordToken.IF)) {
@@ -102,268 +117,262 @@ public class Parser {
 		} else if (match(KeywordToken.WHILE)) {
 			return whileStatement();
 		} else if (check(SymbolToken.LC)) {
-			return block();
+			return block(true);
 		}
 
 		return expressionStatement();
 	}
 
-	private AstStatement forStatement() {
-		consume(SymbolToken.LP, "Expect '(' after 'for'.");
+	private Interpretable forStatement() {
+		consume(SymbolToken.LP, "Expected '(' after 'for'");
 
-		AstStatement initializer;
+		Interpretable initializer;
 		if (match(SymbolToken.SEMI)) {
 			initializer = null;
-		} else if (match(KeywordToken.VAR, KeywordToken.LET, KeywordToken.CONST)) {
+		} else if (match(VAR_TOKENS)) {
 			initializer = varDeclaration(previous().token() == KeywordToken.CONST);
 		} else {
 			initializer = expressionStatement();
 		}
 
-		AstExpression condition = null;
+		Evaluable condition = null;
 		if (!check(SymbolToken.SEMI)) {
 			condition = expression();
 		}
-		consume(SymbolToken.SEMI, "Expect ';' after loop condition.");
+		consume(SymbolToken.SEMI, "Expected ';' after loop condition");
 
-		AstExpression increment = null;
+		Evaluable increment = null;
 		if (!check(SymbolToken.RP)) {
 			increment = expression();
 		}
-		consume(SymbolToken.RP, "Expect ')' after for clauses.");
+		consume(SymbolToken.RP, "Expected ')' after for clauses");
 		var body = statement();
 
 		if (increment != null) {
-			body = new AstBlock(body, new AstExpressionStatement(increment));
+			body = new AstInterpretableGroup(body, new AstExpressionStatement(increment));
 		}
 
 		if (condition == null) {
 			condition = new AstLiteral(true);
 		}
-		body = new AstWhile(condition, new AstBlock(body));
+		body = new AstWhile(condition, new AstInterpretableGroup(body));
 
 		if (initializer != null) {
-			body = new AstBlock(initializer, body);
+			body = new AstInterpretableGroup(initializer, body);
 		}
 
 		return body;
 	}
 
-	private AstIf ifStatement() {
-		consume(SymbolToken.LP, "Expect '(' after 'if'.");
+	private Interpretable ifStatement() {
+		consume(SymbolToken.LP, "Expected '(' after 'if'");
 		var condition = expression();
-		consume(SymbolToken.RP, "Expect ')' after if condition."); // [parens]
+		consume(SymbolToken.RP, "Expected ')' after if condition"); // [parens]
 
-		var ifTrue = block();
-		AstStatement ifFalse = null;
+		var ifTrue = block(false);
+		Interpretable ifFalse = null;
 
 		if (match(KeywordToken.ELSE)) {
-			ifFalse = block();
+			ifFalse = block(false);
 		}
 
 		return new AstIf(condition, ifTrue, ifFalse);
 	}
 
-	private AstStatement returnStatement() {
+	private Interpretable returnStatement() {
 		var keyword = previous();
-		AstExpression value = null;
+		Object value = null;
+
 		if (!check(SymbolToken.SEMI)) {
-			value = expression();
+			value = expression().optimize();
 		}
 
-		consume(SymbolToken.SEMI, "Expect ';' after return value.");
+		consume(SymbolToken.SEMI, "Expected ';' after return value");
 		return new AstReturn(value).pos(keyword);
 	}
 
-	private AstStatement varDeclaration(boolean isConst) {
-		var name = consumeName("Expect variable name.");
+	private Interpretable varDeclaration(boolean isConst) {
+		var list = new ArrayList<Interpretable>(1);
 
-		AstExpression initializer = null;
+		do {
+			var name = consumeName("Expected variable name");
 
-		if (match(SymbolToken.SET)) {
-			initializer = expression();
+			Object initializer = null;
+
+			if (match(SymbolToken.SET)) {
+				initializer = expression().optimize();
+			} else if (isConst) {
+				error(name, "const must have an initializer!");
+			}
+
+			list.add((isConst ? new AstConstStatement(name.asString(), initializer) : new AstVarStatement(name.asString(), initializer)).pos(name));
 		}
-
-		consume(SymbolToken.SEMI, "Expect ';' after variable declaration.");
-		return isConst ? new AstConstStatement(name.asString(), initializer) : new AstVarStatement(name.asString(), initializer);
+		while (match(SymbolToken.COMMA));
+		consume(SymbolToken.SEMI, "Expected ';' after variable declaration");
+		return AstInterpretableGroup.optimized(list);
 	}
 
-	private AstStatement whileStatement() {
-		consume(SymbolToken.LP, "Expect '(' after 'while'.");
+	private Interpretable whileStatement() {
+		consume(SymbolToken.LP, "Expected '(' after 'while'");
 		var condition = expression();
-		consume(SymbolToken.RP, "Expect ')' after condition.");
-		var body = block();
+		consume(SymbolToken.RP, "Expected ')' after condition");
+		var body = block(false);
 
 		return new AstWhile(condition, body);
 	}
 
-	private AstStatement expressionStatement() {
+	private Interpretable expressionStatement() {
 		var expr = expression();
 		match(SymbolToken.SEMI);
 		return new AstExpressionStatement(expr);
 	}
 
 	private AstFunction function() {
-		var name = consumeName("Expect function name.");
-		consume(SymbolToken.LP, "Expect '(' after function name.");
+		var name = consumeName("Expected function name");
+		return function(name.asString());
+	}
+
+	private AstFunction function(String name) {
+		consume(SymbolToken.LP, "Expected '(' after function name");
 		var parameters = new ArrayList<String>();
 		if (!check(SymbolToken.RP)) {
 			do {
-				if (parameters.size() >= 255) {
-					error(peek(), "Can't have more than 255 parameters.");
-				}
-
-				parameters.add(consumeName("Expect parameter name.").asString());
+				parameters.add(consumeName("Expected parameter name").asString());
 			} while (match(SymbolToken.COMMA));
 		}
-		consume(SymbolToken.RP, "Expect ')' after parameters.");
-		var body = block();
-		return new AstFunction(name.asString(), parameters.toArray(new String[0]), body);
+		consume(SymbolToken.RP, "Expected ')' after parameters");
+		var body = block(true);
+		return new AstFunction(name, parameters.toArray(EMPTY_STRING_ARRAY), body);
 	}
 
-	private AstStatement block() {
-		if (match(SymbolToken.LC)) {
-			var firstPos = consume(SymbolToken.LC, "Expect '{' before block.");
+	private Interpretable block(boolean isBlock) {
+		if (check(SymbolToken.LC)) {
+			var firstPos = consume(SymbolToken.LC, "Expected '{' before block, got " + peek() + " instead");
 
-			var statements = new ArrayList<AstStatement>();
+			var statements = new ArrayList<Interpretable>();
 
-			while (!check(SymbolToken.RC) && !isAtEnd()) {
+			while (!check(SymbolToken.RC) && canAdvance()) {
 				statements.add(declaration());
 			}
 
-			consume(SymbolToken.RC, "Expect '}' after block.");
-			var block = new AstBlock(statements);
-			block.pos(firstPos);
+			consume(SymbolToken.RC, "Expected '}' after block");
+			var block = isBlock ? new AstBlock(statements) : AstInterpretableGroup.optimized(statements);
+
+			if (block instanceof Ast ast) {
+				ast.pos(firstPos);
+			}
+
 			return block;
 		} else {
 			return statement();
 		}
 	}
 
-	private AstExpression assignment() {
-		var expr = or();
+	private Evaluable assignment() {
+		var expr = nc();
 
 		if (match(SymbolToken.SET)) {
-			var equals = previous();
+			var operator = previous();
 			var value = assignment();
 
-			if (expr instanceof AstVarExpression name) {
-				return new AstAssign(name.name, value);
-			} else if (expr instanceof AstGet get) {
-				return new AstSet(get.from, get.name, value);
+			if (expr instanceof AstGetBase get) {
+				return new AstSet(get, value.optimize());
 			}
 
-			error(equals, "Invalid assignment target."); // [no-throw]
+			error(operator, "Invalid assignment target."); // [no-throw]
+		} else if (match(SymbolToken.ADD1)) {
+			var ast = new AstAdd1R();
+			ast.node = expr;
+			ast.pos(previous());
+			return ast;
+		} else if (match(SymbolToken.SUB1)) {
+			var ast = new AstSub1R();
+			ast.node = expr;
+			ast.pos(previous());
+			return ast;
 		}
 
 		return expr;
 	}
 
-	private AstExpression or() {
-		var expr = and();
+	private Evaluable binary(StaticToken[] token, EvaluableFactory next) {
+		var expr = next.create();
 
-		while (match(SymbolToken.OR)) {
-			var right = and();
-			expr = new AstOr(expr, right);
-		}
-
-		return expr;
-	}
-
-	private AstExpression and() {
-		var expr = equality();
-
-		while (match(SymbolToken.AND)) {
-			var right = equality();
-			expr = new AstAnd(expr, right);
-		}
-
-		return expr;
-	}
-
-	private AstExpression equality() {
-		var expr = comparison();
-
-		while (match(SymbolToken.NEQ, SymbolToken.EQ, SymbolToken.SNEQ, SymbolToken.SEQ)) {
+		while (match(token)) {
 			var operator = previous();
 			var right = comparison();
-			expr = ((SymbolToken) operator.token()).astBinary.create(expr, right);
+			var ast = (AstBinary) ((SymbolToken) operator.token()).astBinary.create();
+			ast.left = expr.optimize();
+			ast.right = right.optimize();
+			ast.pos(operator);
+			expr = ast;
 		}
 
 		return expr;
 	}
 
-	private AstExpression comparison() {
-		var expr = term();
-
-		while (match(SymbolToken.GT, SymbolToken.GTE, SymbolToken.LT, SymbolToken.LTE)) {
-			var operator = previous();
-			var right = term();
-			expr = ((SymbolToken) operator.token()).astBinary.create(expr, right);
-		}
-
-		return expr;
+	public Evaluable nc() {
+		return binary(NC_TOKENS, this::or);
 	}
 
-	private AstExpression term() {
-		var expr = factor();
-
-		while (match(SymbolToken.ADD, SymbolToken.SUB)) {
-			var operator = previous();
-			var right = factor();
-			expr = ((SymbolToken) operator.token()).astBinary.create(expr, right);
-		}
-
-		return expr;
+	public Evaluable or() {
+		return binary(OR_TOKENS, this::and);
 	}
 
-	private AstExpression factor() {
-		var expr = unary();
-
-		while (match(SymbolToken.DIV, SymbolToken.MUL)) {
-			var operator = previous();
-			var right = unary();
-			expr = ((SymbolToken) operator.token()).astBinary.create(expr, right);
-		}
-
-		return expr;
+	public Evaluable and() {
+		return binary(AND_TOKENS, this::equality);
 	}
 
-	private AstExpression unary() {
-		if (match(SymbolToken.NOT, SymbolToken.SUB, SymbolToken.BNOT, SymbolToken.ADD1, SymbolToken.SUB1)) {
+	public Evaluable equality() {
+		return binary(EQUALITY_TOKENS, this::comparison);
+	}
+
+	public Evaluable comparison() {
+		return binary(COMPARISON_TOKENS, this::additive);
+	}
+
+	public Evaluable additive() {
+		return binary(ADDITIVE_TOKENS, this::multiplicative);
+	}
+
+	public Evaluable multiplicative() {
+		return binary(MULTIPLICATIVE_TOKENS, this::unary);
+	}
+
+	public Evaluable unary() {
+		if (match(UNARY_TOKENS)) {
 			var operator = previous();
 			var right = unary();
-			return ((SymbolToken) operator.token()).astUnary.create(right);
+			var ast = (AstUnary) ((SymbolToken) operator.token()).astUnary.create();
+			ast.node = right.optimize();
+			ast.pos(operator);
+			return ast;
 		}
 
 		return call();
 	}
 
-	private AstExpression finishCall(AstExpression callee) {
-		var arguments = new ArrayList<AstExpression>();
-		if (!check(SymbolToken.RP)) {
-			do {
-				if (arguments.size() >= 255) {
-					error(peek(), "Can't have more than 255 arguments.");
-				}
-				arguments.add(expression());
-			} while (match(SymbolToken.COMMA));
-		}
-
-		consume(SymbolToken.RP, "Expect ')' after arguments.");
-
-		return new AstCall(callee, arguments.toArray(AstExpression.EMPTY_EXPRESSION_ARRAY));
-	}
-
-	private AstExpression call() {
+	private Evaluable call() {
 		var expr = primary();
 
 		while (true) {
 			if (match(SymbolToken.LP)) {
-				expr = finishCall(expr);
+				var lp = previous();
+				var arguments = new ArrayList<>(2);
+				if (!check(SymbolToken.RP)) {
+					do {
+						arguments.add(expression().optimize());
+					} while (match(SymbolToken.COMMA));
+				}
+
+				consume(SymbolToken.RP, "Expected ')' after arguments");
+				expr = new AstCall(expr, arguments.toArray(EMPTY_OBJECT_ARRAY)).pos(lp);
 			} else if (match(SymbolToken.DOT)) {
-				var name = consumeName("Expect property name after '.'.");
-				expr = new AstGet(expr, name.asString());
+				var name = consumeName("Expected property name after '.'");
+				expr = new AstGetByName(expr, name.asString()).pos(name);
+			} else if (match(SymbolToken.OC)) {
+				var name = consumeName("Expected property name after '?.'");
+				expr = new AstGetByNameOptional(expr, name.asString()).pos(name);
 			} else {
 				break;
 			}
@@ -372,16 +381,16 @@ public class Parser {
 		return expr;
 	}
 
-	private AstExpression primary() {
-		if (!isAtEnd() && peek().token().hasValue()) {
+	private Evaluable primary() {
+		if (canAdvance() && peek().token().hasValue()) {
 			var token = advance();
 			return new AstLiteral(token.token().getValue()).pos(token);
 		}
 
 		if (match(KeywordToken.SUPER)) {
 			var keyword = previous();
-			consume(SymbolToken.DOT, "Expect '.' after 'super'.");
-			var method = consumeName("Expect superclass method name.");
+			consume(SymbolToken.DOT, "Expected '.' after 'super'");
+			var method = consumeName("Expected superclass method name");
 			return new AstSuper(method.asString()).pos(keyword);
 		}
 
@@ -389,18 +398,19 @@ public class Parser {
 			return new AstThis().pos(previous());
 		}
 
-		if (!isAtEnd() && peek().token() instanceof NameToken) {
+		if (canAdvance() && peek().token() instanceof NameToken) {
 			advance();
-			return new AstVarExpression(previous().asString());
+			return new AstGet(previous().asString()).pos(previous());
 		}
 
 		if (match(SymbolToken.LP)) {
+			var lp = previous();
 			var expr = expression();
-			consume(SymbolToken.RP, "Expect ')' after expression.");
-			return new AstGrouping(expr);
+			consume(SymbolToken.RP, "Expected ')' after expression");
+			return new AstGrouping(expr).pos(lp);
 		}
 
-		throw error(peek(), "Expect expression.");
+		throw error(peek(), "Expected expression");
 	}
 
 	//
@@ -418,11 +428,18 @@ public class Parser {
 		return false;
 	}
 
-	private boolean match(StaticToken... types) {
-		for (var type : types) {
-			if (check(type)) {
+	private boolean match(StaticToken[] types) {
+		if (types.length == 1) {
+			if (check(types[0])) {
 				advance();
 				return true;
+			}
+		} else {
+			for (var type : types) {
+				if (check(type)) {
+					advance();
+					return true;
+				}
 			}
 		}
 
@@ -430,7 +447,7 @@ public class Parser {
 	}
 
 	private PositionedToken consumeName(String message) {
-		if (!isAtEnd() && peek().token() instanceof NameToken) {
+		if (canAdvance() && peek().token() instanceof NameToken) {
 			return advance();
 		}
 
@@ -446,18 +463,18 @@ public class Parser {
 	}
 
 	private boolean check(StaticToken type) {
-		return !isAtEnd() && peek().token() == type;
+		return canAdvance() && peek().token() == type;
 	}
 
 	private PositionedToken advance() {
-		if (!isAtEnd()) {
+		if (canAdvance()) {
 			current++;
 		}
 		return previous();
 	}
 
-	private boolean isAtEnd() {
-		return current >= tokens.size() || peek().token() == SymbolToken.EOF;
+	private boolean canAdvance() {
+		return current < tokens.size() && peek().token() != SymbolToken.EOF;
 	}
 
 	private PositionedToken peek() {

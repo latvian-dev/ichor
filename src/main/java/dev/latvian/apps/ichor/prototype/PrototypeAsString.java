@@ -1,8 +1,8 @@
 package dev.latvian.apps.ichor.prototype;
 
-import dev.latvian.apps.ichor.Context;
+import dev.latvian.apps.ichor.Scope;
 
 @FunctionalInterface
 public interface PrototypeAsString {
-	String asString(Context cx, Object self);
+	String asString(Scope scope, Object self);
 }

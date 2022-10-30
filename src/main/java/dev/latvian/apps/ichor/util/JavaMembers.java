@@ -1,6 +1,6 @@
 package dev.latvian.apps.ichor.util;
 
-import dev.latvian.apps.ichor.Context;
+import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.js.java.JavaTypePrototype;
@@ -27,7 +27,7 @@ public class JavaMembers {
 		name = n;
 	}
 
-	public Object getValue(Context cx, Object self) {
+	public Object getValue(Scope scope, Object self) {
 		if (beanGetter != null) {
 			try {
 				return beanGetter.invoke(self);
@@ -47,10 +47,10 @@ public class JavaMembers {
 		}
 	}
 
-	public void setValue(Context cx, Object self, Object value) {
+	public void setValue(Scope scope, Object self, Object value) {
 		if (beanSetters != null) {
 			for (var setter : beanSetters) {
-				var o = cx.as(value, setter.argType);
+				var o = scope.getContext().as(scope, value, setter.argType);
 
 				if (o != Special.NOT_FOUND) {
 					try {
@@ -76,7 +76,7 @@ public class JavaMembers {
 		}
 	}
 
-	public Object invoke(Context cx, Object self, Object[] args) {
+	public Object invoke(Scope scope, Object self, Object[] args) {
 		if (methods == null) {
 			throw new ScriptError("No such method %s.%s".formatted(prototype, name));
 		}

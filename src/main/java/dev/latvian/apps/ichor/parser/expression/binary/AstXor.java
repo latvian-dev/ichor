@@ -1,14 +1,30 @@
 package dev.latvian.apps.ichor.parser.expression.binary;
 
-import dev.latvian.apps.ichor.parser.expression.AstExpression;
+import dev.latvian.apps.ichor.Scope;
 
 public class AstXor extends AstBinary {
-	public AstXor(AstExpression left, AstExpression right) {
-		super(left, right);
-	}
-
 	@Override
 	public void appendSymbol(StringBuilder builder) {
 		builder.append('^');
+	}
+
+	@Override
+	public Object eval(Scope scope) {
+		return evalInt(scope);
+	}
+
+	@Override
+	public int evalInt(Scope scope) {
+		return scope.getContext().asInt(scope, left) ^ scope.getContext().asInt(scope, right);
+	}
+
+	@Override
+	public boolean evalBoolean(Scope scope) {
+		return scope.getContext().asBoolean(scope, left) ^ scope.getContext().asBoolean(scope, right);
+	}
+
+	@Override
+	public double evalDouble(Scope scope) {
+		return evalInt(scope);
 	}
 }

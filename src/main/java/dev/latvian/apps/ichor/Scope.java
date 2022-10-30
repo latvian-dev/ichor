@@ -12,7 +12,7 @@ import java.util.Set;
 public class Scope {
 	public Scope parent;
 	public RootScope root;
-	private Map<String, Slot> members;
+	public Map<String, Slot> members;
 
 	// Member Methods //
 
@@ -160,5 +160,9 @@ public class Scope {
 		scope.parent = this;
 		scope.root = root;
 		return scope;
+	}
+
+	public Context getContext() {
+		return root.context;
 	}
 }

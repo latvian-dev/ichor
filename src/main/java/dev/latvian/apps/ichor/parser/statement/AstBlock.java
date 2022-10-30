@@ -1,34 +1,28 @@
 package dev.latvian.apps.ichor.parser.statement;
 
+import dev.latvian.apps.ichor.Interpretable;
+import dev.latvian.apps.ichor.Interpreter;
+import dev.latvian.apps.ichor.parser.AstStringBuilder;
+
 import java.util.Collection;
 
-public class AstBlock extends AstStatement {
-	public final AstStatement[] statements;
+public class AstBlock extends AstInterpretableGroup {
 
-	public AstBlock(AstStatement... statements) {
-		this.statements = statements;
-	}
-
-	public AstBlock(Collection<AstStatement> statements) {
-		this(statements.toArray(EMPTY_STATEMENT_ARRAY));
+	public AstBlock(Collection<Interpretable> statements) {
+		super(statements);
 	}
 
 	@Override
-	public void append(StringBuilder builder) {
-		if (statements.length == 1) {
-			builder.append('{');
-			statements[0].append(builder);
-			builder.append('}');
-		} else {
-			builder.append("{\n");
+	public void append(AstStringBuilder builder) {
+		builder.append('{');
+		super.append(builder);
+		builder.append('}');
+	}
 
-			for (var s : statements) {
-				builder.append('\t');
-				s.append(builder);
-				builder.append('\n');
-			}
-
-			builder.append('}');
-		}
+	@Override
+	public void interpret(Interpreter interpreter) {
+		interpreter.pushScope();
+		super.interpret(interpreter);
+		interpreter.popScope();
 	}
 }

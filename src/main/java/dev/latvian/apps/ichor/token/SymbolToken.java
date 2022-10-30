@@ -3,7 +3,6 @@ package dev.latvian.apps.ichor.token;
 import dev.latvian.apps.ichor.parser.expression.binary.AstAdd;
 import dev.latvian.apps.ichor.parser.expression.binary.AstAddSet;
 import dev.latvian.apps.ichor.parser.expression.binary.AstAnd;
-import dev.latvian.apps.ichor.parser.expression.binary.AstBinary;
 import dev.latvian.apps.ichor.parser.expression.binary.AstBitwiseAnd;
 import dev.latvian.apps.ichor.parser.expression.binary.AstBitwiseOr;
 import dev.latvian.apps.ichor.parser.expression.binary.AstBitwiseOrSet;
@@ -20,14 +19,14 @@ import dev.latvian.apps.ichor.parser.expression.binary.AstMod;
 import dev.latvian.apps.ichor.parser.expression.binary.AstModSet;
 import dev.latvian.apps.ichor.parser.expression.binary.AstMul;
 import dev.latvian.apps.ichor.parser.expression.binary.AstMulSet;
+import dev.latvian.apps.ichor.parser.expression.binary.AstNc;
 import dev.latvian.apps.ichor.parser.expression.binary.AstNeq;
-import dev.latvian.apps.ichor.parser.expression.binary.AstNullishCoalescing;
 import dev.latvian.apps.ichor.parser.expression.binary.AstOr;
 import dev.latvian.apps.ichor.parser.expression.binary.AstPow;
 import dev.latvian.apps.ichor.parser.expression.binary.AstRsh;
 import dev.latvian.apps.ichor.parser.expression.binary.AstRshSet;
 import dev.latvian.apps.ichor.parser.expression.binary.AstSeq;
-import dev.latvian.apps.ichor.parser.expression.binary.AstSet;
+import dev.latvian.apps.ichor.parser.expression.binary.AstSetReplace;
 import dev.latvian.apps.ichor.parser.expression.binary.AstSneq;
 import dev.latvian.apps.ichor.parser.expression.binary.AstSub;
 import dev.latvian.apps.ichor.parser.expression.binary.AstSubSet;
@@ -35,11 +34,12 @@ import dev.latvian.apps.ichor.parser.expression.binary.AstUrsh;
 import dev.latvian.apps.ichor.parser.expression.binary.AstUrshSet;
 import dev.latvian.apps.ichor.parser.expression.binary.AstXor;
 import dev.latvian.apps.ichor.parser.expression.binary.AstXorSet;
-import dev.latvian.apps.ichor.parser.expression.unary.AstAdd1B;
+import dev.latvian.apps.ichor.parser.expression.unary.AstAdd1L;
 import dev.latvian.apps.ichor.parser.expression.unary.AstBitwiseNot;
 import dev.latvian.apps.ichor.parser.expression.unary.AstNegate;
-import dev.latvian.apps.ichor.parser.expression.unary.AstSub1B;
-import dev.latvian.apps.ichor.parser.expression.unary.AstUnary;
+import dev.latvian.apps.ichor.parser.expression.unary.AstPositive;
+import dev.latvian.apps.ichor.parser.expression.unary.AstSub1L;
+import dev.latvian.apps.ichor.util.EvaluableFactory;
 
 public enum SymbolToken implements StaticToken {
 	EOF("EOF"), // end of file
@@ -53,21 +53,21 @@ public enum SymbolToken implements StaticToken {
 	RS("]"), // right square bracket
 	LC("{"), // left curly bracket
 	RC("}"), // right curly bracket
-	SET("=", AstSet::new), // set
+	SET("=", AstSetReplace::new), // set
 	ADD("+", AstAdd::new), // addition
 	ADD_SET("+=", AstAddSet::new), // add and set
-	ADD1("++", AstAdd1B::new), // 1 addition
+	ADD1("++", AstAdd1L::new, false), // 1 addition
 	SUB("-", AstSub::new), // subtraction & negation
 	SUB_SET("-=", AstSubSet::new), // sub and set
-	SUB1("--", AstSub1B::new), // 1 subtraction
+	SUB1("--", AstSub1L::new, false), // 1 subtraction
 	MUL("*", AstMul::new), // multiplication
 	MUL_SET("*=", AstMulSet::new), // multiply and set
 	DIV("/", AstDiv::new), // division
 	DIV_SET("/=", AstDivSet::new), // divide and set
 	MOD("%", AstMod::new), // modulo
 	MOD_SET("%=", AstModSet::new), // modulo and set
-	NOT("!", AstNegate::new), // not
-	BNOT("~", AstBitwiseNot::new), // bitwise not
+	NOT("!", AstNegate::new, false), // not
+	BNOT("~", AstBitwiseNot::new, false), // bitwise not
 	EQ("==", AstEq::new), // equal
 	NEQ("!=", AstNeq::new), // not equal
 	SEQ("===", AstSeq::new), // shallow equal
@@ -95,27 +95,38 @@ public enum SymbolToken implements StaticToken {
 	COL(":"), // colon
 	SEMI(";"), // semicolon
 	OC("?."), // optional chaining
-	NC("??", AstNullishCoalescing::new), // nullish coalescing
+	NC("??", AstNc::new), // nullish coalescing
 	ARROW("=>"), // arrow
+	JAVA_ARROW("->"), // java arrow
 
 	;
+
+	static {
+		ADD.astUnary = AstPositive::new;
+		SUB.astUnary = AstNegate::new;
+	}
 
 	public static final int RIGHT_ASSOCIATIVE = 4;
 
 	public final String name;
-	public AstUnary.Factory astUnary;
-	public AstBinary.Factory astBinary;
+	public EvaluableFactory astUnary;
+	public EvaluableFactory astBinary;
 
 	SymbolToken(String name) {
 		this.name = name;
 	}
 
-	SymbolToken(String name, AstUnary.Factory astUnary) {
+	SymbolToken(String name, EvaluableFactory factory, boolean binary) {
 		this(name);
-		this.astUnary = astUnary;
+
+		if (binary) {
+			this.astBinary = factory;
+		} else {
+			this.astUnary = factory;
+		}
 	}
 
-	SymbolToken(String name, AstBinary.Factory astBinary) {
+	SymbolToken(String name, EvaluableFactory astBinary) {
 		this(name);
 		this.astBinary = astBinary;
 	}

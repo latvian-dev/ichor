@@ -1,7 +1,7 @@
 package dev.latvian.apps.ichor.test;
 
+import dev.latvian.apps.ichor.token.BooleanToken;
 import dev.latvian.apps.ichor.token.KeywordToken;
-import dev.latvian.apps.ichor.token.LiteralToken;
 import dev.latvian.apps.ichor.token.NameToken;
 import dev.latvian.apps.ichor.token.NumberToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
@@ -79,7 +79,7 @@ public class TokenTests {
 						    }
 						""",
 				KeywordToken.LET, new NameToken("x"), SymbolToken.SET, NumberToken.of(4.444), SymbolToken.SEMI,
-				KeywordToken.WHILE, SymbolToken.LP, LiteralToken.TRUE, SymbolToken.RP, SymbolToken.LC,
+				KeywordToken.WHILE, SymbolToken.LP, BooleanToken.TRUE, SymbolToken.RP, SymbolToken.LC,
 				KeywordToken.IF, SymbolToken.LP, SymbolToken.ADD1, new NameToken("x"), SymbolToken.GTE, NumberToken.of(10), SymbolToken.RP, SymbolToken.LC,
 				KeywordToken.BREAK, SymbolToken.SEMI,
 				SymbolToken.RC,

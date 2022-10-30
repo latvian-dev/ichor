@@ -1,5 +1,7 @@
 package dev.latvian.apps.ichor.token;
 
+import dev.latvian.apps.ichor.Special;
+
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Function;
@@ -78,9 +80,9 @@ public enum KeywordToken implements StaticToken {
 
 	public Token toLiteralOrSelf() {
 		return switch (this) {
-			case NULL -> LiteralToken.NULL;
-			case TRUE -> LiteralToken.TRUE;
-			case FALSE -> LiteralToken.FALSE;
+			case NULL -> Special.NULL;
+			case TRUE -> BooleanToken.TRUE;
+			case FALSE -> BooleanToken.FALSE;
 			default -> this;
 		};
 	}

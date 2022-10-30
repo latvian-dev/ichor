@@ -47,17 +47,19 @@ public class Context {
 		properties.put(name, value);
 	}
 
-	public String asString(Object o) {
+	public String asString(Scope scope, Object o) {
 		if (o == null) {
 			return "null";
-		} else if (o instanceof CharSequence || o instanceof Number || o instanceof Boolean) {
+		} else if (o instanceof CharSequence || o instanceof Number || o instanceof Boolean || o instanceof Special) {
 			return o.toString();
+		} else if (o instanceof Evaluable) {
+			return ((Evaluable) o).evalString(scope);
 		}
 
-		return getPrototype(o).asString(this, o);
+		return getPrototype(o).asString(scope, o);
 	}
 
-	public Number asNumber(Object o) {
+	public Number asNumber(Scope scope, Object o) {
 		if (Special.isInvalid(o)) {
 			return NumberJS.NaN;
 		} else if (o instanceof Number) {
@@ -71,12 +73,14 @@ public class Context {
 			} catch (Exception ex) {
 				return NumberJS.NaN;
 			}
+		} else if (o instanceof Evaluable) {
+			return ((Evaluable) o).evalDouble(scope);
 		}
 
-		return getPrototype(o).asNumber(this, o);
+		return getPrototype(o).asNumber(scope, o);
 	}
 
-	public double asDouble(Object o) {
+	public double asDouble(Scope scope, Object o) {
 		if (Special.isInvalid(o)) {
 			return Double.NaN;
 		} else if (o instanceof Number) {
@@ -89,12 +93,14 @@ public class Context {
 			} catch (Exception ex) {
 				return 0;
 			}
+		} else if (o instanceof Evaluable) {
+			return ((Evaluable) o).evalDouble(scope);
 		}
 
-		return asNumber(o).doubleValue();
+		return asNumber(scope, o).doubleValue();
 	}
 
-	public int asInt(Object o) {
+	public int asInt(Scope scope, Object o) {
 		if (Special.isInvalid(o)) {
 			return -1;
 		} else if (o instanceof Number) {
@@ -103,16 +109,39 @@ public class Context {
 			return (Boolean) o ? 1 : 0;
 		} else if (o instanceof CharSequence) {
 			try {
-				return Integer.parseInt(o.toString());
+				return (int) Long.parseLong(o.toString());
 			} catch (Exception ex) {
 				return 0;
 			}
+		} else if (o instanceof Evaluable) {
+			return ((Evaluable) o).evalInt(scope);
 		}
 
-		return asNumber(o).intValue();
+		return asNumber(scope, o).intValue();
 	}
 
-	public Boolean asBoolean(Object o) {
+	public long asLong(Scope scope, Object o) {
+		if (Special.isInvalid(o)) {
+			return -1L;
+		} else if (o instanceof Number) {
+			return ((Number) o).longValue();
+		} else if (o instanceof Boolean) {
+			return (Boolean) o ? 1L : 0L;
+		} else if (o instanceof CharSequence) {
+			try {
+				return Long.parseLong(o.toString());
+			} catch (Exception ex) {
+				return 0L;
+			}
+		} else if (o instanceof Evaluable) {
+			// add evalLong
+			return ((Evaluable) o).evalInt(scope);
+		}
+
+		return asNumber(scope, o).longValue();
+	}
+
+	public Boolean asBoolean(Scope scope, Object o) {
 		if (o instanceof Boolean) {
 			return (Boolean) o;
 		} else if (Special.isInvalid(o)) {
@@ -121,49 +150,53 @@ public class Context {
 			return ((Number) o).doubleValue() != 0D;
 		} else if (o instanceof CharSequence) {
 			return o.toString().equalsIgnoreCase("true");
+		} else if (o instanceof Evaluable) {
+			return ((Evaluable) o).evalBoolean(scope);
 		}
 
-		return getPrototype(o).asBoolean(this, o);
+		return getPrototype(o).asBoolean(scope, o);
 	}
 
-	public char asChar(Object o) {
+	public char asChar(Scope scope, Object o) {
 		if (o instanceof Character) {
 			return (Character) o;
 		} else if (o instanceof CharSequence) {
 			return ((CharSequence) o).charAt(0);
 		} else if (o instanceof Number) {
 			return (char) ((Number) o).intValue();
+		} else if (o instanceof Evaluable) {
+			return ((Evaluable) o).evalString(scope).charAt(0);
 		}
 
 		return 0;
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> T as(Object o, Class<T> toType) {
+	public <T> T as(Scope scope, Object o, Class<T> toType) {
 		if (Special.isInvalid(o)) {
 			return null;
 		} else if (toType == null || toType == Void.TYPE || toType == Object.class || toType.isInstance(o)) {
 			return (T) o;
 		} else if (toType == String.class || toType == CharSequence.class) {
-			return (T) asString(o);
+			return (T) asString(scope, o);
 		} else if (toType == Number.class) {
-			return (T) asNumber(o);
+			return (T) asNumber(scope, o);
 		} else if (toType == Boolean.class || toType == Boolean.TYPE) {
-			return (T) asBoolean(o);
+			return (T) asBoolean(scope, o);
 		} else if (toType == Character.class || toType == Character.TYPE) {
-			return (T) Character.valueOf(asChar(o));
+			return (T) Character.valueOf(asChar(scope, o));
 		} else if (toType == Byte.class || toType == Byte.TYPE) {
-			return (T) Byte.valueOf(asNumber(o).byteValue());
+			return (T) Byte.valueOf(asNumber(scope, o).byteValue());
 		} else if (toType == Short.class || toType == Short.TYPE) {
-			return (T) Short.valueOf(asNumber(o).shortValue());
+			return (T) Short.valueOf(asNumber(scope, o).shortValue());
 		} else if (toType == Integer.class || toType == Integer.TYPE) {
-			return (T) Integer.valueOf(asNumber(o).intValue());
+			return (T) Integer.valueOf(asNumber(scope, o).intValue());
 		} else if (toType == Long.class || toType == Long.TYPE) {
-			return (T) Long.valueOf(asNumber(o).longValue());
+			return (T) Long.valueOf(asNumber(scope, o).longValue());
 		} else if (toType == Float.class || toType == Float.TYPE) {
-			return (T) Float.valueOf(asNumber(o).floatValue());
+			return (T) Float.valueOf(asNumber(scope, o).floatValue());
 		} else if (toType == Double.class || toType == Double.TYPE) {
-			return (T) Double.valueOf(asNumber(o).doubleValue());
+			return (T) Double.valueOf(asNumber(scope, o).doubleValue());
 		}
 
 		throw new ScriptError("Cannot cast " + o.getClass().getName() + " to " + toType.getName());
@@ -171,7 +204,7 @@ public class Context {
 
 	public Prototype getPrototype(Object o) {
 		if (o == null) {
-			return Special.NULL;
+			return Special.NULL.getPrototype();
 		} else if (o instanceof CharSequence) {
 			return StringJS.PROTOTYPE;
 		} else if (o instanceof Number) {
@@ -193,7 +226,7 @@ public class Context {
 
 	public Prototype getClassPrototype(Class<?> c) {
 		if (c == null || c == Void.class || c == Void.TYPE) {
-			return Special.NULL;
+			return Special.NULL.getPrototype();
 		} else if (c == String.class || c == Character.class || c == Character.TYPE) {
 			return StringJS.PROTOTYPE;
 		} else if (c == Boolean.class || c == Boolean.TYPE) {

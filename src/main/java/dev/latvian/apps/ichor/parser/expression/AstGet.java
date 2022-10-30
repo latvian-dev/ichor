@@ -1,18 +1,28 @@
 package dev.latvian.apps.ichor.parser.expression;
 
-public class AstGet extends AstExpression {
-	public final AstExpression from;
+import dev.latvian.apps.ichor.Scope;
+import dev.latvian.apps.ichor.parser.AstStringBuilder;
+import dev.latvian.apps.ichor.util.AssignType;
+
+public class AstGet extends AstGetBase {
 	public final String name;
 
-	public AstGet(AstExpression from, String name) {
-		this.from = from;
+	public AstGet(String name) {
 		this.name = name;
 	}
 
 	@Override
-	public void append(StringBuilder builder) {
-		from.append(builder);
-		builder.append('.');
+	public void append(AstStringBuilder builder) {
 		builder.append(name);
+	}
+
+	@Override
+	public Object eval(Scope scope) {
+		return scope.getMember(name);
+	}
+
+	@Override
+	public void set(Scope scope, Object value) {
+		scope.setMember(name, value, AssignType.NONE);
 	}
 }

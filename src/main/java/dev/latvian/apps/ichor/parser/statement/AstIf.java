@@ -1,28 +1,44 @@
 package dev.latvian.apps.ichor.parser.statement;
 
-import dev.latvian.apps.ichor.parser.expression.AstExpression;
+import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Interpretable;
+import dev.latvian.apps.ichor.Interpreter;
+import dev.latvian.apps.ichor.parser.AstStringBuilder;
 
 public class AstIf extends AstStatement {
-	public final AstExpression condition;
-	public final AstStatement trueBody;
-	public final AstStatement falseBody;
+	public final Evaluable condition;
+	public final Interpretable trueBody;
+	public final Interpretable falseBody;
 
-	public AstIf(AstExpression condition, AstStatement ifTrue, AstStatement ifFalse) {
+	public AstIf(Evaluable condition, Interpretable ifTrue, Interpretable ifFalse) {
 		this.condition = condition;
 		this.trueBody = ifTrue;
 		this.falseBody = ifFalse;
 	}
 
 	@Override
-	public void append(StringBuilder builder) {
+	public void append(AstStringBuilder builder) {
 		builder.append("if (");
-		condition.append(builder);
+		builder.append(condition);
 		builder.append(") ");
-		trueBody.append(builder);
+		builder.append(trueBody);
 
 		if (falseBody != null) {
 			builder.append(" else ");
-			falseBody.append(builder);
+			builder.append(falseBody);
+		}
+	}
+
+	@Override
+	public void interpret(Interpreter interpreter) {
+		if (condition.evalBoolean(interpreter.scope)) {
+			interpreter.pushScope();
+			trueBody.interpret(interpreter);
+			interpreter.popScope();
+		} else if (falseBody != null) {
+			interpreter.pushScope();
+			falseBody.interpret(interpreter);
+			interpreter.popScope();
 		}
 	}
 }

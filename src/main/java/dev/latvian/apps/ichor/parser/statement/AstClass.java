@@ -1,21 +1,24 @@
 package dev.latvian.apps.ichor.parser.statement;
 
-import dev.latvian.apps.ichor.parser.expression.AstVarExpression;
+import dev.latvian.apps.ichor.Interpreter;
+import dev.latvian.apps.ichor.parser.AstStringBuilder;
+import dev.latvian.apps.ichor.parser.expression.AstGet;
 
 public class AstClass extends AstStatement {
 	public final String name;
-	public final AstVarExpression parent;
+	public final AstGet parent;
 	public final AstFunction[] methods;
 
-	public AstClass(String name, AstVarExpression parent, AstFunction[] methods) {
+	public AstClass(String name, AstGet parent, AstFunction[] methods) {
 		this.name = name;
 		this.parent = parent;
 		this.methods = methods;
 	}
 
 	@Override
-	public void append(StringBuilder builder) {
-		builder.append("class ").append(name);
+	public void append(AstStringBuilder builder) {
+		builder.append("class ");
+		builder.append(name);
 
 		if (parent != null) {
 			builder.append(" extends ");
@@ -37,5 +40,9 @@ public class AstClass extends AstStatement {
 
 			builder.append('}');
 		}
+	}
+
+	@Override
+	public void interpret(Interpreter interpreter) {
 	}
 }

@@ -1,11 +1,10 @@
 package dev.latvian.apps.ichor.parser.statement;
 
+import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.parser.Ast;
 import dev.latvian.apps.ichor.token.PositionedToken;
 
-public abstract class AstStatement extends Ast {
-	public static final AstStatement[] EMPTY_STATEMENT_ARRAY = new AstStatement[0];
-
+public abstract class AstStatement extends Ast implements Interpretable {
 	@Override
 	public AstStatement pos(PositionedToken token) {
 		line = token.line();

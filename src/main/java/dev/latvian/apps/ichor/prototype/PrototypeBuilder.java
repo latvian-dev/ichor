@@ -1,7 +1,7 @@
 package dev.latvian.apps.ichor.prototype;
 
 import dev.latvian.apps.ichor.Callable;
-import dev.latvian.apps.ichor.Context;
+import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.js.NumberJS;
 import org.jetbrains.annotations.Nullable;
@@ -95,23 +95,23 @@ public class PrototypeBuilder implements Prototype, Callable {
 
 	@Override
 	@Nullable
-	public Object get(Context cx, String name, @Nullable Object self) {
+	public Object get(Scope scope, String name, @Nullable Object self) {
 		if (members != null) {
 			var m = members.get(name);
 
 			if (m != null) {
-				return m.get(cx, self);
+				return m.get(scope, self);
 			}
 		}
 
 		if (namedValueHandler != null && self != null) {
-			return namedValueHandler.get(cx, name, self);
+			return namedValueHandler.get(scope, name, self);
 		}
 
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			var v = parent0.get(cx, name, self);
+			var v = parent0.get(scope, name, self);
 
 			if (v != Special.NOT_FOUND) {
 				return v;
@@ -124,15 +124,15 @@ public class PrototypeBuilder implements Prototype, Callable {
 	}
 
 	@Override
-	public boolean set(Context cx, String name, @Nullable Object self, @Nullable Object value) {
+	public boolean set(Scope scope, String name, @Nullable Object self, @Nullable Object value) {
 		if (namedValueHandler != null && self != null) {
-			return namedValueHandler.set(cx, name, self, value);
+			return namedValueHandler.set(scope, name, self, value);
 		}
 
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			if (parent0.set(cx, name, self, value)) {
+			if (parent0.set(scope, name, self, value)) {
 				return true;
 			}
 
@@ -143,15 +143,15 @@ public class PrototypeBuilder implements Prototype, Callable {
 	}
 
 	@Override
-	public boolean delete(Context cx, String name, @Nullable Object self) {
+	public boolean delete(Scope scope, String name, @Nullable Object self) {
 		if (namedValueHandler != null && self != null) {
-			return namedValueHandler.delete(cx, name, self);
+			return namedValueHandler.delete(scope, name, self);
 		}
 
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			if (parent0.delete(cx, name, self)) {
+			if (parent0.delete(scope, name, self)) {
 				return true;
 			}
 
@@ -163,15 +163,15 @@ public class PrototypeBuilder implements Prototype, Callable {
 
 	@Override
 	@Nullable
-	public Object get(Context cx, int index, @Nullable Object self) {
+	public Object get(Scope scope, int index, @Nullable Object self) {
 		if (indexedValueHandler != null && self != null) {
-			return indexedValueHandler.get(cx, index, self);
+			return indexedValueHandler.get(scope, index, self);
 		}
 
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			var v = parent0.get(cx, index, self);
+			var v = parent0.get(scope, index, self);
 
 			if (v != Special.NOT_FOUND) {
 				return v;
@@ -184,15 +184,15 @@ public class PrototypeBuilder implements Prototype, Callable {
 	}
 
 	@Override
-	public boolean set(Context cx, int index, @Nullable Object self, @Nullable Object value) {
+	public boolean set(Scope scope, int index, @Nullable Object self, @Nullable Object value) {
 		if (indexedValueHandler != null && self != null) {
-			return indexedValueHandler.set(cx, index, self, value);
+			return indexedValueHandler.set(scope, index, self, value);
 		}
 
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			if (parent0.set(cx, index, self, value)) {
+			if (parent0.set(scope, index, self, value)) {
 				return true;
 			}
 
@@ -203,15 +203,15 @@ public class PrototypeBuilder implements Prototype, Callable {
 	}
 
 	@Override
-	public boolean delete(Context cx, int index, @Nullable Object self) {
+	public boolean delete(Scope scope, int index, @Nullable Object self) {
 		if (indexedValueHandler != null && self != null) {
-			return indexedValueHandler.delete(cx, index, self);
+			return indexedValueHandler.delete(scope, index, self);
 		}
 
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			if (parent0.delete(cx, index, self)) {
+			if (parent0.delete(scope, index, self)) {
 				return true;
 			}
 
@@ -222,45 +222,45 @@ public class PrototypeBuilder implements Prototype, Callable {
 	}
 
 	@Override
-	public Object construct(Context cx, Object[] args) {
+	public Object construct(Scope scope, Object[] args) {
 		if (constructor != null) {
-			return constructor.construct(cx, args, true);
+			return constructor.construct(scope, args, true);
 		}
 
 		return Special.NOT_FOUND;
 	}
 
 	@Override
-	public Object call(Context cx, Object[] args) {
+	public Object call(Scope scope, Object[] args) {
 		if (constructor != null) {
-			return constructor.construct(cx, args, false);
+			return constructor.construct(scope, args, false);
 		}
 
 		return Special.NOT_FOUND;
 	}
 
 	@Override
-	public String asString(Context cx, Object self) {
+	public String asString(Scope scope, Object self) {
 		if (asString != null) {
-			return asString.asString(cx, self);
+			return asString.asString(scope, self);
 		}
 
 		return self.toString();
 	}
 
 	@Override
-	public Number asNumber(Context cx, Object self) {
+	public Number asNumber(Scope scope, Object self) {
 		if (asNumber != null) {
-			return asNumber.asNumber(cx, self);
+			return asNumber.asNumber(scope, self);
 		}
 
 		return NumberJS.ONE;
 	}
 
 	@Override
-	public Boolean asBoolean(Context cx, Object self) {
+	public Boolean asBoolean(Scope scope, Object self) {
 		if (asBoolean != null) {
-			return asBoolean.asBoolean(cx, self);
+			return asBoolean.asBoolean(scope, self);
 		}
 
 		return Boolean.TRUE;

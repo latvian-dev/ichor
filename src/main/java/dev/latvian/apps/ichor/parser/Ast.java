@@ -10,7 +10,7 @@ public abstract class Ast {
 
 	@Override
 	public String toString() {
-		var sb = new StringBuilder();
+		var sb = new AstStringBuilder();
 		append(sb);
 		return sb.toString();
 	}
@@ -27,5 +27,5 @@ public abstract class Ast {
 		return this;
 	}
 
-	public abstract void append(StringBuilder builder);
+	public abstract void append(AstStringBuilder builder);
 }
