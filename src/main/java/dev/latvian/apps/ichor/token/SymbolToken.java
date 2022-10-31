@@ -97,7 +97,6 @@ public enum SymbolToken implements StaticToken {
 	OC("?."), // optional chaining
 	NC("??", AstNc::new), // nullish coalescing
 	ARROW("=>"), // arrow
-	JAVA_ARROW("->"), // java arrow
 
 	;
 

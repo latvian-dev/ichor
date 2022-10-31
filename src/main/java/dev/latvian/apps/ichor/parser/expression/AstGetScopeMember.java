@@ -4,10 +4,10 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.parser.AstStringBuilder;
 import dev.latvian.apps.ichor.util.AssignType;
 
-public class AstGet extends AstGetBase {
+public class AstGetScopeMember extends AstGetBase {
 	public final String name;
 
-	public AstGet(String name) {
+	public AstGetScopeMember(String name) {
 		this.name = name;
 	}
 
@@ -18,7 +18,8 @@ public class AstGet extends AstGetBase {
 
 	@Override
 	public Object eval(Scope scope) {
-		return scope.getMember(name);
+		var m = scope.getMember(name);
+		return m;
 	}
 
 	@Override

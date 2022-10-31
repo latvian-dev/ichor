@@ -3,10 +3,10 @@ package dev.latvian.apps.ichor;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
-import dev.latvian.apps.ichor.token.StaticToken;
+import dev.latvian.apps.ichor.token.Token;
 import org.jetbrains.annotations.Nullable;
 
-public class Special implements PrototypeSupplier, StaticToken, Evaluable {
+public class Special implements PrototypeSupplier, Token, Evaluable {
 	public static final Special NOT_FOUND = new Special("<not found>"); // Internal use only
 	public static final Special NULL = new Special("null");
 	public static final Special UNDEFINED = new Special("undefined");

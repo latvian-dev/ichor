@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.prototype;
 
-import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.js.NumberJS;
@@ -9,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PrototypeBuilder implements Prototype, Callable {
+public class PrototypeBuilder implements Prototype {
 	public static PrototypeBuilder create(String name) {
 		return new PrototypeBuilder(name);
 	}
@@ -162,6 +161,11 @@ public class PrototypeBuilder implements Prototype, Callable {
 	}
 
 	@Override
+	public boolean isArrayPrototype() {
+		return indexedValueHandler != null;
+	}
+
+	@Override
 	@Nullable
 	public Object get(Scope scope, int index, @Nullable Object self) {
 		if (indexedValueHandler != null && self != null) {
@@ -222,7 +226,7 @@ public class PrototypeBuilder implements Prototype, Callable {
 	}
 
 	@Override
-	public Object construct(Scope scope, Object[] args) {
+	public Object construct(Scope scope, Object[] args, @Nullable Object self) {
 		if (constructor != null) {
 			return constructor.construct(scope, args, true);
 		}
@@ -231,7 +235,7 @@ public class PrototypeBuilder implements Prototype, Callable {
 	}
 
 	@Override
-	public Object call(Scope scope, Object[] args) {
+	public Object call(Scope scope, Object[] args, @Nullable Object self) {
 		if (constructor != null) {
 			return constructor.construct(scope, args, false);
 		}

@@ -1,7 +1,7 @@
 package dev.latvian.apps.ichor.parser.statement;
 
 import dev.latvian.apps.ichor.Evaluable;
-import dev.latvian.apps.ichor.Interpreter;
+import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.parser.AstStringBuilder;
 import dev.latvian.apps.ichor.util.AssignType;
 
@@ -23,7 +23,7 @@ public class AstConstStatement extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Interpreter interpreter) {
-		interpreter.scope.declareMember(name, initializer instanceof Evaluable eval ? eval.eval(interpreter.scope) : initializer, AssignType.IMMUTABLE);
+	public void interpret(Scope scope) {
+		scope.declareMember(name, initializer instanceof Evaluable eval ? eval.eval(scope) : initializer, AssignType.IMMUTABLE);
 	}
 }

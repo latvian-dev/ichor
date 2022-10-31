@@ -12,7 +12,7 @@ public class AstLiteral extends AstExpression {
 
 	@Override
 	public void append(AstStringBuilder builder) {
-		builder.append(value);
+		builder.appendValue(value);
 	}
 
 	@Override

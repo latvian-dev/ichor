@@ -1,7 +1,7 @@
 package dev.latvian.apps.ichor.parser.statement;
 
 import dev.latvian.apps.ichor.Evaluable;
-import dev.latvian.apps.ichor.Interpreter;
+import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.parser.AstStringBuilder;
 import dev.latvian.apps.ichor.util.AssignType;
@@ -17,6 +17,7 @@ public class AstVarStatement extends AstStatement {
 
 	@Override
 	public void append(AstStringBuilder builder) {
+		builder.append("var ");
 		builder.append(name);
 
 		if (initializer != null) {
@@ -26,7 +27,7 @@ public class AstVarStatement extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Interpreter interpreter) {
-		interpreter.scope.declareMember(name, initializer == null ? Special.UNDEFINED : initializer instanceof Evaluable eval ? eval.eval(interpreter.scope) : initializer, AssignType.MUTABLE);
+	public void interpret(Scope scope) {
+		scope.declareMember(name, initializer == null ? Special.UNDEFINED : initializer instanceof Evaluable eval ? eval.eval(scope) : initializer, AssignType.MUTABLE);
 	}
 }

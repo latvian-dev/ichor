@@ -3,7 +3,7 @@ package dev.latvian.apps.ichor.token;
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 
-public class BooleanToken implements StaticToken, Evaluable {
+public class BooleanToken implements Token, Evaluable {
 	public static final BooleanToken TRUE = new BooleanToken(true);
 	public static final BooleanToken FALSE = new BooleanToken(false);
 

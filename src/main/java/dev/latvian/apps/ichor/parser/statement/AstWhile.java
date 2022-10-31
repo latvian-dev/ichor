@@ -2,7 +2,7 @@ package dev.latvian.apps.ichor.parser.statement;
 
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Interpretable;
-import dev.latvian.apps.ichor.Interpreter;
+import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.parser.AstStringBuilder;
 
 public class AstWhile extends AstStatement {
@@ -23,11 +23,14 @@ public class AstWhile extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Interpreter interpreter) {
-		while (condition.evalBoolean(interpreter.scope)) {
-			interpreter.pushScope();
-			body.interpret(interpreter);
-			interpreter.popScope();
+	public void interpret(Scope scope) {
+		while (condition.evalBoolean(scope)) {
+			try {
+				body.interpretNewScope(scope);
+			} catch (AstBreak.BreakException ex) {
+				break;
+			} catch (AstContinue.ContinueException ignored) {
+			}
 		}
 	}
 }

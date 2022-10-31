@@ -8,6 +8,6 @@ public interface Token {
 	}
 
 	default Object getValue() {
-		throw new ScriptError("Not a primary token!");
+		throw new ScriptError(this + " is not a primary token");
 	}
 }

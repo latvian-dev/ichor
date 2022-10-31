@@ -2,7 +2,7 @@ package dev.latvian.apps.ichor.parser.statement;
 
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Interpretable;
-import dev.latvian.apps.ichor.Interpreter;
+import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.parser.AstStringBuilder;
 
 public class AstIf extends AstStatement {
@@ -30,15 +30,11 @@ public class AstIf extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Interpreter interpreter) {
-		if (condition.evalBoolean(interpreter.scope)) {
-			interpreter.pushScope();
-			trueBody.interpret(interpreter);
-			interpreter.popScope();
+	public void interpret(Scope scope) {
+		if (condition.evalBoolean(scope)) {
+			trueBody.interpretNewScope(scope);
 		} else if (falseBody != null) {
-			interpreter.pushScope();
-			falseBody.interpret(interpreter);
-			interpreter.popScope();
+			falseBody.interpretNewScope(scope);
 		}
 	}
 }

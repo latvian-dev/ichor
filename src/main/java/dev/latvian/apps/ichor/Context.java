@@ -15,24 +15,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Context {
-	public final RootScope rootScope;
 	private Map<Class<?>, Prototype> classPrototypeCache;
 	private Map<String, Object> properties;
+	public boolean debug = false;
 
 	public Context() {
-		rootScope = new RootScope(this);
-	}
-
-	public void reset() {
-		rootScope.deleteAllDeclaredMembers();
-	}
-
-	public void addSafeClasses() {
-		rootScope.add(StringJS.PROTOTYPE);
-		rootScope.add(NumberJS.PROTOTYPE);
-		rootScope.add(BooleanJS.PROTOTYPE);
-		rootScope.add(ObjectJS.PROTOTYPE);
-		rootScope.add(ArrayJS.PROTOTYPE);
 	}
 
 	public Object getProperty(String name, Object defaultValue) {
@@ -84,7 +71,7 @@ public class Context {
 		if (Special.isInvalid(o)) {
 			return Double.NaN;
 		} else if (o instanceof Number) {
-			return ((Number) o).intValue();
+			return ((Number) o).doubleValue();
 		} else if (o instanceof Boolean) {
 			return (Boolean) o ? 1D : 0D;
 		} else if (o instanceof CharSequence) {

@@ -5,7 +5,9 @@ import dev.latvian.apps.ichor.error.IchorError;
 import dev.latvian.apps.ichor.util.AssignType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
+@Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
 public class ScopeTests {
 	@Test
 	public void redeclaration() {

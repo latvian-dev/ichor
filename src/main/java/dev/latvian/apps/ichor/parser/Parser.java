@@ -4,10 +4,12 @@ import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.error.ParseError;
 import dev.latvian.apps.ichor.parser.expression.AstCall;
-import dev.latvian.apps.ichor.parser.expression.AstGet;
 import dev.latvian.apps.ichor.parser.expression.AstGetBase;
+import dev.latvian.apps.ichor.parser.expression.AstGetByEvaluable;
+import dev.latvian.apps.ichor.parser.expression.AstGetByIndex;
 import dev.latvian.apps.ichor.parser.expression.AstGetByName;
 import dev.latvian.apps.ichor.parser.expression.AstGetByNameOptional;
+import dev.latvian.apps.ichor.parser.expression.AstGetScopeMember;
 import dev.latvian.apps.ichor.parser.expression.AstGrouping;
 import dev.latvian.apps.ichor.parser.expression.AstLiteral;
 import dev.latvian.apps.ichor.parser.expression.AstSet;
@@ -18,8 +20,10 @@ import dev.latvian.apps.ichor.parser.expression.unary.AstAdd1R;
 import dev.latvian.apps.ichor.parser.expression.unary.AstSub1R;
 import dev.latvian.apps.ichor.parser.expression.unary.AstUnary;
 import dev.latvian.apps.ichor.parser.statement.AstBlock;
+import dev.latvian.apps.ichor.parser.statement.AstBreak;
 import dev.latvian.apps.ichor.parser.statement.AstClass;
 import dev.latvian.apps.ichor.parser.statement.AstConstStatement;
+import dev.latvian.apps.ichor.parser.statement.AstContinue;
 import dev.latvian.apps.ichor.parser.statement.AstExpressionStatement;
 import dev.latvian.apps.ichor.parser.statement.AstFunction;
 import dev.latvian.apps.ichor.parser.statement.AstIf;
@@ -32,6 +36,7 @@ import dev.latvian.apps.ichor.token.NameToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
 import dev.latvian.apps.ichor.token.StaticToken;
 import dev.latvian.apps.ichor.token.SymbolToken;
+import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.util.EvaluableFactory;
 
 import java.util.ArrayList;
@@ -88,11 +93,11 @@ public class Parser {
 	private Interpretable classDeclaration() {
 		var name = consumeName("Expected class name");
 
-		AstGet superclass = null;
+		AstGetScopeMember superclass = null;
 
 		if (match(KeywordToken.EXTENDS)) {
 			consumeName("Expected superclass name");
-			superclass = new AstGet(previous().asString());
+			superclass = new AstGetScopeMember(previous().asString());
 		}
 
 		consume(SymbolToken.LC, "Expected '{' before class body");
@@ -114,6 +119,10 @@ public class Parser {
 			return ifStatement();
 		} else if (match(KeywordToken.RETURN)) {
 			return returnStatement();
+		} else if (match(KeywordToken.BREAK)) {
+			return breakStatement();
+		} else if (match(KeywordToken.CONTINUE)) {
+			return continueStatement();
 		} else if (match(KeywordToken.WHILE)) {
 			return whileStatement();
 		} else if (check(SymbolToken.LC)) {
@@ -191,6 +200,18 @@ public class Parser {
 		return new AstReturn(value).pos(keyword);
 	}
 
+	private Interpretable breakStatement() {
+		var keyword = previous();
+		consume(SymbolToken.SEMI, "Expected ';' after break");
+		return new AstBreak().pos(keyword);
+	}
+
+	private Interpretable continueStatement() {
+		var keyword = previous();
+		consume(SymbolToken.SEMI, "Expected ';' after continue");
+		return new AstContinue().pos(keyword);
+	}
+
 	private Interpretable varDeclaration(boolean isConst) {
 		var list = new ArrayList<Interpretable>(1);
 
@@ -200,7 +221,11 @@ public class Parser {
 			Object initializer = null;
 
 			if (match(SymbolToken.SET)) {
-				initializer = expression().optimize();
+				if (match(KeywordToken.FUNCTION)) {
+					initializer = function(name.asString());
+				} else {
+					initializer = expression().optimize();
+				}
 			} else if (isConst) {
 				error(name, "const must have an initializer!");
 			}
@@ -280,16 +305,6 @@ public class Parser {
 			}
 
 			error(operator, "Invalid assignment target."); // [no-throw]
-		} else if (match(SymbolToken.ADD1)) {
-			var ast = new AstAdd1R();
-			ast.node = expr;
-			ast.pos(previous());
-			return ast;
-		} else if (match(SymbolToken.SUB1)) {
-			var ast = new AstSub1R();
-			ast.node = expr;
-			ast.pos(previous());
-			return ast;
 		}
 
 		return expr;
@@ -373,6 +388,28 @@ public class Parser {
 			} else if (match(SymbolToken.OC)) {
 				var name = consumeName("Expected property name after '?.'");
 				expr = new AstGetByNameOptional(expr, name.asString()).pos(name);
+			} else if (match(SymbolToken.ADD1)) {
+				var ast = new AstAdd1R();
+				ast.node = expr;
+				ast.pos(previous());
+				return ast;
+			} else if (match(SymbolToken.SUB1)) {
+				var ast = new AstSub1R();
+				ast.node = expr;
+				ast.pos(previous());
+				return ast;
+			} else if (match(SymbolToken.LS)) {
+				var keyo = expression().optimize();
+
+				if (keyo instanceof String) {
+					expr = new AstGetByName(expr, keyo.toString()).pos(previous());
+				} else if (keyo instanceof Number n) {
+					expr = new AstGetByIndex(expr, n.intValue()).pos(previous());
+				} else {
+					expr = new AstGetByEvaluable(expr, (Evaluable) keyo);
+				}
+
+				consume(SymbolToken.RS, "Expected ']' after key");
 			} else {
 				break;
 			}
@@ -382,7 +419,7 @@ public class Parser {
 	}
 
 	private Evaluable primary() {
-		if (canAdvance() && peek().token().hasValue()) {
+		if (peekToken().hasValue()) {
 			var token = advance();
 			return new AstLiteral(token.token().getValue()).pos(token);
 		}
@@ -398,12 +435,56 @@ public class Parser {
 			return new AstThis().pos(previous());
 		}
 
-		if (canAdvance() && peek().token() instanceof NameToken) {
+		if (peekToken() instanceof NameToken name) {
 			advance();
-			return new AstGet(previous().asString()).pos(previous());
+
+			if (peekToken() == SymbolToken.ARROW) {
+				var arrow = advance();
+
+				var body = block(true);
+
+				if (!(body instanceof AstInterpretableGroup)) {
+					body = new AstReturn(body);
+				}
+
+				return (Evaluable) new AstFunction("<arrow>", new String[]{name.name()}, body).pos(arrow);
+			} else {
+				return new AstGetScopeMember(name.name()).pos(previous());
+			}
 		}
 
 		if (match(SymbolToken.LP)) {
+			if (peekToken() == SymbolToken.RP) {
+				advance();
+				consume(SymbolToken.ARROW, "Expected '=>' after arrow function parameters");
+
+				var body = block(true);
+
+				if (!(body instanceof AstInterpretableGroup)) {
+					body = new AstReturn(body);
+				}
+
+				return (Evaluable) new AstFunction("<arrow>", EMPTY_STRING_ARRAY, body).pos(previous());
+			}
+			if (peekToken() instanceof NameToken && (peekToken(1) == SymbolToken.RP || peekToken(1) == SymbolToken.COMMA)) {
+				var list = new ArrayList<String>();
+
+				do {
+					list.add(consumeName("Expected parameter name").asString());
+				}
+				while (match(SymbolToken.COMMA));
+				consume(SymbolToken.RP, "Expected ')' after arrow function parameters");
+				consume(SymbolToken.ARROW, "Expected '=>' after arrow function parameters");
+
+				var body = block(true);
+
+				if (!(body instanceof AstInterpretableGroup)) {
+					body = new AstReturn(body);
+				}
+
+				return (Evaluable) new AstFunction("<arrow>", list.toArray(EMPTY_STRING_ARRAY), body).pos(previous());
+			}
+
 			var lp = previous();
 			var expr = expression();
 			consume(SymbolToken.RP, "Expected ')' after expression");
@@ -447,7 +528,7 @@ public class Parser {
 	}
 
 	private PositionedToken consumeName(String message) {
-		if (canAdvance() && peek().token() instanceof NameToken) {
+		if (peekToken() instanceof NameToken) {
 			return advance();
 		}
 
@@ -463,7 +544,7 @@ public class Parser {
 	}
 
 	private boolean check(StaticToken type) {
-		return canAdvance() && peek().token() == type;
+		return peekToken() == type;
 	}
 
 	private PositionedToken advance() {
@@ -479,6 +560,18 @@ public class Parser {
 
 	private PositionedToken peek() {
 		return tokens.get(current);
+	}
+
+	private PositionedToken peek(int offset) {
+		return tokens.get(current + offset);
+	}
+
+	private Token peekToken() {
+		return canAdvance() ? peek().token() : SymbolToken.EOF;
+	}
+
+	private Token peekToken(int offset) {
+		return canAdvance() ? peek(offset).token() : SymbolToken.EOF;
 	}
 
 	private PositionedToken previous() {

@@ -1,12 +1,12 @@
 package dev.latvian.apps.ichor.parser;
 
 import dev.latvian.apps.ichor.token.PositionedToken;
+import dev.latvian.apps.ichor.token.TokenPos;
 
 public abstract class Ast {
 	public static final Ast[] EMPTY_ARRAY = new Ast[0];
 
-	public int line = -1;
-	public int pos = -1;
+	public TokenPos pos = TokenPos.UNKNOWN;
 
 	@Override
 	public String toString() {
@@ -16,13 +16,11 @@ public abstract class Ast {
 	}
 
 	public Ast pos(PositionedToken token) {
-		line = token.line();
 		pos = token.pos();
 		return this;
 	}
 
 	public Ast pos(Ast other) {
-		line = other.line;
 		pos = other.pos;
 		return this;
 	}

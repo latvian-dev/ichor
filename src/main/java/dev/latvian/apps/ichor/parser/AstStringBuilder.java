@@ -19,6 +19,22 @@ public class AstStringBuilder {
 		}
 	}
 
+	public void appendValue(Object o) {
+		if (o instanceof CharSequence) {
+			builder.append('"');
+		}
+
+		if (o instanceof Ast ast) {
+			ast.append(this);
+		} else {
+			builder.append(o);
+		}
+
+		if (o instanceof CharSequence) {
+			builder.append('"');
+		}
+	}
+
 	public void append(char c) {
 		builder.append(c);
 	}

@@ -1,15 +1,13 @@
 package dev.latvian.apps.ichor.parser.expression;
 
-import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.parser.AstStringBuilder;
 
 public class AstCall extends AstExpression {
 	public final Evaluable callee;
 	public final Object[] arguments;
-	private boolean needEvaluate;
+	private boolean needEval;
 
 	public AstCall(Evaluable callee, Object[] arguments) {
 		this.callee = callee;
@@ -18,7 +16,7 @@ public class AstCall extends AstExpression {
 		if (this.arguments.length > 0) {
 			for (var o : this.arguments) {
 				if (o instanceof Evaluable) {
-					needEvaluate = true;
+					needEval = true;
 					break;
 				}
 			}
@@ -43,24 +41,23 @@ public class AstCall extends AstExpression {
 
 	@Override
 	public Object eval(Scope scope) {
-		if (callee.eval(scope) instanceof Callable callable) {
-			if (needEvaluate) {
-				var args = new Object[arguments.length];
+		var o = callee.eval(scope);
+		var p = scope.getContext().getPrototype(o);
 
-				for (int i = 0; i < arguments.length; i++) {
-					if (arguments[i] instanceof Evaluable evaluable) {
-						args[i] = evaluable.eval(scope);
-					} else {
-						args[i] = arguments[i];
-					}
+		if (needEval) {
+			var args = new Object[arguments.length];
+
+			for (int i = 0; i < arguments.length; i++) {
+				if (arguments[i] instanceof Evaluable evaluable) {
+					args[i] = evaluable.eval(scope);
+				} else {
+					args[i] = arguments[i];
 				}
-
-				return callable.call(scope, args);
-			} else {
-				return callable.call(scope, arguments);
 			}
-		}
 
-		throw new ScriptError(callee + " is not a function!");
+			return p.call(scope, args, o);
+		} else {
+			return p.call(scope, arguments, o);
+		}
 	}
 }

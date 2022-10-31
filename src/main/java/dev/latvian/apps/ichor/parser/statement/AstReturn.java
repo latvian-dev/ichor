@@ -1,7 +1,7 @@
 package dev.latvian.apps.ichor.parser.statement;
 
 import dev.latvian.apps.ichor.Evaluable;
-import dev.latvian.apps.ichor.Interpreter;
+import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.parser.AstStringBuilder;
 
 public class AstReturn extends AstStatement {
@@ -18,11 +18,16 @@ public class AstReturn extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Interpreter interpreter) {
-		if (value instanceof Evaluable e) {
-			interpreter.returnValue = e.eval(interpreter.scope);
-		} else {
-			interpreter.returnValue = value;
+	public void interpret(Scope scope) {
+		throw new ReturnException(value instanceof Evaluable eval ? eval.eval(scope) : value);
+	}
+
+	public static class ReturnException extends RuntimeException {
+		public final Object value;
+
+		private ReturnException(Object v) {
+			super("return is not supported here!");
+			value = v;
 		}
 	}
 }

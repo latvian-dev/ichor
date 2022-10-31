@@ -1,12 +1,12 @@
 package dev.latvian.apps.ichor.token;
 
-public record PositionedToken(Token token, int line, int pos) {
+public record PositionedToken(Token token, TokenPos pos) {
 	public String asString() {
 		return token instanceof NameToken n ? n.name() : token.getValue().toString();
 	}
 
 	@Override
 	public String toString() {
-		return line + ":" + pos + " " + token;
+		return "%d:%d %s".formatted(pos.line(), pos.pos(), token);
 	}
 }

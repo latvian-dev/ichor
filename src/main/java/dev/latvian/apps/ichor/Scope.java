@@ -98,7 +98,7 @@ public class Scope {
 				return m;
 			}
 
-			s = parent;
+			s = s.parent;
 		}
 		while (s != null);
 
@@ -123,7 +123,7 @@ public class Scope {
 				return;
 			}
 
-			s = parent;
+			s = s.parent;
 		}
 		while (s != null);
 
@@ -140,7 +140,7 @@ public class Scope {
 				return t;
 			}
 
-			s = parent;
+			s = s.parent;
 		}
 		while (s != null);
 
@@ -164,5 +164,36 @@ public class Scope {
 
 	public Context getContext() {
 		return root.context;
+	}
+
+	public Scope push() {
+		root.current = createChildScope();
+
+		if (root.context.debug) {
+			System.out.println("Scope + > " + root.current);
+		}
+
+		return root.current;
+	}
+
+	public void pop() {
+		root.current = this;
+
+		if (root.context.debug) {
+			System.out.println("Scope - > " + this);
+		}
+	}
+
+	@Override
+	public String toString() {
+		int depth = 0;
+		var s = this;
+
+		while (s.parent != null) {
+			depth++;
+			s = s.parent;
+		}
+
+		return "Scope{depth=" + depth + ",members=" + getDeclaredMemberNames() + "}";
 	}
 }

@@ -11,9 +11,11 @@ import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.token.TokenStream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import java.util.Arrays;
 
+@Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
 public class TokenTests {
 	private static void testTokenStream(String input, Token... match) {
 		System.out.println("--- Token Test ---");
@@ -83,7 +85,7 @@ public class TokenTests {
 				KeywordToken.IF, SymbolToken.LP, SymbolToken.ADD1, new NameToken("x"), SymbolToken.GTE, NumberToken.of(10), SymbolToken.RP, SymbolToken.LC,
 				KeywordToken.BREAK, SymbolToken.SEMI,
 				SymbolToken.RC,
-				new NameToken("console"), SymbolToken.DOT, new NameToken("print"), SymbolToken.LP, new StringToken("X: "), SymbolToken.ADD, new NameToken("x"), SymbolToken.RP,
+				new NameToken("console"), SymbolToken.DOT, new NameToken("print"), SymbolToken.LP, StringToken.of("X: "), SymbolToken.ADD, new NameToken("x"), SymbolToken.RP,
 				SymbolToken.RC
 		);
 	}

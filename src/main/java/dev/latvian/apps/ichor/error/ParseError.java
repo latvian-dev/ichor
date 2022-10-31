@@ -4,6 +4,6 @@ import dev.latvian.apps.ichor.token.PositionedToken;
 
 public class ParseError extends IchorError {
 	public ParseError(PositionedToken token, String message) {
-		super(token.line() + ":" + token.pos() + ": " + message);
+		super(token.pos() + ": " + message);
 	}
 }

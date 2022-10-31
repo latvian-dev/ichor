@@ -3,18 +3,26 @@ package dev.latvian.apps.ichor.token;
 import dev.latvian.apps.ichor.error.TokenStreamError;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TokenStream {
 	private final char[] input;
 	private int line;
 	private int pos;
 	private List<PositionedToken> tokens;
+	private final Map<String, NumberToken> numberTokenCache;
+	private final Map<String, StringToken> stringTokenCache;
+	private final Map<String, TemplateLiteralToken> templateLiteralTokenMap;
 
 	public TokenStream(String string) {
 		input = string.toCharArray();
 		line = 0;
 		pos = 0;
+		numberTokenCache = new HashMap<>();
+		stringTokenCache = new HashMap<>();
+		templateLiteralTokenMap = new HashMap<>();
 	}
 
 	private char peek(int i) {
@@ -147,7 +155,7 @@ public class TokenStream {
 					}
 				}
 
-				yield t == '`' ? new TemplateLiteralToken(sb.toString()) : new StringToken(sb.toString());
+				yield t == '`' ? templateLiteralTokenMap.computeIfAbsent(sb.toString(), TemplateLiteralToken::new) : stringTokenCache.computeIfAbsent(sb.toString(), StringToken::of);
 			}
 			default -> {
 				if (isDigit(t)) {
@@ -211,8 +219,16 @@ public class TokenStream {
 
 		var numStr = new String(input, p, len);
 
+		var num = numberTokenCache.get(numStr);
+
+		if (num != null) {
+			return num;
+		}
+
 		try {
-			return new NumberToken(Double.parseDouble(numStr));
+			num = new NumberToken(Double.parseDouble(numStr));
+			numberTokenCache.put(numStr, num);
+			return num;
 		} catch (Exception ex) {
 			return error("Invalid number: " + numStr);
 		}
@@ -252,7 +268,7 @@ public class TokenStream {
 			if (t == SymbolToken.EOF) {
 				return tokens;
 			} else {
-				tokens.add(new PositionedToken(t, l, p));
+				tokens.add(new PositionedToken(t, new TokenPos(l, p)));
 			}
 		}
 	}

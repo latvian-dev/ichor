@@ -1,12 +1,13 @@
 package dev.latvian.apps.ichor.parser.expression;
 
-import dev.latvian.apps.ichor.NamedMemberHolder;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.parser.AstStringBuilder;
+import dev.latvian.apps.ichor.prototype.Prototype;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.Set;
+import java.util.Collections;
+import java.util.Iterator;
 
 public class AstThis extends AstExpression {
 	@Override
@@ -19,9 +20,14 @@ public class AstThis extends AstExpression {
 		return new ThisAccessor(scope);
 	}
 
-	public record ThisAccessor(Scope scope) implements NamedMemberHolder {
+	public record ThisAccessor(Scope scope) implements Prototype {
 		@Override
-		public Object getMember(Scope scope, String name) {
+		public String getPrototypeName() {
+			return "this";
+		}
+
+		@Override
+		public Object get(Scope scope, String name, @Nullable Object self) {
 			var slot = scope.members == null ? null : scope.members.get(name);
 
 			if (slot == null) {
@@ -32,12 +38,12 @@ public class AstThis extends AstExpression {
 		}
 
 		@Override
-		public boolean hasMember(Scope scope, String name) {
+		public boolean has(Scope scope, String name, @Nullable Object self) {
 			return scope.members != null && scope.members.containsKey(name);
 		}
 
 		@Override
-		public void setMember(Scope scope, String name, Object value) {
+		public boolean set(Scope scope, String name, @Nullable Object self, Object value) {
 			var slot = scope.members == null ? null : scope.members.get(name);
 
 			if (slot == null) {
@@ -46,21 +52,33 @@ public class AstThis extends AstExpression {
 				throw new ScriptError("Member " + name + " is a constant");
 			} else {
 				slot.value = value;
+				return true;
 			}
 		}
 
 		@Override
-		public void deleteMember(Scope scope, String name) {
+		public boolean delete(Scope scope, String name, @Nullable Object self) {
 			if (scope.members != null && scope.members.containsKey(name)) {
 				scope.members.remove(name);
+				return true;
 			} else {
 				throw new ScriptError("Member " + name + " not found");
 			}
 		}
 
 		@Override
-		public Collection<String> getMemberNames() {
-			return scope.members == null ? Set.of() : scope.members.keySet();
+		public Iterator<?> keyIterator(Scope scope, @Nullable Object self) {
+			return scope.members == null ? Collections.emptyIterator() : scope.members.keySet().iterator();
+		}
+
+		@Override
+		public Iterator<?> valueIterator(Scope scope, @Nullable Object self) {
+			return scope.members == null ? Collections.emptyIterator() : scope.members.values().iterator();
+		}
+
+		@Override
+		public Iterator<?> entryIterator(Scope scope, @Nullable Object self) {
+			return scope.members == null ? Collections.emptyIterator() : scope.members.entrySet().iterator();
 		}
 	}
 }
