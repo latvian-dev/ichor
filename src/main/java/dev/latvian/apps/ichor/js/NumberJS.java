@@ -13,9 +13,8 @@ public class NumberJS {
 
 	public static final Prototype PROTOTYPE = PrototypeBuilder.create("Number")
 			.constructor((scope, args, hasNew) -> args.length == 0 ? NaN : scope.getContext().asNumber(scope, args[0]))
-			.asString((cx, self) -> self.toString())
-			.asNumber((cx, self) -> (Number) self)
-			.asBoolean((cx, self) -> ((Number) self).doubleValue() != 0D)
+			.asNumber((scope, self) -> (Number) self)
+			.asBoolean((scope, self) -> ((Number) self).doubleValue() != 0D)
 			.constant("NaN", NaN)
 			.constant("POSITIVE_INFINITY", Double.POSITIVE_INFINITY)
 			.constant("NEGATIVE_INFINITY", Double.NEGATIVE_INFINITY)

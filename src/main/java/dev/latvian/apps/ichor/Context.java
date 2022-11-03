@@ -1,29 +1,36 @@
 package dev.latvian.apps.ichor;
 
 import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.java.JavaClassJS;
+import dev.latvian.apps.ichor.java.JavaTypePrototype;
 import dev.latvian.apps.ichor.js.ArrayJS;
 import dev.latvian.apps.ichor.js.BooleanJS;
 import dev.latvian.apps.ichor.js.NumberJS;
 import dev.latvian.apps.ichor.js.ObjectJS;
 import dev.latvian.apps.ichor.js.StringJS;
-import dev.latvian.apps.ichor.js.java.JavaClassJS;
-import dev.latvian.apps.ichor.js.java.JavaTypePrototype;
+import dev.latvian.apps.ichor.prototype.Evaluable;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class Context {
+public abstract class Context {
 	private Map<Class<?>, Prototype> classPrototypeCache;
 	private Map<String, Object> properties;
-	public boolean debug = false;
+	public Debugger debugger = null;
+	public Prototype stringPrototype;
+	public Prototype numberPrototype;
+	public Prototype booleanPrototype;
+	public Prototype listPrototype;
+	public Prototype mapPrototype;
 
 	public Context() {
 	}
 
-	public Object getProperty(String name, Object defaultValue) {
-		return properties == null ? defaultValue : properties.getOrDefault(name, defaultValue);
+	@SuppressWarnings("unchecked")
+	public <T> T getProperty(String name, T defaultValue) {
+		return properties == null ? defaultValue : (T) properties.getOrDefault(name, defaultValue);
 	}
 
 	public void setProperty(String name, Object value) {
@@ -37,7 +44,7 @@ public class Context {
 	public String asString(Scope scope, Object o) {
 		if (o == null) {
 			return "null";
-		} else if (o instanceof CharSequence || o instanceof Number || o instanceof Boolean || o instanceof Special) {
+		} else if (o instanceof CharSequence || o instanceof Character || o instanceof Number || o instanceof Boolean || o instanceof Special) {
 			return o.toString();
 		} else if (o instanceof Evaluable) {
 			return ((Evaluable) o).evalString(scope);

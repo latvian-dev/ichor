@@ -5,8 +5,11 @@ import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.js.NumberJS;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class PrototypeBuilder implements Prototype {
 	public static PrototypeBuilder create(String name) {
@@ -16,12 +19,12 @@ public class PrototypeBuilder implements Prototype {
 	private final String prototypeName;
 	protected Prototype parent;
 	private PrototypeConstructor constructor;
-	private Map<String, PrototypeMember> members;
+	private Map<String, Object> members;
 	private PrototypeAsString asString;
 	private PrototypeAsNumber asNumber;
 	private PrototypeAsBoolean asBoolean;
-	private PrototypeNamedValueHandler namedValueHandler;
-	private PrototypeIndexedValueHandler indexedValueHandler;
+	private Prototype namedValueHandler;
+	private Prototype indexedValueHandler;
 
 	protected PrototypeBuilder(String n) {
 		prototypeName = n;
@@ -44,7 +47,7 @@ public class PrototypeBuilder implements Prototype {
 		return this;
 	}
 
-	public PrototypeBuilder member(String name, PrototypeMember member) {
+	private PrototypeBuilder member(String name, Object member) {
 		if (members == null) {
 			members = new HashMap<>(1);
 		}
@@ -58,7 +61,7 @@ public class PrototypeBuilder implements Prototype {
 	}
 
 	public PrototypeBuilder constant(String name, Object value) {
-		return member(name, new PrototypeConstant(value));
+		return member(name, value);
 	}
 
 	public PrototypeBuilder function(String name, PrototypeFunction value) {
@@ -80,12 +83,12 @@ public class PrototypeBuilder implements Prototype {
 		return this;
 	}
 
-	public PrototypeBuilder namedValueHandler(PrototypeNamedValueHandler value) {
+	public PrototypeBuilder namedValueHandler(Prototype value) {
 		namedValueHandler = value;
 		return this;
 	}
 
-	public PrototypeBuilder indexedValueHandler(PrototypeIndexedValueHandler value) {
+	public PrototypeBuilder indexedValueHandler(Prototype value) {
 		indexedValueHandler = value;
 		return this;
 	}
@@ -94,23 +97,29 @@ public class PrototypeBuilder implements Prototype {
 
 	@Override
 	@Nullable
-	public Object get(Scope scope, String name, @Nullable Object self) {
+	public Object get(Scope scope, Object self, String name) {
 		if (members != null) {
 			var m = members.get(name);
 
-			if (m != null) {
-				return m.get(scope, self);
+			if (m instanceof PrototypeProperty p) {
+				return p.get(scope, self);
+			} else if (m != null) {
+				return scope.eval(m);
 			}
 		}
 
 		if (namedValueHandler != null && self != null) {
-			return namedValueHandler.get(scope, name, self);
+			var m = namedValueHandler.get(scope, self, name);
+
+			if (m != Special.NOT_FOUND) {
+				return m;
+			}
 		}
 
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			var v = parent0.get(scope, name, self);
+			var v = parent0.get(scope, self, name);
 
 			if (v != Special.NOT_FOUND) {
 				return v;
@@ -123,15 +132,17 @@ public class PrototypeBuilder implements Prototype {
 	}
 
 	@Override
-	public boolean set(Scope scope, String name, @Nullable Object self, @Nullable Object value) {
+	public boolean set(Scope scope, Object self, String name, @Nullable Object value) {
 		if (namedValueHandler != null && self != null) {
-			return namedValueHandler.set(scope, name, self, value);
+			if (namedValueHandler.set(scope, self, name, value)) {
+				return true;
+			}
 		}
 
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			if (parent0.set(scope, name, self, value)) {
+			if (parent0.set(scope, self, name, value)) {
 				return true;
 			}
 
@@ -142,15 +153,17 @@ public class PrototypeBuilder implements Prototype {
 	}
 
 	@Override
-	public boolean delete(Scope scope, String name, @Nullable Object self) {
+	public boolean delete(Scope scope, Object self, String name) {
 		if (namedValueHandler != null && self != null) {
-			return namedValueHandler.delete(scope, name, self);
+			if (namedValueHandler.delete(scope, self, name)) {
+				return true;
+			}
 		}
 
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			if (parent0.delete(scope, name, self)) {
+			if (parent0.delete(scope, self, name)) {
 				return true;
 			}
 
@@ -167,15 +180,19 @@ public class PrototypeBuilder implements Prototype {
 
 	@Override
 	@Nullable
-	public Object get(Scope scope, int index, @Nullable Object self) {
+	public Object get(Scope scope, Object self, int index) {
 		if (indexedValueHandler != null && self != null) {
-			return indexedValueHandler.get(scope, index, self);
+			var m = indexedValueHandler.get(scope, self, index);
+
+			if (m != Special.NOT_FOUND) {
+				return m;
+			}
 		}
 
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			var v = parent0.get(scope, index, self);
+			var v = parent0.get(scope, self, index);
 
 			if (v != Special.NOT_FOUND) {
 				return v;
@@ -188,15 +205,17 @@ public class PrototypeBuilder implements Prototype {
 	}
 
 	@Override
-	public boolean set(Scope scope, int index, @Nullable Object self, @Nullable Object value) {
+	public boolean set(Scope scope, Object self, int index, @Nullable Object value) {
 		if (indexedValueHandler != null && self != null) {
-			return indexedValueHandler.set(scope, index, self, value);
+			if (indexedValueHandler.set(scope, self, index, value)) {
+				return true;
+			}
 		}
 
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			if (parent0.set(scope, index, self, value)) {
+			if (parent0.set(scope, self, index, value)) {
 				return true;
 			}
 
@@ -207,15 +226,17 @@ public class PrototypeBuilder implements Prototype {
 	}
 
 	@Override
-	public boolean delete(Scope scope, int index, @Nullable Object self) {
+	public boolean delete(Scope scope, Object self, int index) {
 		if (indexedValueHandler != null && self != null) {
-			return indexedValueHandler.delete(scope, index, self);
+			if (indexedValueHandler.delete(scope, self, index)) {
+				return true;
+			}
 		}
 
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			if (parent0.delete(scope, index, self)) {
+			if (parent0.delete(scope, self, index)) {
 				return true;
 			}
 
@@ -226,7 +247,7 @@ public class PrototypeBuilder implements Prototype {
 	}
 
 	@Override
-	public Object construct(Scope scope, Object[] args, @Nullable Object self) {
+	public Object construct(Scope scope, Object[] args) {
 		if (constructor != null) {
 			return constructor.construct(scope, args, true);
 		}
@@ -235,7 +256,7 @@ public class PrototypeBuilder implements Prototype {
 	}
 
 	@Override
-	public Object call(Scope scope, Object[] args, @Nullable Object self) {
+	public Object call(Scope scope, Object self, Object[] args) {
 		if (constructor != null) {
 			return constructor.construct(scope, args, false);
 		}
@@ -268,5 +289,14 @@ public class PrototypeBuilder implements Prototype {
 		}
 
 		return Boolean.TRUE;
+	}
+
+	public Set<String> memberKeys() {
+		return members == null ? Collections.emptySet() : members.keySet();
+	}
+
+	@Override
+	public Collection<?> keys(Scope scope, Object self) {
+		return memberKeys();
 	}
 }

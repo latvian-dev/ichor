@@ -8,14 +8,13 @@ import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 public class StringJS {
 	public static final Prototype PROTOTYPE = PrototypeBuilder.create("String")
 			.constructor((scope, args, hasNew) -> args.length == 0 ? "" : scope.getContext().asString(scope, args[0]))
-			.asString((cx, self) -> self.toString())
-			.asNumber((cx, self) -> self.toString().isEmpty() ? NumberJS.ZERO : NumberJS.ONE)
-			.asBoolean((cx, self) -> !self.toString().isEmpty())
+			.asNumber((scope, self) -> scope.toString().isEmpty() ? NumberJS.ZERO : NumberJS.ONE)
+			.asBoolean((scope, self) -> !scope.toString().isEmpty())
 			.property("length", StringJS::length)
 			.function("fromCharCode", StringJS::fromCharCode)
 			.function("fromCodePoint", StringJS::fromCodePoint)
 			.function("raw", StringJS::raw)
-			.function("charAt", StringJS::unimpl)
+			.function("charAt", StringJS::charAt)
 			.function("charCodeAt", StringJS::unimpl)
 			.function("indexOf", StringJS::unimpl)
 			.function("lastIndexOf", StringJS::unimpl)
@@ -45,6 +44,14 @@ public class StringJS {
 			.function("padEnd", StringJS::unimpl)
 			.function("trimStart", StringJS::unimpl)
 			.function("trimEnd", StringJS::unimpl);
+
+	private static String s(Object self) {
+		return self.toString();
+	}
+
+	private static CharSequence cs(Object self) {
+		return self instanceof CharSequence c ? c : self.toString();
+	}
 
 	private static String unimpl(Scope scope, Object self, Object[] args) {
 		throw new ScriptError("This function is not yet implemented!");
@@ -93,15 +100,15 @@ public class StringJS {
 		return scope.getContext().asString(scope, args[0]);
 	}
 
-	private static CharSequence asCS(Object value) {
-		return value instanceof CharSequence c ? c : value.toString();
+	private static Object length(Scope scope, Object self) {
+		return cs(self).length();
 	}
 
-	private static int length(Scope scope, Object self) {
-		return asCS(self).length();
+	private static Object charAt(Scope scope, Object self, Object[] objects) {
+		return cs(self).charAt(scope.getContext().asInt(scope, objects[0]));
 	}
 
 	private static String trim(Scope scope, Object self, Object[] args) {
-		return self.toString().trim();
+		return s(self).trim();
 	}
 }

@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor;
 
+import dev.latvian.apps.ichor.prototype.Evaluable;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
@@ -10,9 +11,10 @@ public class Special implements PrototypeSupplier, Token, Evaluable {
 	public static final Special NOT_FOUND = new Special("<not found>"); // Internal use only
 	public static final Special NULL = new Special("null");
 	public static final Special UNDEFINED = new Special("undefined");
+	public static final Special IMMUTABLE = new Special("<immutable>");
 
 	public static boolean isInvalid(@Nullable Object o) {
-		return o == null || o == NOT_FOUND || o == NULL || o == UNDEFINED;
+		return o == null || o instanceof Special;
 	}
 
 	private final Prototype prototype;
@@ -33,7 +35,7 @@ public class Special implements PrototypeSupplier, Token, Evaluable {
 
 	@Override
 	public boolean equals(Object obj) {
-		return obj instanceof Special;
+		return obj == null || obj instanceof Special;
 	}
 
 	@Override

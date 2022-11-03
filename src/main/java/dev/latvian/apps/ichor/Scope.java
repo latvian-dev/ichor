@@ -1,18 +1,40 @@
 package dev.latvian.apps.ichor;
 
 import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.prototype.Evaluable;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.AssignType;
-import dev.latvian.apps.ichor.util.Slot;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 public class Scope {
-	public Scope parent;
+	public static class Slot {
+		public Object value;
+		public boolean immutable;
+		public Prototype prototype;
+
+		public Prototype getPrototype(Context cx) {
+			if (prototype == null) {
+				prototype = cx.getPrototype(value);
+			}
+
+			return prototype;
+		}
+	}
+
+	public final Scope parent;
 	public RootScope root;
 	public Map<String, Slot> members;
+
+	protected Scope(Scope parent) {
+		this.parent = parent;
+
+		if (this.parent != null) {
+			this.root = parent.root;
+		}
+	}
 
 	// Member Methods //
 
@@ -32,6 +54,10 @@ public class Scope {
 			} else {
 				slot.value = value;
 				slot.prototype = null;
+
+				if (root.context.debugger != null) {
+					root.context.debugger.assignSet(name, value);
+				}
 			}
 		} else {
 			if (slot == null) {
@@ -47,6 +73,10 @@ public class Scope {
 			slot.value = value;
 			slot.immutable = type == AssignType.IMMUTABLE;
 			slot.prototype = null;
+
+			if (root.context.debugger != null) {
+				root.context.debugger.assignNew(name, value);
+			}
 		}
 	}
 
@@ -102,7 +132,7 @@ public class Scope {
 		}
 		while (s != null);
 
-		return Special.UNDEFINED;
+		return Special.NOT_FOUND;
 	}
 
 	public void setMember(String name, Object value, AssignType type) {
@@ -155,11 +185,8 @@ public class Scope {
 		add(root.context.getClassPrototype(type));
 	}
 
-	public Scope createChildScope() {
-		var scope = new Scope();
-		scope.parent = this;
-		scope.root = root;
-		return scope;
+	public Scope childScope() {
+		return new Scope(this);
 	}
 
 	public Context getContext() {
@@ -167,10 +194,10 @@ public class Scope {
 	}
 
 	public Scope push() {
-		root.current = createChildScope();
+		root.current = childScope();
 
-		if (root.context.debug) {
-			System.out.println("Scope + > " + root.current);
+		if (root.context.debugger != null) {
+			root.context.debugger.pushScope(root.current);
 		}
 
 		return root.current;
@@ -179,8 +206,8 @@ public class Scope {
 	public void pop() {
 		root.current = this;
 
-		if (root.context.debug) {
-			System.out.println("Scope - > " + this);
+		if (root.context.debugger != null) {
+			root.context.debugger.popScope(this);
 		}
 	}
 
@@ -194,6 +221,10 @@ public class Scope {
 			s = s.parent;
 		}
 
-		return "Scope{depth=" + depth + ",members=" + getDeclaredMemberNames() + "}";
+		return "Scope[" + depth + ']' + getDeclaredMemberNames();
+	}
+
+	public Object eval(Object object) {
+		return object instanceof Evaluable eval ? eval.eval(this) : object;
 	}
 }

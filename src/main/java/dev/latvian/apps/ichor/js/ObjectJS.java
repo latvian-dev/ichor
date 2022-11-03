@@ -1,6 +1,6 @@
 package dev.latvian.apps.ichor.js;
 
-import dev.latvian.apps.ichor.js.java.MapValueHandler;
+import dev.latvian.apps.ichor.java.MapValueHandler;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 

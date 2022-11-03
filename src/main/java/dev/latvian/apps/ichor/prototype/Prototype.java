@@ -5,10 +5,10 @@ import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.js.NumberJS;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 
-public interface Prototype extends PrototypeSupplier {
+public interface Prototype extends PrototypeSupplier, Callable {
 
 	@Override
 	default Prototype getPrototype() {
@@ -17,44 +17,37 @@ public interface Prototype extends PrototypeSupplier {
 
 	String getPrototypeName();
 
-	default Object construct(Scope scope, Object[] args, @Nullable Object self) {
-		return Special.NOT_FOUND;
-	}
-
-	default Object call(Scope scope, Object[] args, @Nullable Object self) {
-		return Special.NOT_FOUND;
+	@Override
+	default Object call(Scope scope, Object self, Object[] args) {
+		return construct(scope, args);
 	}
 
 	@Nullable
-	default Object get(Scope scope, String name, @Nullable Object self) {
+	default Object get(Scope scope, Object self, String name) {
 		return Special.NOT_FOUND;
 	}
 
-	default boolean has(Scope scope, String name, @Nullable Object self) {
+	default boolean set(Scope scope, Object self, String name, @Nullable Object value) {
 		return false;
 	}
 
-	default boolean set(Scope scope, String name, @Nullable Object self, @Nullable Object value) {
+	default boolean delete(Scope scope, Object self, String name) {
 		return false;
 	}
 
-	default boolean delete(Scope scope, String name, @Nullable Object self) {
-		return false;
+	default Collection<?> keys(Scope scope, Object self) {
+		return Collections.emptySet();
 	}
 
-	default Iterator<?> keyIterator(Scope scope, @Nullable Object self) {
-		return Collections.emptyIterator();
+	default Collection<?> values(Scope scope, Object self) {
+		return Collections.emptySet();
 	}
 
-	default Iterator<?> valueIterator(Scope scope, @Nullable Object self) {
-		return Collections.emptyIterator();
+	default Collection<?> entries(Scope scope, Object self) {
+		return Collections.emptySet();
 	}
 
-	default Iterator<?> entryIterator(Scope scope, @Nullable Object self) {
-		return Collections.emptyIterator();
-	}
-
-	default int getMemberCount(Scope scope, @Nullable Object self) {
+	default int getMemberCount(Scope scope, Object self) {
 		return 0;
 	}
 
@@ -63,19 +56,15 @@ public interface Prototype extends PrototypeSupplier {
 	}
 
 	@Nullable
-	default Object get(Scope scope, int index, @Nullable Object self) {
+	default Object get(Scope scope, Object self, int index) {
 		return Special.NOT_FOUND;
 	}
 
-	default boolean has(Scope scope, int index, @Nullable Object self) {
+	default boolean set(Scope scope, Object self, int index, @Nullable Object value) {
 		return false;
 	}
 
-	default boolean set(Scope scope, int index, @Nullable Object self, @Nullable Object value) {
-		return false;
-	}
-
-	default boolean delete(Scope scope, int index, @Nullable Object self) {
+	default boolean delete(Scope scope, Object self, int index) {
 		return false;
 	}
 

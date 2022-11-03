@@ -1,7 +1,9 @@
 package dev.latvian.apps.ichor.token;
 
-import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
+import dev.latvian.apps.ichor.Special;
+import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.prototype.Evaluable;
 
 public record NameToken(String name) implements Token, Evaluable {
 	@Override
@@ -11,11 +13,12 @@ public record NameToken(String name) implements Token, Evaluable {
 
 	@Override
 	public Object eval(Scope scope) {
-		return scope.getMember(name);
-	}
+		var r = scope.getMember(name);
 
-	@Override
-	public String evalName(Scope scope) {
-		return name;
+		if (r == Special.NOT_FOUND) {
+			throw new ScriptError("Cannot find " + name);
+		}
+
+		return r;
 	}
 }

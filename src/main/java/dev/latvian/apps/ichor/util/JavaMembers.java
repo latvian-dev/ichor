@@ -3,7 +3,7 @@ package dev.latvian.apps.ichor.util;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.error.ScriptError;
-import dev.latvian.apps.ichor.js.java.JavaTypePrototype;
+import dev.latvian.apps.ichor.java.JavaTypePrototype;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

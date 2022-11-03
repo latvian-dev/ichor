@@ -1,7 +1,7 @@
 package dev.latvian.apps.ichor.token;
 
-import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
+import dev.latvian.apps.ichor.prototype.Evaluable;
 
 public record NumberToken(double value) implements Token, Evaluable {
 	public static final NumberToken ZERO = new NumberToken(0.0);

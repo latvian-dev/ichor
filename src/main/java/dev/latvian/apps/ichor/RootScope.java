@@ -5,14 +5,13 @@ import dev.latvian.apps.ichor.js.BooleanJS;
 import dev.latvian.apps.ichor.js.NumberJS;
 import dev.latvian.apps.ichor.js.ObjectJS;
 import dev.latvian.apps.ichor.js.StringJS;
-import dev.latvian.apps.ichor.parser.Parser;
-import dev.latvian.apps.ichor.token.TokenStream;
 
 public class RootScope extends Scope {
 	public final Context context;
 	public Scope current;
 
 	public RootScope(Context cx) {
+		super(null);
 		context = cx;
 		root = this;
 		current = this;
@@ -29,13 +28,6 @@ public class RootScope extends Scope {
 	@Override
 	public Context getContext() {
 		return context;
-	}
-
-	public Object interpret(String code) {
-		var tokens = new TokenStream(code).getTokens();
-		var ast = new Parser(tokens).parse();
-		ast.interpret(this);
-		return Special.NOT_FOUND;
 	}
 
 	@Override
