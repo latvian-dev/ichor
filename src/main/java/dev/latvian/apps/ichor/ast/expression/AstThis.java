@@ -3,8 +3,9 @@ package dev.latvian.apps.ichor.ast.expression;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.ast.statement.AstClass;
 import dev.latvian.apps.ichor.prototype.Prototype;
+import dev.latvian.apps.ichor.util.AssignType;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -20,53 +21,64 @@ public class AstThis extends AstExpression implements Prototype {
 		return "this";
 	}
 
-	@Override
-	public Object call(Scope scope, Object self, Object[] args) {
-		return Special.NOT_FOUND;
+	public Scope getActualScope(Scope scope) {
+		var s = scope;
+
+		do {
+			if (s.owner instanceof AstClass.Instance) {
+				return s;
+			}
+
+			s = s.parent;
+		}
+		while (s != null);
+
+		// arrow functions need to use parent scope
+		return scope;
 	}
 
 	@Override
 	public Object get(Scope scope, Object self, String name) {
-		var slot = scope.members == null ? null : scope.members.get(name);
-		return slot == null ? Special.NOT_FOUND : slot.value;
+		var s = getActualScope(scope);
+
+		var r = s.getDeclaredMember(name);
+		return r == Special.NOT_FOUND ? Special.UNDEFINED : r;
 	}
 
 	@Override
 	public boolean set(Scope scope, Object self, String name, Object value) {
-		var slot = scope.members == null ? null : scope.members.get(name);
+		var s = getActualScope(scope);
 
-		if (slot == null) {
-			throw new ScriptError("Member " + name + " not found");
-		} else if (slot.immutable) {
-			throw new ScriptError("Member " + name + " is a constant");
-		} else {
-			slot.value = value;
-			return true;
+		if (s.hasDeclaredMember(name) == AssignType.NONE) {
+			s.declareMember(name, value, AssignType.MUTABLE);
 		}
+
+		return true;
 	}
 
 	@Override
 	public boolean delete(Scope scope, Object self, String name) {
-		if (scope.members != null && scope.members.containsKey(name)) {
-			scope.members.remove(name);
-			return true;
-		} else {
-			throw new ScriptError("Member " + name + " not found");
-		}
+		var s = getActualScope(scope);
+
+		s.deleteDeclaredMember(name);
+		return true;
 	}
 
 	@Override
 	public Collection<?> keys(Scope scope, Object self) {
-		return scope.members == null ? Collections.emptySet() : scope.members.keySet();
+		var s = getActualScope(scope);
+		return s.members == null ? Collections.emptySet() : s.members.keySet();
 	}
 
 	@Override
 	public Collection<?> values(Scope scope, Object self) {
-		return scope.members == null ? Collections.emptySet() : scope.members.values();
+		var s = getActualScope(scope);
+		return s.members == null ? Collections.emptySet() : s.members.values();
 	}
 
 	@Override
 	public Collection<?> entries(Scope scope, Object self) {
-		return scope.members == null ? Collections.emptySet() : scope.members.entrySet();
+		var s = getActualScope(scope);
+		return s.members == null ? Collections.emptySet() : s.members.entrySet();
 	}
 }

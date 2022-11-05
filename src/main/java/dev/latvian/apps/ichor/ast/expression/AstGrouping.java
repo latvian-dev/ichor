@@ -1,8 +1,8 @@
 package dev.latvian.apps.ichor.ast.expression;
 
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.prototype.Evaluable;
 
 public class AstGrouping extends AstExpression {
 	public final Evaluable expression;

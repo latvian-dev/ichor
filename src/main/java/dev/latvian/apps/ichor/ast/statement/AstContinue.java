@@ -2,7 +2,8 @@ package dev.latvian.apps.ichor.ast.statement;
 
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.exit.ContinueExit;
+import dev.latvian.apps.ichor.exit.ScopeExit;
 
 public class AstContinue extends AstStatement {
 	@Override
@@ -11,13 +12,7 @@ public class AstContinue extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) {
-		throw new ContinueException();
-	}
-
-	public static class ContinueException extends ScriptError {
-		private ContinueException() {
-			super("continue is not supported here");
-		}
+	public void interpret(Scope scope) throws ScopeExit {
+		throw new ContinueExit();
 	}
 }

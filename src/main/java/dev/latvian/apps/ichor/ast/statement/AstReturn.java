@@ -2,6 +2,8 @@ package dev.latvian.apps.ichor.ast.statement;
 
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
+import dev.latvian.apps.ichor.exit.ReturnExit;
+import dev.latvian.apps.ichor.exit.ScopeExit;
 
 public class AstReturn extends AstStatement {
 	public final Object value;
@@ -17,16 +19,7 @@ public class AstReturn extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) {
-		throw new ReturnException(scope.eval(value));
-	}
-
-	public static class ReturnException extends RuntimeException {
-		public final Object value;
-
-		private ReturnException(Object v) {
-			super("return is not supported here!");
-			value = v;
-		}
+	public void interpret(Scope scope) throws ScopeExit {
+		throw new ReturnExit(scope.eval(value));
 	}
 }

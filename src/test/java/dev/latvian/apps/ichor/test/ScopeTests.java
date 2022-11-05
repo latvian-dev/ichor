@@ -14,7 +14,7 @@ public class ScopeTests {
 			var root = new RootScope(new ContextJS());
 			root.setMember("test", 5, AssignType.IMMUTABLE);
 
-			var child = root.childScope();
+			var child = root.push();
 			child.setMember("test", 10, AssignType.NONE);
 		});
 	}

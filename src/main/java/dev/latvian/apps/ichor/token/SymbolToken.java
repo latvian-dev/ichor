@@ -89,12 +89,12 @@ public enum SymbolToken implements StaticToken {
 
 	;
 
+	public static final int RIGHT_ASSOCIATIVE = 4;
+
 	static {
 		ADD.astUnary = AstPositive::new;
 		SUB.astUnary = AstNegate::new;
 	}
-
-	public static final int RIGHT_ASSOCIATIVE = 4;
 
 	public final String name;
 	public EvaluableFactory astUnary;

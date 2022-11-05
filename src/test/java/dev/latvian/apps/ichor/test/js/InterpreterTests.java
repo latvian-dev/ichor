@@ -1,6 +1,8 @@
 package dev.latvian.apps.ichor.test.js;
 
 import dev.latvian.apps.ichor.RootScope;
+import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.exit.ScopeExit;
 import dev.latvian.apps.ichor.js.ContextJS;
 import dev.latvian.apps.ichor.js.NumberJS;
 import dev.latvian.apps.ichor.js.ParserJS;
@@ -13,49 +15,62 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 // @Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
 public class InterpreterTests {
-	private static void testInterpreter(String input, boolean debug, String... match) {
-		var matchStr = Arrays.asList(match);
+	private static void printLines(List<String> lines) {
+		for (int i = 0; i < lines.size(); i++) {
+			System.out.printf("%02d | %s%n", i + 1, lines.get(i));
+		}
+	}
+
+	private static void testInterpreter(String input, boolean debug, String match) {
+		var matchStr = Arrays.asList(match.split("\n"));
 		System.out.println("--- Interpreter Test ---");
 		System.out.println("Input:");
-		var lines = input.split("\n");
+		printLines(Arrays.asList(input.split("\n")));
+		System.out.println();
+		System.out.println("Expected:");
+		printLines(matchStr);
+		System.out.println();
 
-		for (int i = 0; i < lines.length; i++) {
-			System.out.printf("%02d | %s%n", i + 1, lines[i]);
-		}
-
-		System.out.println("Expected: " + matchStr);
 		var cx = new ContextJS();
-		cx.debugger = new ConsoleDebugger();
+		var rootScope = new RootScope(cx);
+		rootScope.addSafeClasses();
+		var console = new TestConsole(System.out, new ArrayList<>());
+		rootScope.declareMember("print", console, AssignType.IMMUTABLE);
 
 		if (debug) {
 			cx.setProperty("debug", debug);
 		}
+
+		cx.debugger = new ConsoleDebugger();
 
 		var tokenStream = new TokenStreamJS(input);
 		var tokens = tokenStream.getTokens();
 		var parser = new ParserJS(cx, tokens);
 		var ast = parser.parse();
 		var astStr = ast.toString();
-		var console = new TestConsole(System.out, new ArrayList<>());
-		var rootScope = new RootScope(cx);
-		rootScope.addSafeClasses();
-		rootScope.declareMember("print", console, AssignType.IMMUTABLE);
-		System.out.println("Parsed:   " + astStr);
+
+		System.out.println("Parsed:");
+		System.out.println(astStr);
+		System.out.println();
 
 		try {
 			ast.interpret(rootScope);
+		} catch (ScopeExit ex) {
+			throw new ScriptError(ex);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 
-		System.out.println("Returned: " + console.output().toString());
+		System.out.println("Returned:");
+		printLines(console.output());
 		Assertions.assertEquals(matchStr, console.output());
 	}
 
-	private static void testInterpreter(String input, String... match) {
+	private static void testInterpreter(String input, String match) {
 		testInterpreter(input, false, match);
 	}
 
@@ -74,7 +89,7 @@ public class InterpreterTests {
 				}
 								
 				print(x);
-				""", true, "256.0");
+				""", "256.0");
 	}
 
 	@Test
@@ -160,7 +175,10 @@ public class InterpreterTests {
 								
 				print(isOdd(7));
 				print(isEven(7));
-				""", "true", "false");
+				""", """
+				true
+				false
+				""");
 	}
 
 	@Test
@@ -176,7 +194,12 @@ public class InterpreterTests {
 				}
 								
 				print(x);
-				""", "10.0", "10.0", "20.0", "10.0");
+				""", """
+				10.0
+				10.0
+				20.0
+				10.0
+				""");
 	}
 
 	@Test
@@ -191,7 +214,7 @@ public class InterpreterTests {
 		testInterpreter("""
 				const a = x => {
 				  const b = y => { return y * y; };
-				  return b(x) + b(x);
+				  return b(x) * 2;
 				};
 								
 				let z = a(3.5);
@@ -209,7 +232,11 @@ public class InterpreterTests {
 				a('a', 'b', 'c');
 				a('a', 'b');
 				a('a');
-				""", "a : b : c", "a : b : Z", "a : Y : Z");
+				""", """
+				a : b : c
+				a : b : Z
+				a : Y : Z
+				""");
 	}
 
 	@Test
@@ -225,6 +252,9 @@ public class InterpreterTests {
 				  }
 				}
 								
+				let t1 = new TestParent(-439);
+				t1.printTest('Hi 1');
+								
 				class Test extends TestParent {
 				  constructor(x, y = 10, z = 30) {
 				    super(x);
@@ -235,9 +265,12 @@ public class InterpreterTests {
 				  }
 				}
 								
-				let t = new Test();
-				t.printTest2('Hi');
-				""", "Hi");
+				let t2 = new Test(9);
+				t2.printTest2('Hi 2');
+				""", """
+				Hi 1
+				Hi 2
+				""");
 	}
 
 	@Test
@@ -247,7 +280,12 @@ public class InterpreterTests {
 				print('B');
 				print('C');
 				print(print.lastLine);
-				""", "A", "B", "C", "C");
+				""", """
+				A
+				B
+				C
+				C
+				""");
 	}
 
 	@Test
@@ -255,7 +293,14 @@ public class InterpreterTests {
 		testInterpreter("""
 				print('Hello'.length);
 				print('Hello'.charAt(0));
-				""", "5", "H");
+				print(String(4));
+				print(new String(true));
+				""", """
+				5
+				H
+				4.0
+				true
+				""");
 	}
 
 	@Test
@@ -273,6 +318,25 @@ public class InterpreterTests {
 				print(a.length);
 				print(a[0]);
 				print(a[2]);
-				""", "3", "1.0", "Hi");
+				""", """
+				3
+				1.0
+				Hi
+				""");
+	}
+
+	@Test
+	public void comments() {
+		testInterpreter("""
+				// before
+				print('A')
+				/* block comment
+				print('B')
+				*/
+				print('C')
+				""", """
+				A
+				C
+				""");
 	}
 }

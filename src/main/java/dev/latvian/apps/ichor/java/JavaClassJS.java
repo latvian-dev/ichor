@@ -5,7 +5,7 @@ import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 
 public class JavaClassJS {
-	public static final Prototype PROTOTYPE = PrototypeBuilder.create("JavaClass")
+	public static final Prototype PROTOTYPE = new PrototypeBuilder("JavaClass")
 			.asString((scope, self) -> c(self).getName())
 			.property("name", JavaClassJS::name)
 			.property("superclass", JavaClassJS::superclass)

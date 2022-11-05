@@ -12,10 +12,6 @@ import java.util.Map;
 import java.util.Set;
 
 public class PrototypeBuilder implements Prototype {
-	public static PrototypeBuilder create(String name) {
-		return new PrototypeBuilder(name);
-	}
-
 	private final String prototypeName;
 	protected Prototype parent;
 	private PrototypeConstructor constructor;
@@ -26,7 +22,7 @@ public class PrototypeBuilder implements Prototype {
 	private Prototype namedValueHandler;
 	private Prototype indexedValueHandler;
 
-	protected PrototypeBuilder(String n) {
+	public PrototypeBuilder(String n) {
 		prototypeName = n;
 	}
 

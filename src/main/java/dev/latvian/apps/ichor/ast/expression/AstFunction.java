@@ -1,11 +1,12 @@
 package dev.latvian.apps.ichor.ast.expression;
 
+import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.ast.statement.AstReturn;
 import dev.latvian.apps.ichor.error.ScriptError;
-import dev.latvian.apps.ichor.prototype.Interpretable;
+import dev.latvian.apps.ichor.exit.ReturnExit;
+import dev.latvian.apps.ichor.exit.ScopeExit;
 import dev.latvian.apps.ichor.prototype.PrototypeFunction;
 import dev.latvian.apps.ichor.util.AssignType;
 
@@ -60,12 +61,7 @@ public class AstFunction extends AstExpression implements PrototypeFunction, Com
 				builder.append(", ");
 			}
 
-			builder.append(params[i].name);
-
-			if (params[i].defaultValue != Special.UNDEFINED) {
-				builder.append(" = ");
-				builder.appendValue(params[i].defaultValue);
-			}
+			params[i].append(builder);
 		}
 
 		builder.append(") => ");
@@ -78,7 +74,7 @@ public class AstFunction extends AstExpression implements PrototypeFunction, Com
 			throw new ScriptError("Invalid number of arguments: " + args.length + " < " + requiredParams);
 		}
 
-		var s = scope.push();
+		var s = scope.push(this);
 
 		try {
 			for (int i = 0; i < params.length; i++) {
@@ -86,10 +82,10 @@ public class AstFunction extends AstExpression implements PrototypeFunction, Com
 			}
 
 			body.interpret(s);
-		} catch (AstReturn.ReturnException ex) {
-			return ex.value;
-		} finally {
-			scope.pop();
+		} catch (ReturnExit exit) {
+			return exit.value;
+		} catch (ScopeExit exit) {
+			throw new ScriptError(exit);
 		}
 
 		return Special.UNDEFINED;

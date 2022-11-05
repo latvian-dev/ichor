@@ -1,9 +1,9 @@
 package dev.latvian.apps.ichor.ast.expression;
 
+import dev.latvian.apps.ichor.Callable;
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.prototype.Callable;
-import dev.latvian.apps.ichor.prototype.Evaluable;
 
 import java.util.ArrayList;
 import java.util.List;

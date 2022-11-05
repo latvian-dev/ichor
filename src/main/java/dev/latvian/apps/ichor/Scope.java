@@ -1,9 +1,10 @@
 package dev.latvian.apps.ichor;
 
+import dev.latvian.apps.ichor.ast.statement.AstClass;
 import dev.latvian.apps.ichor.error.ScriptError;
-import dev.latvian.apps.ichor.prototype.Evaluable;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.AssignType;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,12 +28,20 @@ public class Scope {
 	public final Scope parent;
 	public RootScope root;
 	public Map<String, Slot> members;
+	public Object owner;
+	private int depth;
 
 	protected Scope(Scope parent) {
 		this.parent = parent;
 
 		if (this.parent != null) {
 			this.root = parent.root;
+			this.owner = parent.owner;
+			this.depth = parent.depth + 1;
+
+			if (this.depth > this.root.maxScopeDepth) {
+				throw new ScriptError("Scope depth is > " + this.root.maxScopeDepth);
+			}
 		}
 	}
 
@@ -56,7 +65,7 @@ public class Scope {
 				slot.prototype = null;
 
 				if (root.context.debugger != null) {
-					root.context.debugger.assignSet(name, value);
+					root.context.debugger.assignSet(this, name, value);
 				}
 			}
 		} else {
@@ -75,7 +84,7 @@ public class Scope {
 			slot.prototype = null;
 
 			if (root.context.debugger != null) {
-				root.context.debugger.assignNew(name, value);
+				root.context.debugger.assignNew(this, name, value);
 			}
 		}
 	}
@@ -135,14 +144,14 @@ public class Scope {
 		return Special.NOT_FOUND;
 	}
 
-	public void setMember(String name, Object value, AssignType type) {
+	public boolean setMember(String name, Object value, AssignType type) {
 		// type == NONE = replace existing member, error if not found (x = y)
 		// type == MUTABLE = create new mutable member (var x, let x)
 		// type == IMMUTABLE = create new immutable member (const x)
 
 		if (type == AssignType.MUTABLE || type == AssignType.IMMUTABLE) {
 			declareMember(name, value, type);
-			return;
+			return true;
 		}
 
 		Scope s = this;
@@ -150,14 +159,14 @@ public class Scope {
 		do {
 			if (s.hasDeclaredMember(name) != AssignType.NONE) {
 				s.declareMember(name, value, AssignType.NONE);
-				return;
+				return true;
 			}
 
 			s = s.parent;
 		}
 		while (s != null);
 
-		throw new ScriptError("Member " + name + " not found");
+		return false;
 	}
 
 	public AssignType hasMember(String name) {
@@ -185,46 +194,51 @@ public class Scope {
 		add(root.context.getClassPrototype(type));
 	}
 
-	public Scope childScope() {
-		return new Scope(this);
+	public Scope push() {
+		return push(owner);
+	}
+
+	public Scope push(Object owner) {
+		var p = new Scope(this);
+		p.owner = owner;
+
+		if (root.context.debugger != null) {
+			root.context.debugger.pushScope(this);
+		}
+
+		return p;
 	}
 
 	public Context getContext() {
 		return root.context;
 	}
 
-	public Scope push() {
-		root.current = childScope();
-
-		if (root.context.debugger != null) {
-			root.context.debugger.pushScope(root.current);
-		}
-
-		return root.current;
-	}
-
-	public void pop() {
-		root.current = this;
-
-		if (root.context.debugger != null) {
-			root.context.debugger.popScope(this);
-		}
-	}
-
 	@Override
 	public String toString() {
-		int depth = 0;
-		var s = this;
-
-		while (s.parent != null) {
-			depth++;
-			s = s.parent;
-		}
-
-		return "Scope[" + depth + ']' + getDeclaredMemberNames();
+		return "Scope[" + getDepth() + ']' + getDeclaredMemberNames();
 	}
 
 	public Object eval(Object object) {
 		return object instanceof Evaluable eval ? eval.eval(this) : object;
+	}
+
+	public int getDepth() {
+		return depth;
+	}
+
+	@Nullable
+	public AstClass.Instance findOwnerClass() {
+		var s = this;
+
+		do {
+			if (s.owner instanceof AstClass.Instance instance) {
+				return instance;
+			}
+
+			s = s.parent;
+		}
+		while (s != null);
+
+		return null;
 	}
 }

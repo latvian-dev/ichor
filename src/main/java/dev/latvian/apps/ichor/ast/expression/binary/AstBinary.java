@@ -1,15 +1,10 @@
 package dev.latvian.apps.ichor.ast.expression.binary;
 
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.ast.expression.AstExpression;
-import dev.latvian.apps.ichor.prototype.Evaluable;
 
 public abstract class AstBinary extends AstExpression {
-	@FunctionalInterface
-	public interface Factory {
-		Evaluable create(Evaluable left, Evaluable right);
-	}
-
 	public Object left;
 	public Object right;
 
@@ -23,4 +18,9 @@ public abstract class AstBinary extends AstExpression {
 	}
 
 	public abstract void appendSymbol(StringBuilder builder);
+
+	@FunctionalInterface
+	public interface Factory {
+		Evaluable create(Evaluable left, Evaluable right);
+	}
 }

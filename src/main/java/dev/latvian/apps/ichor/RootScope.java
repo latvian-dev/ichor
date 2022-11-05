@@ -8,13 +8,14 @@ import dev.latvian.apps.ichor.js.StringJS;
 
 public class RootScope extends Scope {
 	public final Context context;
-	public Scope current;
+	public int maxScopeDepth;
 
 	public RootScope(Context cx) {
 		super(null);
 		context = cx;
 		root = this;
-		current = this;
+		owner = cx;
+		maxScopeDepth = cx.getProperty("maxScopeDepth", 1000);
 	}
 
 	public void addSafeClasses() {

@@ -8,7 +8,6 @@ import dev.latvian.apps.ichor.js.BooleanJS;
 import dev.latvian.apps.ichor.js.NumberJS;
 import dev.latvian.apps.ichor.js.ObjectJS;
 import dev.latvian.apps.ichor.js.StringJS;
-import dev.latvian.apps.ichor.prototype.Evaluable;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
 
@@ -16,14 +15,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public abstract class Context {
-	private Map<Class<?>, Prototype> classPrototypeCache;
-	private Map<String, Object> properties;
 	public Debugger debugger = null;
 	public Prototype stringPrototype;
 	public Prototype numberPrototype;
 	public Prototype booleanPrototype;
 	public Prototype listPrototype;
 	public Prototype mapPrototype;
+	private Map<Class<?>, Prototype> classPrototypeCache;
+	private Map<String, Object> properties;
 
 	public Context() {
 	}

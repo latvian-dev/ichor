@@ -1,11 +1,11 @@
 package dev.latvian.apps.ichor.ast.expression;
 
+import dev.latvian.apps.ichor.Callable;
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
-import dev.latvian.apps.ichor.prototype.Callable;
-import dev.latvian.apps.ichor.prototype.Evaluable;
 
 public class AstNew extends AstExpression {
 	public final Evaluable callee;

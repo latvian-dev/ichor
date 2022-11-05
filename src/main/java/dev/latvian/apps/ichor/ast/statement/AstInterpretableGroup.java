@@ -1,18 +1,19 @@
 package dev.latvian.apps.ichor.ast.statement;
 
+import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.prototype.Interpretable;
+import dev.latvian.apps.ichor.exit.ScopeExit;
 
 import java.util.Collection;
 import java.util.List;
 
 public class AstInterpretableGroup extends AstStatement {
-	public final Interpretable[] interpretable;
-
 	public static Interpretable optimized(List<Interpretable> statements) {
 		return statements.size() == 1 ? statements.get(0) : new AstInterpretableGroup(statements);
 	}
+
+	public final Interpretable[] interpretable;
 
 	public AstInterpretableGroup(Interpretable... statements) {
 		this.interpretable = statements;
@@ -31,7 +32,7 @@ public class AstInterpretableGroup extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) {
+	public void interpret(Scope scope) throws ScopeExit {
 		for (var statement : interpretable) {
 			statement.interpret(scope);
 		}

@@ -4,11 +4,6 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 
 public class AstSeq extends AstBinaryBoolean {
-	@Override
-	public void appendSymbol(StringBuilder builder) {
-		builder.append("===");
-	}
-
 	public static boolean shallowEquals(Object l, Object r) {
 		if (l == r) {
 			return true;
@@ -21,6 +16,11 @@ public class AstSeq extends AstBinaryBoolean {
 		}
 
 		return l == r;
+	}
+
+	@Override
+	public void appendSymbol(StringBuilder builder) {
+		builder.append("===");
 	}
 
 	@Override

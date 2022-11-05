@@ -7,7 +7,7 @@ import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 import java.util.LinkedHashMap;
 
 public class ObjectJS {
-	public static final Prototype PROTOTYPE = PrototypeBuilder.create("Object")
+	public static final Prototype PROTOTYPE = new PrototypeBuilder("Object")
 			.constructor((cx, args, hasNew) -> new LinkedHashMap<>())
 			.namedValueHandler(MapValueHandler.INSTANCE);
 

@@ -1,10 +1,10 @@
 package dev.latvian.apps.ichor.ast.expression;
 
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
-import dev.latvian.apps.ichor.prototype.Evaluable;
 
 public class AstGetByIndex extends AstGetFrom {
 	public final int index;
@@ -34,7 +34,7 @@ public class AstGetByIndex extends AstGetFrom {
 		var p = cx.getPrototype(self);
 
 		if (cx.debugger != null) {
-			cx.debugger.pushSelf(self);
+			cx.debugger.pushSelf(scope, self);
 		}
 
 		var r = p.get(scope, self, index);
@@ -44,7 +44,7 @@ public class AstGetByIndex extends AstGetFrom {
 		}
 
 		if (cx.debugger != null) {
-			cx.debugger.get(this, r);
+			cx.debugger.get(scope, this, r);
 		}
 
 		return r;
@@ -57,13 +57,13 @@ public class AstGetByIndex extends AstGetFrom {
 		var p = cx.getPrototype(self);
 
 		if (cx.debugger != null) {
-			cx.debugger.pushSelf(self);
+			cx.debugger.pushSelf(scope, self);
 		}
 
 		p.set(scope, self, index, value);
 
 		if (cx.debugger != null) {
-			cx.debugger.set(this, value);
+			cx.debugger.set(scope, this, value);
 		}
 	}
 }

@@ -6,9 +6,7 @@ import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 
 public class ConsoleDebugger implements Debugger {
-	public String indent = "[DEBUG] ";
-
-	private String wrapString(Object o) {
+	private String wrapString(Scope scope, Object o) {
 		if (o == null) {
 			return "null";
 		} else if (o instanceof CharSequence) {
@@ -20,35 +18,29 @@ public class ConsoleDebugger implements Debugger {
 
 	@Override
 	public void pushScope(Scope scope) {
-		System.out.println(indent + "* -> " + scope);
-		indent += "  ";
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Scope -> " + scope + " of " + scope.owner);
 	}
 
 	@Override
-	public void popScope(Scope scope) {
-		indent = indent.substring(0, indent.length() - 2);
-		System.out.println(indent + "* <- " + scope);
+	public void pushSelf(Scope scope, Object self) {
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Self -> " + wrapString(scope, self));
 	}
 
 	@Override
-	public void pushSelf(Object self) {
-		System.out.println(indent + "* Self -> " + self);
+	public void get(Scope scope, Object object, Object returnValue) {
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Get @ " + object + " = " + wrapString(scope, returnValue));
 	}
 
 	@Override
-	public void get(Object object, Object returnValue) {
-		System.out.println(indent + "* Get @ " + object + " = " + wrapString(returnValue));
+	public void set(Scope scope, Object object, Object value) {
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Get @ " + object + " = " + wrapString(scope, value));
 	}
 
 	@Override
-	public void set(Object object, Object value) {
-		System.out.println(indent + "* Get @ " + object + " = " + wrapString(value));
-	}
-
-	@Override
-	public void call(Object callee, Object[] args, Object returnValue) {
+	public void call(Scope scope, Object callee, Object[] args, Object returnValue) {
 		var sb = new AstStringBuilder();
-		sb.append(indent);
+		sb.append("[DEBUG] ");
+		sb.append("  ".repeat(scope.getDepth()));
 		sb.append("* Call => ");
 		sb.append(callee);
 		sb.append('(');
@@ -59,25 +51,32 @@ public class ConsoleDebugger implements Debugger {
 			}
 
 			sb.appendValue(args[i]);
+			sb.append('=');
+			sb.append(wrapString(scope, args[i]));
 		}
 
 		sb.append(") = ");
-		sb.append(wrapString(returnValue));
+		sb.append(wrapString(scope, returnValue));
 
 		System.out.println(sb);
 	}
 
 	@Override
-	public void assignNew(Object object, Object value) {
+	public void assignNew(Scope scope, Object object, Object value) {
 		if (value instanceof PrototypeBuilder) {
 			return;
 		}
 
-		System.out.println(indent + "* Assign New @ " + object + " = " + wrapString(value));
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Assign New @ " + object + " = " + wrapString(scope, value));
 	}
 
 	@Override
-	public void assignSet(Object object, Object value) {
-		System.out.println(indent + "* Assign Set @ " + object + " = " + wrapString(value));
+	public void assignSet(Scope scope, Object object, Object value) {
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Assign Set @ " + object + " = " + wrapString(scope, value));
+	}
+
+	@Override
+	public void exit(Scope scope, Object value) {
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Exit = " + wrapString(scope, value));
 	}
 }

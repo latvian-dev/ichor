@@ -19,6 +19,12 @@ public class JavaTypePrototype extends PrototypeBuilder {
 
 	private boolean shouldInit;
 
+	public JavaTypePrototype(Context cx, Class<?> t) {
+		super(t.getName());
+		context = cx;
+		type = t;
+	}
+
 	private void init0() {
 		if (shouldInit) {
 			shouldInit = false;
@@ -34,12 +40,6 @@ public class JavaTypePrototype extends PrototypeBuilder {
 				}
 			}
 		}
-	}
-
-	public JavaTypePrototype(Context cx, Class<?> t) {
-		super(t.getName());
-		context = cx;
-		type = t;
 	}
 
 	@Override

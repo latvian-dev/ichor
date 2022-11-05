@@ -1,7 +1,7 @@
 package dev.latvian.apps.ichor.ast.statement;
 
+import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.ast.Ast;
-import dev.latvian.apps.ichor.prototype.Interpretable;
 import dev.latvian.apps.ichor.token.PositionedToken;
 
 public abstract class AstStatement extends Ast implements Interpretable {

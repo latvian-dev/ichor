@@ -6,7 +6,11 @@ import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 
 public class StringJS {
-	public static final Prototype PROTOTYPE = PrototypeBuilder.create("String")
+	private static String s(Object self) {
+		return self.toString();
+	}
+
+	public static final Prototype PROTOTYPE = new PrototypeBuilder("String")
 			.constructor((scope, args, hasNew) -> args.length == 0 ? "" : scope.getContext().asString(scope, args[0]))
 			.asNumber((scope, self) -> scope.toString().isEmpty() ? NumberJS.ZERO : NumberJS.ONE)
 			.asBoolean((scope, self) -> !scope.toString().isEmpty())
@@ -44,10 +48,6 @@ public class StringJS {
 			.function("padEnd", StringJS::unimpl)
 			.function("trimStart", StringJS::unimpl)
 			.function("trimEnd", StringJS::unimpl);
-
-	private static String s(Object self) {
-		return self.toString();
-	}
 
 	private static CharSequence cs(Object self) {
 		return self instanceof CharSequence c ? c : self.toString();

@@ -1,7 +1,4 @@
-package dev.latvian.apps.ichor.prototype;
-
-import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.Special;
+package dev.latvian.apps.ichor;
 
 @FunctionalInterface
 public interface Callable {

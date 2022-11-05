@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class ArrayJS {
-	public static final Prototype PROTOTYPE = PrototypeBuilder.create("Array")
+	public static final Prototype PROTOTYPE = new PrototypeBuilder("Array")
 			.constructor((cx, args, hasNew) -> args.length == 0 ? new ArrayList<>() : Arrays.asList(args))
 			.property("length", (scope, self) -> collection(self).size())
 			.indexedValueHandler(ListValueHandler.INSTANCE);

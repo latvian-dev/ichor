@@ -4,24 +4,24 @@ public interface Debugger {
 	default void pushScope(Scope scope) {
 	}
 
-	default void popScope(Scope scope) {
+	default void pushSelf(Scope scope, Object self) {
 	}
 
-	default void pushSelf(Object self) {
+	default void get(Scope scope, Object object, Object returnValue) {
 	}
 
-	default void get(Object object, Object returnValue) {
+	default void set(Scope scope, Object object, Object value) {
 	}
 
-	default void set(Object object, Object value) {
+	default void call(Scope scope, Object callee, Object[] args, Object returnValue) {
 	}
 
-	default void call(Object callee, Object[] args, Object returnValue) {
+	default void assignNew(Scope scope, Object object, Object value) {
 	}
 
-	default void assignNew(Object object, Object value) {
+	default void assignSet(Scope scope, Object object, Object value) {
 	}
 
-	default void assignSet(Object object, Object value) {
+	default void exit(Scope scope, Object value) {
 	}
 }

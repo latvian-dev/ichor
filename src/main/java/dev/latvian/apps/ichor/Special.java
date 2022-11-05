@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor;
 
-import dev.latvian.apps.ichor.prototype.Evaluable;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
@@ -20,7 +19,7 @@ public class Special implements PrototypeSupplier, Token, Evaluable {
 	private final Prototype prototype;
 
 	private Special(String name) {
-		prototype = PrototypeBuilder.create(name);
+		prototype = new PrototypeBuilder(name);
 	}
 
 	@Override

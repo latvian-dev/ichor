@@ -11,7 +11,7 @@ public class NumberJS {
 	public static final double MAX_SAFE_INTEGER = 9007199254740991.0;
 	public static final double MIN_SAFE_INTEGER = -MAX_SAFE_INTEGER;
 
-	public static final Prototype PROTOTYPE = PrototypeBuilder.create("Number")
+	public static final Prototype PROTOTYPE = new PrototypeBuilder("Number")
 			.constructor((scope, args, hasNew) -> args.length == 0 ? NaN : scope.getContext().asNumber(scope, args[0]))
 			.asNumber((scope, self) -> (Number) self)
 			.asBoolean((scope, self) -> ((Number) self).doubleValue() != 0D)

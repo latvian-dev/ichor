@@ -1,9 +1,12 @@
 package dev.latvian.apps.ichor.ast.statement;
 
+import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.prototype.Evaluable;
-import dev.latvian.apps.ichor.prototype.Interpretable;
+import dev.latvian.apps.ichor.exit.BreakExit;
+import dev.latvian.apps.ichor.exit.ContinueExit;
+import dev.latvian.apps.ichor.exit.ScopeExit;
 
 public class AstWhile extends AstStatement {
 	public final Evaluable condition;
@@ -23,13 +26,13 @@ public class AstWhile extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) {
+	public void interpret(Scope scope) throws ScopeExit {
 		while (condition.evalBoolean(scope)) {
 			try {
-				body.interpretInNewScope(scope);
-			} catch (AstBreak.BreakException ex) {
+				body.interpret(scope.push());
+			} catch (BreakExit exit) {
 				break;
-			} catch (AstContinue.ContinueException ignored) {
+			} catch (ContinueExit ignored) {
 			}
 		}
 	}

@@ -12,7 +12,7 @@ public class AstStringBuilder {
 	}
 
 	public void append(Object o) {
-		if (o instanceof Ast ast) {
+		if (o instanceof AstAppendable ast) {
 			ast.append(this);
 		} else {
 			builder.append(o);
@@ -24,7 +24,7 @@ public class AstStringBuilder {
 			builder.append('"');
 		}
 
-		if (o instanceof Ast ast) {
+		if (o instanceof AstAppendable ast) {
 			ast.append(this);
 		} else {
 			builder.append(o);

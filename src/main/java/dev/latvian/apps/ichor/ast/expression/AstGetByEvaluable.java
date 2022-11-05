@@ -33,7 +33,7 @@ public class AstGetByEvaluable extends AstGetFrom {
 		var p = cx.getPrototype(self);
 
 		if (cx.debugger != null) {
-			cx.debugger.pushSelf(self);
+			cx.debugger.pushSelf(scope, self);
 		}
 
 		var k = scope.eval(key);
@@ -51,7 +51,7 @@ public class AstGetByEvaluable extends AstGetFrom {
 		}
 
 		if (cx.debugger != null) {
-			cx.debugger.get(this, r);
+			cx.debugger.get(scope, this, r);
 		}
 
 		return r;
@@ -64,7 +64,7 @@ public class AstGetByEvaluable extends AstGetFrom {
 		var p = cx.getPrototype(self);
 
 		if (cx.debugger != null) {
-			cx.debugger.pushSelf(self);
+			cx.debugger.pushSelf(scope, self);
 		}
 
 		var k = scope.eval(key);
@@ -76,7 +76,7 @@ public class AstGetByEvaluable extends AstGetFrom {
 		}
 
 		if (cx.debugger != null) {
-			cx.debugger.set(this, value);
+			cx.debugger.set(scope, this, value);
 		}
 	}
 }
