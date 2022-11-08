@@ -4,10 +4,10 @@ import dev.latvian.apps.ichor.Context;
 
 public class ContextJS extends Context {
 	public ContextJS() {
-		stringPrototype = StringJS.PROTOTYPE;
-		numberPrototype = NumberJS.PROTOTYPE;
-		booleanPrototype = BooleanJS.PROTOTYPE;
-		listPrototype = ArrayJS.PROTOTYPE;
-		mapPrototype = ObjectJS.PROTOTYPE;
+		safePrototypes.add(stringPrototype = StringJS.PROTOTYPE);
+		safePrototypes.add(numberPrototype = NumberJS.PROTOTYPE);
+		safePrototypes.add(booleanPrototype = BooleanJS.PROTOTYPE);
+		safePrototypes.add(listPrototype = ArrayJS.PROTOTYPE);
+		safePrototypes.add(mapPrototype = ObjectJS.PROTOTYPE);
 	}
 }

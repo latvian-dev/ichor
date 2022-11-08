@@ -76,4 +76,20 @@ public class AstGetByName extends AstGetFrom {
 			cx.debugger.set(scope, this, value);
 		}
 	}
+
+	@Override
+	public Evaluable createCall(Object[] arguments, boolean isNew) {
+		if (arguments.length == 0 && name.equals("toString")) {
+			return new ToStringEvaluable(this);
+		}
+
+		return super.createCall(arguments, isNew);
+	}
+
+	private record ToStringEvaluable(Object obj) implements Evaluable {
+		@Override
+		public Object eval(Scope scope) {
+			return scope.getContext().toString(scope, obj);
+		}
+	}
 }

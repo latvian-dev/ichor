@@ -5,6 +5,7 @@ import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.ast.Ast;
 import dev.latvian.apps.ichor.ast.CallableAst;
 import dev.latvian.apps.ichor.ast.expression.AstArray;
+import dev.latvian.apps.ichor.ast.expression.AstClassFunction;
 import dev.latvian.apps.ichor.ast.expression.AstFunction;
 import dev.latvian.apps.ichor.ast.expression.AstGetBase;
 import dev.latvian.apps.ichor.ast.expression.AstGetByEvaluable;
@@ -44,19 +45,16 @@ import dev.latvian.apps.ichor.token.PositionedToken;
 import dev.latvian.apps.ichor.token.StaticToken;
 import dev.latvian.apps.ichor.token.SymbolToken;
 import dev.latvian.apps.ichor.token.Token;
+import dev.latvian.apps.ichor.util.EmptyArrays;
 import dev.latvian.apps.ichor.util.EvaluableFactory;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @SuppressWarnings("StatementWithEmptyBody")
 public class ParserJS {
-	public static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
-	public static final String[] EMPTY_STRING_ARRAY = new String[0];
-
 	private static final StaticToken[] VAR_TOKENS = {KeywordToken.VAR, KeywordToken.LET, KeywordToken.CONST};
 	private static final StaticToken[] NC_TOKENS = {SymbolToken.NC};
 	private static final StaticToken[] AND_TOKENS = {SymbolToken.AND};
@@ -95,7 +93,7 @@ public class ParserJS {
 			return classDeclaration();
 		} else if (match(KeywordToken.FUNCTION)) {
 			var name = consumeName("Expected function name").asString();
-			var func = function(0);
+			var func = function(null, null, 0);
 			return new AstConstStatement(name, func);
 		} else if (match(VAR_TOKENS)) {
 			return varDeclaration(previous().token() == KeywordToken.CONST);
@@ -106,21 +104,19 @@ public class ParserJS {
 
 	private Interpretable classDeclaration() {
 		var name = consumeName("Expected class name");
-
-		Object superclass = null;
+		var astClass = new AstClass(name.asString());
+		astClass.pos(name);
 
 		if (match(KeywordToken.EXTENDS)) {
 			consumeName("Expected superclass name");
-			superclass = new AstGetScopeMember(previous().asString());
+			astClass.parent = new AstGetScopeMember(previous().asString());
 		}
 
 		consume(SymbolToken.LC, "Expected '{' before class body");
 
-		AstFunction constructor = null;
-		var methods = new ArrayList<Map.Entry<String, AstFunction>>();
-
 		while (!check(SymbolToken.RC) && canAdvance()) {
 			int modifiers = AstFunction.MOD_CLASS;
+			var type = AstClassFunction.Type.METHOD;
 
 			if (match(KeywordToken.STATIC)) {
 				modifiers |= AstFunction.MOD_STATIC;
@@ -128,29 +124,42 @@ public class ParserJS {
 
 			if (match(KeywordToken.GET)) {
 				modifiers |= AstFunction.MOD_GET;
+				type = AstClassFunction.Type.GETTER;
 			}
 
 			if (match(KeywordToken.SET)) {
 				modifiers |= AstFunction.MOD_SET;
+				type = AstClassFunction.Type.SETTER;
 			}
 
 			var fname = consumeName("Expected function name");
 
 			if (fname.asString().equals("constructor")) {
 				modifiers |= AstFunction.MOD_CONSTRUCTOR;
+				type = AstClassFunction.Type.CONSTRUCTOR;
 
-				if (constructor != null) {
+				if (astClass.constructor != null) {
 					throw error(fname, "Constructor already defined");
 				}
 
-				constructor = function(modifiers);
+				astClass.constructor = (AstClassFunction) function(astClass, type, modifiers);
 			} else {
-				methods.add(new AbstractMap.SimpleEntry<>(fname.asString(), function(modifiers)));
+				var map = switch (type) {
+					case GETTER -> astClass.getters;
+					case SETTER -> astClass.setters;
+					default -> astClass.methods;
+				};
+
+				if (map.containsKey(fname.asString())) {
+					throw error(fname, "Method already defined");
+				}
+
+				map.put(fname.asString(), (AstClassFunction) function(astClass, type, modifiers));
 			}
 		}
 
 		consume(SymbolToken.RC, "Expected '}' after class body");
-		return new AstClass(name.asString(), superclass, constructor, methods);
+		return astClass;
 	}
 
 	private Interpretable statement() {
@@ -301,7 +310,7 @@ public class ParserJS {
 		return new AstExpressionStatement(expr);
 	}
 
-	private AstFunction function(int modifiers) {
+	private AstFunction function(@Nullable AstClass owner, AstClassFunction.Type type, int modifiers) {
 		consume(SymbolToken.LP, "Expected '(' before function parameters");
 		var parameters = new ArrayList<AstParam>();
 		if (!check(SymbolToken.RP)) {
@@ -311,6 +320,11 @@ public class ParserJS {
 		}
 		consume(SymbolToken.RP, "Expected ')' after function parameters");
 		var body = block(false);
+
+		if (owner != null) {
+			return new AstClassFunction(owner, parameters.toArray(AstParam.EMPTY_PARAM_ARRAY), body, modifiers, type);
+		}
+
 		return new AstFunction(parameters.toArray(AstParam.EMPTY_PARAM_ARRAY), body, modifiers);
 	}
 
@@ -466,7 +480,7 @@ public class ParserJS {
 				consume(SymbolToken.RP, "Expected ')' after arguments");
 
 				if (expr instanceof CallableAst c) {
-					expr = c.createCall(arguments.toArray(EMPTY_OBJECT_ARRAY), false);
+					expr = c.createCall(arguments.toArray(EmptyArrays.OBJECTS), false);
 
 					if (expr instanceof Ast ast) {
 						ast.pos(lp);
@@ -531,12 +545,12 @@ public class ParserJS {
 				}
 
 				consume(SymbolToken.RP, "Expected ')' after arguments");
-				return new AstNew(new AstGetScopeMember(name.asString()), arguments.toArray(EMPTY_OBJECT_ARRAY)).pos(name);
+				return new AstNew(new AstGetScopeMember(name.asString()), arguments.toArray(EmptyArrays.OBJECTS)).pos(name);
 			} else {
 				throw error(peek(), "Expected class name");
 			}
 		} else if (match(KeywordToken.FUNCTION)) {
-			return function(0);
+			return function(null, null, 0);
 		} else if (peekToken() instanceof NameToken name) {
 			int current0 = current;
 			var param = param();
@@ -635,7 +649,7 @@ public class ParserJS {
 	}
 
 	private PositionedToken consumeName(String message) {
-		if (peekToken() instanceof NameToken) {
+		if (peekToken() instanceof NameToken || peekToken() instanceof KeywordToken) {
 			return advance();
 		}
 

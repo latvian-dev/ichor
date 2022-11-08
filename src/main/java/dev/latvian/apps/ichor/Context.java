@@ -1,17 +1,16 @@
 package dev.latvian.apps.ichor;
 
+import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.java.JavaClassJS;
 import dev.latvian.apps.ichor.java.JavaTypePrototype;
-import dev.latvian.apps.ichor.js.ArrayJS;
-import dev.latvian.apps.ichor.js.BooleanJS;
 import dev.latvian.apps.ichor.js.NumberJS;
-import dev.latvian.apps.ichor.js.ObjectJS;
-import dev.latvian.apps.ichor.js.StringJS;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public abstract class Context {
@@ -21,10 +20,12 @@ public abstract class Context {
 	public Prototype booleanPrototype;
 	public Prototype listPrototype;
 	public Prototype mapPrototype;
+	public final List<Prototype> safePrototypes;
 	private Map<Class<?>, Prototype> classPrototypeCache;
 	private Map<String, Object> properties;
 
 	public Context() {
+		safePrototypes = new ArrayList<>();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -38,6 +39,24 @@ public abstract class Context {
 		}
 
 		properties.put(name, value);
+	}
+
+	public void toString(Scope scope, Object o, StringBuilder builder) {
+		if (o == null) {
+			builder.append("null");
+		} else if (o instanceof Number || o instanceof Boolean || o instanceof Special) {
+			builder.append(o);
+		} else if (o instanceof CharSequence || o instanceof Character) {
+			AstStringBuilder.wrapString(o, builder);
+		} else {
+			getPrototype(o).toString(scope, o, builder);
+		}
+	}
+
+	public String toString(Scope scope, Object o) {
+		var builder = new StringBuilder();
+		toString(scope, o, builder);
+		return builder.toString();
 	}
 
 	public String asString(Scope scope, Object o) {
@@ -199,19 +218,19 @@ public abstract class Context {
 		if (o == null) {
 			return Special.NULL.getPrototype();
 		} else if (o instanceof CharSequence) {
-			return StringJS.PROTOTYPE;
+			return stringPrototype;
 		} else if (o instanceof Number) {
-			return NumberJS.PROTOTYPE;
+			return numberPrototype;
 		} else if (o instanceof Boolean) {
-			return BooleanJS.PROTOTYPE;
+			return booleanPrototype;
 		} else if (o instanceof PrototypeSupplier s) {
 			return s.getPrototype();
 		} else if (o instanceof Class) {
 			return JavaClassJS.PROTOTYPE;
 		} else if (o instanceof Map<?, ?>) {
-			return ObjectJS.PROTOTYPE;
+			return mapPrototype;
 		} else if (o instanceof Iterable<?> || o.getClass().isArray()) {
-			return ArrayJS.PROTOTYPE;
+			return listPrototype;
 		}
 
 		return getClassPrototype0(o.getClass());
@@ -221,21 +240,21 @@ public abstract class Context {
 		if (c == null || c == Void.class || c == Void.TYPE) {
 			return Special.NULL.getPrototype();
 		} else if (c == String.class || c == Character.class || c == Character.TYPE) {
-			return StringJS.PROTOTYPE;
+			return stringPrototype;
 		} else if (c == Boolean.class || c == Boolean.TYPE) {
-			return BooleanJS.PROTOTYPE;
+			return booleanPrototype;
 		} else if (c.isPrimitive()) {
-			return NumberJS.PROTOTYPE;
+			return numberPrototype;
 		} else if (c == Class.class) {
 			return JavaClassJS.PROTOTYPE;
 		} else if (Number.class.isAssignableFrom(c)) {
-			return NumberJS.PROTOTYPE;
+			return numberPrototype;
 		} else if (CharSequence.class.isAssignableFrom(c)) {
-			return StringJS.PROTOTYPE;
+			return stringPrototype;
 		} else if (Map.class.isAssignableFrom(c)) {
-			return ObjectJS.PROTOTYPE;
+			return mapPrototype;
 		} else if (Iterable.class.isAssignableFrom(c) || c.isArray()) {
-			return ArrayJS.PROTOTYPE;
+			return listPrototype;
 		}
 
 		return getClassPrototype0(c);
@@ -254,5 +273,10 @@ public abstract class Context {
 		}
 
 		return p;
+	}
+
+	@Override
+	public String toString() {
+		return "Context";
 	}
 }

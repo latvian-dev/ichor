@@ -7,6 +7,7 @@ import dev.latvian.apps.ichor.js.ContextJS;
 import dev.latvian.apps.ichor.js.NumberJS;
 import dev.latvian.apps.ichor.js.ParserJS;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
+import dev.latvian.apps.ichor.test.ReflectionExample;
 import dev.latvian.apps.ichor.test.TestConsole;
 import dev.latvian.apps.ichor.util.AssignType;
 import dev.latvian.apps.ichor.util.ConsoleDebugger;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 
 // @Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
 public class InterpreterTests {
@@ -25,7 +27,7 @@ public class InterpreterTests {
 		}
 	}
 
-	private static void testInterpreter(String input, boolean debug, String match) {
+	private static void testInterpreter(String input, Consumer<RootScope> rootScopeCallback, String match) {
 		var matchStr = Arrays.asList(match.split("\n"));
 		System.out.println("--- Interpreter Test ---");
 		System.out.println("Input:");
@@ -40,11 +42,7 @@ public class InterpreterTests {
 		rootScope.addSafeClasses();
 		var console = new TestConsole(System.out, new ArrayList<>());
 		rootScope.declareMember("print", console, AssignType.IMMUTABLE);
-
-		if (debug) {
-			cx.setProperty("debug", debug);
-		}
-
+		rootScopeCallback.accept(rootScope);
 		cx.debugger = new ConsoleDebugger();
 
 		var tokenStream = new TokenStreamJS(input);
@@ -71,7 +69,8 @@ public class InterpreterTests {
 	}
 
 	private static void testInterpreter(String input, String match) {
-		testInterpreter(input, false, match);
+		testInterpreter(input, cx -> {
+		}, match);
 	}
 
 	@Test
@@ -337,6 +336,27 @@ public class InterpreterTests {
 				""", """
 				A
 				C
+				""");
+	}
+
+	@Test
+	public void reflection() {
+		testInterpreter("""
+				print(ref.publicField)
+				ref.publicField = 40
+				print(ref.publicField)
+				ref.sout('Hello')
+				ref.sout(7)
+				ref.soutNum('8')
+				print(ref.class.name)
+				print(ref.class.class.name)
+				""", scope -> {
+			scope.declareMember("ref", new ReflectionExample(), AssignType.IMMUTABLE);
+		}, """
+				30
+				40
+				dev.latvian.apps.ichor.test.ReflectionExample
+				java.lang.Class
 				""");
 	}
 }

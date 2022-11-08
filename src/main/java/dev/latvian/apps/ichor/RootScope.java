@@ -1,11 +1,5 @@
 package dev.latvian.apps.ichor;
 
-import dev.latvian.apps.ichor.js.ArrayJS;
-import dev.latvian.apps.ichor.js.BooleanJS;
-import dev.latvian.apps.ichor.js.NumberJS;
-import dev.latvian.apps.ichor.js.ObjectJS;
-import dev.latvian.apps.ichor.js.StringJS;
-
 public class RootScope extends Scope {
 	public final Context context;
 	public int maxScopeDepth;
@@ -19,11 +13,9 @@ public class RootScope extends Scope {
 	}
 
 	public void addSafeClasses() {
-		add(StringJS.PROTOTYPE);
-		add(NumberJS.PROTOTYPE);
-		add(BooleanJS.PROTOTYPE);
-		add(ObjectJS.PROTOTYPE);
-		add(ArrayJS.PROTOTYPE);
+		for (var p : context.safePrototypes) {
+			add(p.getPrototypeName(), p);
+		}
 	}
 
 	@Override

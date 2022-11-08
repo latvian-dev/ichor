@@ -69,6 +69,10 @@ public interface Prototype extends PrototypeSupplier, Callable {
 		return false;
 	}
 
+	default void toString(Scope scope, Object self, StringBuilder builder) {
+		builder.append(self);
+	}
+
 	default String asString(Scope scope, Object self) {
 		return self.toString();
 	}

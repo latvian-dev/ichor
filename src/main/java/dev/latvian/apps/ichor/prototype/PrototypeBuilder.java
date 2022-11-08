@@ -16,6 +16,7 @@ public class PrototypeBuilder implements Prototype {
 	protected Prototype parent;
 	private PrototypeConstructor constructor;
 	private Map<String, Object> members;
+	private PrototypeToString toString;
 	private PrototypeAsString asString;
 	private PrototypeAsNumber asNumber;
 	private PrototypeAsBoolean asBoolean;
@@ -34,6 +35,9 @@ public class PrototypeBuilder implements Prototype {
 	@Override
 	public String toString() {
 		return prototypeName;
+	}
+
+	protected void initLazy() {
 	}
 
 	// Builder //
@@ -62,6 +66,11 @@ public class PrototypeBuilder implements Prototype {
 
 	public PrototypeBuilder function(String name, PrototypeFunction value) {
 		return member(name, value);
+	}
+
+	public PrototypeBuilder toString(PrototypeToString value) {
+		toString = value;
+		return this;
 	}
 
 	public PrototypeBuilder asString(PrototypeAsString value) {
@@ -94,6 +103,8 @@ public class PrototypeBuilder implements Prototype {
 	@Override
 	@Nullable
 	public Object get(Scope scope, Object self, String name) {
+		initLazy();
+
 		if (members != null) {
 			var m = members.get(name);
 
@@ -129,6 +140,18 @@ public class PrototypeBuilder implements Prototype {
 
 	@Override
 	public boolean set(Scope scope, Object self, String name, @Nullable Object value) {
+		initLazy();
+
+		if (members != null) {
+			var m = members.get(name);
+
+			if (m instanceof PrototypeProperty p) {
+				return p.set(scope, self, value);
+			} else if (m != null) {
+				return false;
+			}
+		}
+
 		if (namedValueHandler != null && self != null) {
 			if (namedValueHandler.set(scope, self, name, value)) {
 				return true;
@@ -150,6 +173,8 @@ public class PrototypeBuilder implements Prototype {
 
 	@Override
 	public boolean delete(Scope scope, Object self, String name) {
+		initLazy();
+
 		if (namedValueHandler != null && self != null) {
 			if (namedValueHandler.delete(scope, self, name)) {
 				return true;
@@ -177,6 +202,8 @@ public class PrototypeBuilder implements Prototype {
 	@Override
 	@Nullable
 	public Object get(Scope scope, Object self, int index) {
+		initLazy();
+
 		if (indexedValueHandler != null && self != null) {
 			var m = indexedValueHandler.get(scope, self, index);
 
@@ -202,6 +229,8 @@ public class PrototypeBuilder implements Prototype {
 
 	@Override
 	public boolean set(Scope scope, Object self, int index, @Nullable Object value) {
+		initLazy();
+
 		if (indexedValueHandler != null && self != null) {
 			if (indexedValueHandler.set(scope, self, index, value)) {
 				return true;
@@ -223,6 +252,8 @@ public class PrototypeBuilder implements Prototype {
 
 	@Override
 	public boolean delete(Scope scope, Object self, int index) {
+		initLazy();
+
 		if (indexedValueHandler != null && self != null) {
 			if (indexedValueHandler.delete(scope, self, index)) {
 				return true;
@@ -244,6 +275,8 @@ public class PrototypeBuilder implements Prototype {
 
 	@Override
 	public Object construct(Scope scope, Object[] args) {
+		initLazy();
+
 		if (constructor != null) {
 			return constructor.construct(scope, args, true);
 		}
@@ -253,11 +286,22 @@ public class PrototypeBuilder implements Prototype {
 
 	@Override
 	public Object call(Scope scope, Object self, Object[] args) {
+		initLazy();
+
 		if (constructor != null) {
 			return constructor.construct(scope, args, false);
 		}
 
 		return Special.NOT_FOUND;
+	}
+
+	@Override
+	public void toString(Scope scope, Object self, StringBuilder builder) {
+		if (toString != null) {
+			toString.toString(scope, self, builder);
+		} else {
+			builder.append(scope.getContext().asString(scope, self));
+		}
 	}
 
 	@Override
@@ -288,6 +332,7 @@ public class PrototypeBuilder implements Prototype {
 	}
 
 	public Set<String> memberKeys() {
+		initLazy();
 		return members == null ? Collections.emptySet() : members.keySet();
 	}
 

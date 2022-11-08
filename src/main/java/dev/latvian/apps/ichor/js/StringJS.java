@@ -1,6 +1,7 @@
 package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.Scope;
+import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
@@ -12,6 +13,7 @@ public class StringJS {
 
 	public static final Prototype PROTOTYPE = new PrototypeBuilder("String")
 			.constructor((scope, args, hasNew) -> args.length == 0 ? "" : scope.getContext().asString(scope, args[0]))
+			.toString((scope, self, builder) -> AstStringBuilder.wrapString(self, builder))
 			.asNumber((scope, self) -> scope.toString().isEmpty() ? NumberJS.ZERO : NumberJS.ONE)
 			.asBoolean((scope, self) -> !scope.toString().isEmpty())
 			.property("length", StringJS::length)

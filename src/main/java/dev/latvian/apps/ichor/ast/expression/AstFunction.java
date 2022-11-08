@@ -11,14 +11,12 @@ import dev.latvian.apps.ichor.prototype.PrototypeFunction;
 import dev.latvian.apps.ichor.util.AssignType;
 
 public class AstFunction extends AstExpression implements PrototypeFunction, Comparable<AstFunction> {
-	public static final AstFunction[] EMPTY_FUNCTION_ARRAY = new AstFunction[0];
-
-	public static final int MOD_CONSTRUCTOR = 1;
-	public static final int MOD_STATIC = 2;
-	public static final int MOD_GET = 4;
+	public static final int MOD_ARROW = 1;
+	public static final int MOD_CLASS = 2;
+	public static final int MOD_STATIC = 4;
 	public static final int MOD_SET = 8;
-	public static final int MOD_ARROW = 16;
-	public static final int MOD_CLASS = 32;
+	public static final int MOD_GET = 16;
+	public static final int MOD_CONSTRUCTOR = 32;
 
 	public final AstParam[] params;
 	public final Interpretable body;

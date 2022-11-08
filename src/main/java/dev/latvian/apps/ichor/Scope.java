@@ -186,12 +186,12 @@ public class Scope {
 		return AssignType.NONE;
 	}
 
-	public void add(Prototype prototype) {
-		declareMember(prototype.getPrototypeName(), prototype, AssignType.IMMUTABLE);
+	public void add(String name, Prototype prototype) {
+		declareMember(name, prototype, AssignType.IMMUTABLE);
 	}
 
-	public void add(Class<?> type) {
-		add(root.context.getClassPrototype(type));
+	public void add(String name, Class<?> type) {
+		add(name, root.context.getClassPrototype(type));
 	}
 
 	public Scope push() {
@@ -215,6 +215,10 @@ public class Scope {
 
 	@Override
 	public String toString() {
+		if (owner instanceof AstClass.Instance c) {
+			return "Scope[" + getDepth() + ']' + getDeclaredMemberNames() + ":" + c.getPrototypeName();
+		}
+
 		return "Scope[" + getDepth() + ']' + getDeclaredMemberNames();
 	}
 

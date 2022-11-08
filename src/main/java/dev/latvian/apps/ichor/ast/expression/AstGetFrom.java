@@ -52,8 +52,10 @@ public abstract class AstGetFrom extends AstGetBase {
 		public Object eval(Scope scope) {
 			var func = get.eval(scope);
 
-			if (!(func instanceof Callable)) {
-				throw new ScriptError("Cannot call " + get);
+			if (Special.isInvalid(func)) {
+				throw new ScriptError("Cannot find " + get);
+			} else if (!(func instanceof Callable)) {
+				throw new ScriptError("Cannot call " + get + ", " + scope.getContext().toString(scope, func) + " (" + scope.getContext().getPrototype(func) + ")" + " is not a function");
 			}
 
 			var self = scope.eval(get.from);

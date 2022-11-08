@@ -8,6 +8,7 @@ public class JavaClassJS {
 	public static final Prototype PROTOTYPE = new PrototypeBuilder("JavaClass")
 			.asString((scope, self) -> c(self).getName())
 			.property("name", JavaClassJS::name)
+			.constant("class", Class.class)
 			.property("superclass", JavaClassJS::superclass)
 			.property("interface", JavaClassJS::isInterface)
 			.property("array", JavaClassJS::isArray)

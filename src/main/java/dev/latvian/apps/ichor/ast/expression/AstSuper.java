@@ -60,7 +60,7 @@ public class AstSuper extends AstExpression implements Prototype, CallableAst {
 
 		@Override
 		public Object eval(Scope scope) {
-			if (scope.owner instanceof AstFunction func && func.hasMod(AstFunction.MOD_CONSTRUCTOR)) {
+			if (scope.owner instanceof AstClassFunction func && func.type == AstClassFunction.Type.CONSTRUCTOR) {
 				var c = scope.parent.findOwnerClass();
 
 				if (c != null) {

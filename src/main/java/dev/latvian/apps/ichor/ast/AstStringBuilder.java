@@ -1,6 +1,65 @@
 package dev.latvian.apps.ichor.ast;
 
 public class AstStringBuilder {
+	public static void wrapString(Object func, StringBuilder builder) {
+		if (func == null) {
+			builder.append("null");
+		} else if (func instanceof CharSequence) {
+			var s = func.toString().replace("\\", "\\\\");
+
+			if (s.isEmpty()) {
+				builder.append('\'');
+				builder.append('\'');
+			} else {
+				int sq = s.indexOf('\'');
+
+				if (sq >= 0 && s.indexOf('"') >= 0) {
+					builder.append('\'');
+					builder.append(s.replace("'", "\\'"));
+					builder.append('\'');
+				} else if (sq >= 0) {
+					builder.append('"');
+					builder.append(s);
+					builder.append('"');
+				} else {
+					builder.append('\'');
+					builder.append(s);
+					builder.append('\'');
+				}
+			}
+		} else {
+			builder.append(func);
+		}
+	}
+
+	public static boolean isKey(String key) {
+		char[] c = key.toCharArray();
+
+		if (c.length == 0) {
+			return false;
+		}
+
+		if (!Character.isJavaIdentifierStart(c[0])) {
+			return false;
+		}
+
+		for (int i = 1; i < c.length; i++) {
+			if (!Character.isJavaIdentifierPart(c[i])) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public static void wrapKey(String key, StringBuilder builder) {
+		if (isKey(key)) {
+			builder.append(key);
+		} else {
+			wrapString(key, builder);
+		}
+	}
+
 	public final StringBuilder builder = new StringBuilder();
 
 	public void append(CharSequence string) {
