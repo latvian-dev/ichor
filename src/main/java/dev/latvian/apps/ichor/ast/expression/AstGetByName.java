@@ -89,7 +89,7 @@ public class AstGetByName extends AstGetFrom {
 	private record ToStringEvaluable(Object obj) implements Evaluable {
 		@Override
 		public Object eval(Scope scope) {
-			return scope.getContext().toString(scope, obj);
+			return scope.getContext().asString(scope, obj);
 		}
 	}
 }
