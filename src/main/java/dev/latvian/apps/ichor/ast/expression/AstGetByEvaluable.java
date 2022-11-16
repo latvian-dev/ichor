@@ -1,21 +1,22 @@
 package dev.latvian.apps.ichor.ast.expression;
 
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
 
 public class AstGetByEvaluable extends AstGetFrom {
-	public final Object key;
+	public final Evaluable key;
 
-	public AstGetByEvaluable(Object from, Object key) {
+	public AstGetByEvaluable(Evaluable from, Evaluable key) {
 		super(from);
 		this.key = key;
 	}
 
 	@Override
 	public Object evalKey(Scope scope) {
-		return scope.eval(key);
+		return key.eval(scope);
 	}
 
 	@Override
@@ -29,14 +30,14 @@ public class AstGetByEvaluable extends AstGetFrom {
 	@Override
 	public Object eval(Scope scope) {
 		var cx = scope.getContext();
-		var self = scope.eval(from);
+		var self = from.eval(scope);
 		var p = cx.getPrototype(self);
 
 		if (cx.debugger != null) {
 			cx.debugger.pushSelf(scope, self);
 		}
 
-		var k = scope.eval(key);
+		var k = key.eval(scope);
 
 		Object r;
 
@@ -60,14 +61,14 @@ public class AstGetByEvaluable extends AstGetFrom {
 	@Override
 	public void set(Scope scope, Object value) {
 		var cx = scope.getContext();
-		var self = scope.eval(from);
+		var self = from.eval(scope);
 		var p = cx.getPrototype(self);
 
 		if (cx.debugger != null) {
 			cx.debugger.pushSelf(scope, self);
 		}
 
-		var k = scope.eval(key);
+		var k = key.eval(scope);
 
 		if (k instanceof Number) {
 			p.set(scope, self, ((Number) k).intValue(), value);

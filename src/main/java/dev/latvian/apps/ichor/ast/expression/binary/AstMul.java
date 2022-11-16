@@ -15,7 +15,7 @@ public class AstMul extends AstBinary {
 
 	@Override
 	public double evalDouble(Scope scope) {
-		return scope.getContext().asDouble(scope, left) * scope.getContext().asDouble(scope, right);
+		return left.evalDouble(scope) * right.evalDouble(scope);
 	}
 
 	@Override

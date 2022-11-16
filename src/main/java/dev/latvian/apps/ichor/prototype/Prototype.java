@@ -1,6 +1,8 @@
 package dev.latvian.apps.ichor.prototype;
 
 import dev.latvian.apps.ichor.Callable;
+import dev.latvian.apps.ichor.Context;
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.js.NumberJS;
@@ -12,14 +14,14 @@ import java.util.Collections;
 public interface Prototype extends PrototypeSupplier, Callable {
 
 	@Override
-	default Prototype getPrototype() {
+	default Prototype getPrototype(Context cx) {
 		return this;
 	}
 
 	String getPrototypeName();
 
 	@Override
-	default Object call(Scope scope, Object self, Object[] args) {
+	default Object call(Scope scope, Object self, Evaluable[] args) {
 		return construct(scope, args);
 	}
 

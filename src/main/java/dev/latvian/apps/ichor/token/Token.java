@@ -1,13 +1,11 @@
 package dev.latvian.apps.ichor.token;
 
-import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.Evaluable;
+import org.jetbrains.annotations.Nullable;
 
 public interface Token {
-	default boolean hasValue() {
-		return false;
-	}
-
-	default Object getValue() {
-		throw new ScriptError(this + " is not a primary token");
+	@Nullable
+	default Evaluable toEvaluable() {
+		return null;
 	}
 }

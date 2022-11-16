@@ -27,7 +27,7 @@ public abstract class AstAdditive1 extends AstUnary {
 
 	@Override
 	public double evalDouble(Scope scope) {
-		double o = ((AstGetBase) node).evalDouble(scope);
+		double o = node.evalDouble(scope);
 		double n = isAdd() ? o + 1D : o - 1D;
 		((AstGetBase) node).set(scope, n);
 		return isLeft() ? n : o;
@@ -35,7 +35,7 @@ public abstract class AstAdditive1 extends AstUnary {
 
 	@Override
 	public int evalInt(Scope scope) {
-		int o = ((AstGetBase) node).evalInt(scope);
+		int o = node.evalInt(scope);
 		int n = isAdd() ? o + 1 : o - 1;
 		((AstGetBase) node).set(scope, n);
 		return isLeft() ? n : o;

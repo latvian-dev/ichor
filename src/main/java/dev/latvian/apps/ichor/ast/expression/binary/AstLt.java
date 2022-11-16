@@ -10,6 +10,6 @@ public class AstLt extends AstBinaryBoolean {
 
 	@Override
 	public boolean evalBoolean(Scope scope) {
-		return scope.getContext().asDouble(scope, left) < scope.getContext().asDouble(scope, right);
+		return left.compareTo(right, scope) < 0;
 	}
 }

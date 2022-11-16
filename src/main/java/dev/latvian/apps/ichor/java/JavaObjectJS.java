@@ -22,6 +22,7 @@ public class JavaObjectJS implements Prototype {
 	}
 
 	// It's ok to cache context-specific value, because there won't be a static instance of JavaObjectJS
+	@Override
 	public Prototype getPrototype(Context cx) {
 		if (prototype == null) {
 			prototype = cx.getClassPrototype(javaObject.getClass());

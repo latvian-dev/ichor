@@ -15,11 +15,11 @@ public class AstMod extends AstBinary {
 
 	@Override
 	public double evalDouble(Scope scope) {
-		return scope.getContext().asDouble(scope, left) % scope.getContext().asDouble(scope, right);
+		return left.evalDouble(scope) % right.evalDouble(scope);
 	}
 
 	@Override
 	public int evalInt(Scope scope) {
-		return scope.getContext().asInt(scope, left) % scope.getContext().asInt(scope, right);
+		return left.evalInt(scope) % right.evalInt(scope);
 	}
 }

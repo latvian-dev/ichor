@@ -10,6 +10,6 @@ public class AstAnd extends AstBinaryBoolean {
 
 	@Override
 	public boolean evalBoolean(Scope scope) {
-		return scope.getContext().asBoolean(scope, left) && scope.getContext().asBoolean(scope, right);
+		return left.evalBoolean(scope) && right.evalBoolean(scope);
 	}
 }

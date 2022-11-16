@@ -222,10 +222,6 @@ public class Scope {
 		return "Scope[" + getDepth() + ']' + getDeclaredMemberNames();
 	}
 
-	public Object eval(Object object) {
-		return object instanceof Evaluable eval ? eval.eval(this) : object;
-	}
-
 	public int getDepth() {
 		return depth;
 	}

@@ -10,7 +10,7 @@ import dev.latvian.apps.ichor.util.AssignType;
 import java.util.Collection;
 import java.util.Collections;
 
-public class AstThis extends AstExpression implements Prototype {
+public class AstThisExpression extends AstExpression implements Prototype {
 	@Override
 	public void append(AstStringBuilder builder) {
 		builder.append("this");

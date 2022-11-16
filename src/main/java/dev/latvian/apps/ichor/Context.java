@@ -7,6 +7,7 @@ import dev.latvian.apps.ichor.java.JavaTypePrototype;
 import dev.latvian.apps.ichor.js.NumberJS;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +27,11 @@ public abstract class Context {
 
 	public Context() {
 		safePrototypes = new ArrayList<>();
+	}
+
+	@Nullable
+	public Object getProperty(String name) {
+		return properties == null ? null : properties.get(name);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -216,7 +222,7 @@ public abstract class Context {
 
 	public Prototype getPrototype(Object o) {
 		if (o == null) {
-			return Special.NULL.getPrototype();
+			return Special.NULL.getPrototype(this);
 		} else if (o instanceof CharSequence) {
 			return stringPrototype;
 		} else if (o instanceof Number) {
@@ -224,7 +230,7 @@ public abstract class Context {
 		} else if (o instanceof Boolean) {
 			return booleanPrototype;
 		} else if (o instanceof PrototypeSupplier s) {
-			return s.getPrototype();
+			return s.getPrototype(this);
 		} else if (o instanceof Class) {
 			return JavaClassJS.PROTOTYPE;
 		} else if (o instanceof Map<?, ?>) {
@@ -238,7 +244,7 @@ public abstract class Context {
 
 	public Prototype getClassPrototype(Class<?> c) {
 		if (c == null || c == Void.class || c == Void.TYPE) {
-			return Special.NULL.getPrototype();
+			return Special.NULL.getPrototype(this);
 		} else if (c == String.class || c == Character.class || c == Character.TYPE) {
 			return stringPrototype;
 		} else if (c == Boolean.class || c == Boolean.TYPE) {

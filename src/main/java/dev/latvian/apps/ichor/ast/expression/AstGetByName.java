@@ -40,7 +40,7 @@ public class AstGetByName extends AstGetFrom {
 	@Override
 	public Object eval(Scope scope) {
 		var cx = scope.getContext();
-		var self = scope.eval(from);
+		var self = from.eval(scope);
 		var p = cx.getPrototype(self);
 
 		if (cx.debugger != null) {
@@ -63,7 +63,7 @@ public class AstGetByName extends AstGetFrom {
 	@Override
 	public void set(Scope scope, Object value) {
 		var cx = scope.getContext();
-		var self = scope.eval(from);
+		var self = from.eval(scope);
 		var p = cx.getPrototype(self);
 
 		if (cx.debugger != null) {
@@ -78,7 +78,7 @@ public class AstGetByName extends AstGetFrom {
 	}
 
 	@Override
-	public Evaluable createCall(Object[] arguments, boolean isNew) {
+	public Evaluable createCall(Evaluable[] arguments, boolean isNew) {
 		if (arguments.length == 0 && name.equals("toString")) {
 			return new ToStringEvaluable(this);
 		}
@@ -86,10 +86,10 @@ public class AstGetByName extends AstGetFrom {
 		return super.createCall(arguments, isNew);
 	}
 
-	private record ToStringEvaluable(Object obj) implements Evaluable {
+	private record ToStringEvaluable(Evaluable obj) implements Evaluable {
 		@Override
 		public Object eval(Scope scope) {
-			return scope.getContext().asString(scope, obj);
+			return obj.evalString(scope);
 		}
 	}
 }

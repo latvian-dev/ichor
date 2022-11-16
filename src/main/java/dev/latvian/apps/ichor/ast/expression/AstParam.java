@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.ast.expression;
 
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstAppendable;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -10,7 +11,7 @@ public class AstParam implements AstAppendable {
 
 	public final String name;
 	public final String type;
-	public Object defaultValue;
+	public Evaluable defaultValue;
 
 	public AstParam(String name) {
 		this.name = name;

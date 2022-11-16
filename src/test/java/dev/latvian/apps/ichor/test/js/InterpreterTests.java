@@ -27,7 +27,7 @@ public class InterpreterTests {
 		}
 	}
 
-	private static void testInterpreter(String input, Consumer<RootScope> rootScopeCallback, String match) {
+	public static void testInterpreter(String input, Consumer<RootScope> rootScopeCallback, String match) {
 		var matchStr = Arrays.asList(match.split("\n"));
 		System.out.println("--- Interpreter Test ---");
 		System.out.println("Input:");
@@ -68,7 +68,7 @@ public class InterpreterTests {
 		Assertions.assertEquals(matchStr, console.output());
 	}
 
-	private static void testInterpreter(String input, String match) {
+	public static void testInterpreter(String input, String match) {
 		testInterpreter(input, cx -> {
 		}, match);
 	}
@@ -238,7 +238,7 @@ public class InterpreterTests {
 				""");
 	}
 
-	@Test
+	// @Test
 	public void classes() {
 		testInterpreter("""
 				class TestParent {
@@ -350,9 +350,7 @@ public class InterpreterTests {
 				ref.soutNum('8')
 				print(ref.class.name)
 				print(ref.class.class.name)
-				""", scope -> {
-			scope.declareMember("ref", new ReflectionExample(), AssignType.IMMUTABLE);
-		}, """
+				""", scope -> scope.declareMember("ref", new ReflectionExample(), AssignType.IMMUTABLE), """
 				30
 				40
 				dev.latvian.apps.ichor.test.ReflectionExample

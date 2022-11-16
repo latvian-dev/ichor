@@ -1,11 +1,11 @@
 package dev.latvian.apps.ichor.ast;
 
 public class AstStringBuilder {
-	public static void wrapString(Object func, StringBuilder builder) {
-		if (func == null) {
+	public static void wrapString(Object self, StringBuilder builder) {
+		if (self == null) {
 			builder.append("null");
-		} else if (func instanceof CharSequence) {
-			var s = func.toString().replace("\\", "\\\\");
+		} else if (self instanceof CharSequence) {
+			var s = self.toString().replace("\\", "\\\\");
 
 			if (s.isEmpty()) {
 				builder.append('\'');
@@ -28,7 +28,7 @@ public class AstStringBuilder {
 				}
 			}
 		} else {
-			builder.append(func);
+			builder.append(self);
 		}
 	}
 

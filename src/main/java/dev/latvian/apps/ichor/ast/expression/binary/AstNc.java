@@ -11,7 +11,7 @@ public class AstNc extends AstBinary {
 
 	@Override
 	public Object eval(Scope scope) {
-		var l = scope.eval(left);
-		return Special.isInvalid(l) ? scope.eval(right) : l;
+		var l = left.eval(scope);
+		return Special.isInvalid(l) ? right.eval(scope) : l;
 	}
 }

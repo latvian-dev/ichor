@@ -2,6 +2,7 @@ package dev.latvian.apps.ichor.ast.expression.unary;
 
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
+import dev.latvian.apps.ichor.error.ScriptError;
 
 public class AstNegate extends AstUnary {
 	@Override
@@ -12,16 +13,26 @@ public class AstNegate extends AstUnary {
 
 	@Override
 	public Object eval(Scope scope) {
-		return evalBoolean(scope);
+		return evalDouble(scope);
+	}
+
+	@Override
+	public double evalDouble(Scope scope) {
+		return -node.evalDouble(scope);
 	}
 
 	@Override
 	public boolean evalBoolean(Scope scope) {
-		return !scope.getContext().asBoolean(scope, node);
+		return !node.evalBoolean(scope);
 	}
 
 	@Override
 	public int evalInt(Scope scope) {
-		return !scope.getContext().asBoolean(scope, node) ? 0 : 1;
+		return -node.evalInt(scope);
+	}
+
+	@Override
+	public String evalString(Scope scope) {
+		throw new ScriptError("Can't negate string!");
 	}
 }

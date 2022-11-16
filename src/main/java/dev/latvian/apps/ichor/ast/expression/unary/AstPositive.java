@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.ast.expression.unary;
 
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
@@ -17,7 +18,7 @@ public class AstPositive extends AstUnary {
 	}
 
 	@Override
-	public Object optimize() {
+	public Evaluable optimize() {
 		return node;
 	}
 }

@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.test;
 
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.prototype.Prototype;
@@ -15,10 +16,10 @@ public record TestConsole(PrintStream printStream, List<String> output) implemen
 	}
 
 	@Override
-	public Object call(Scope scope, Object self, Object[] args) {
+	public Object call(Scope scope, Object self, Evaluable[] args) {
 
-		for (Object o : args) {
-			var s = scope.getContext().asString(scope, o);
+		for (var o : args) {
+			var s = o.evalString(scope);
 
 			if (!s.isBlank()) {
 				output.add(s.trim());

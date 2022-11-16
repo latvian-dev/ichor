@@ -8,25 +8,25 @@ import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
 
 public abstract class AstGetFrom extends AstGetBase {
-	public final Object from;
+	public final Evaluable from;
 
-	public AstGetFrom(Object from) {
+	public AstGetFrom(Evaluable from) {
 		this.from = from;
 	}
 
 	public abstract Object evalKey(Scope scope);
 
 	@Override
-	public Evaluable createCall(Object[] arguments, boolean isNew) {
+	public Evaluable createCall(Evaluable[] arguments, boolean isNew) {
 		return new AstCall(this, arguments, isNew);
 	}
 
 	public static class AstCall extends AstExpression {
 		public final AstGetFrom get;
-		public final Object[] arguments;
+		public final Evaluable[] arguments;
 		public final boolean isNew;
 
-		public AstCall(AstGetFrom get, Object[] arguments, boolean isNew) {
+		public AstCall(AstGetFrom get, Evaluable[] arguments, boolean isNew) {
 			this.get = get;
 			this.arguments = arguments;
 			this.isNew = isNew;
@@ -42,7 +42,7 @@ public abstract class AstGetFrom extends AstGetBase {
 					builder.append(',');
 				}
 
-				builder.appendValue(arguments[i]);
+				builder.append(arguments[i]);
 			}
 
 			builder.append(')');
@@ -58,7 +58,7 @@ public abstract class AstGetFrom extends AstGetBase {
 				throw new ScriptError("Cannot call " + get + ", " + scope.getContext().toString(scope, func) + " (" + scope.getContext().getPrototype(func) + ")" + " is not a function");
 			}
 
-			var self = scope.eval(get.from);
+			var self = get.from.eval(scope);
 			var cx = scope.getContext();
 
 			if (cx.debugger != null) {

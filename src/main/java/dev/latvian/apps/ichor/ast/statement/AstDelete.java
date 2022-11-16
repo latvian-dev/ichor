@@ -20,7 +20,7 @@ public class AstDelete extends AstStatement {
 
 	@Override
 	public void interpret(Scope scope) {
-		var o = scope.eval(get.from);
+		var o = get.from.eval(scope);
 		var p = scope.getContext().getPrototype(o);
 		var k = get.evalKey(scope);
 

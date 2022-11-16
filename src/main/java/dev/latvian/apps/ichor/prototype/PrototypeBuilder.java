@@ -1,15 +1,13 @@
 package dev.latvian.apps.ichor.prototype;
 
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.js.NumberJS;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class PrototypeBuilder implements Prototype {
 	private final String prototypeName;
@@ -110,8 +108,10 @@ public class PrototypeBuilder implements Prototype {
 
 			if (m instanceof PrototypeProperty p) {
 				return p.get(scope, self);
+			} else if (m instanceof Evaluable e) {
+				return e.eval(scope);
 			} else if (m != null) {
-				return scope.eval(m);
+				return m;
 			}
 		}
 
@@ -132,7 +132,7 @@ public class PrototypeBuilder implements Prototype {
 				return v;
 			}
 
-			parent0 = parent0.getPrototype();
+			parent0 = parent0.getPrototype(scope.getContext());
 		}
 
 		return Special.NOT_FOUND;
@@ -165,7 +165,7 @@ public class PrototypeBuilder implements Prototype {
 				return true;
 			}
 
-			parent0 = parent0.getPrototype();
+			parent0 = parent0.getPrototype(scope.getContext());
 		}
 
 		return false;
@@ -188,7 +188,7 @@ public class PrototypeBuilder implements Prototype {
 				return true;
 			}
 
-			parent0 = parent0.getPrototype();
+			parent0 = parent0.getPrototype(scope.getContext());
 		}
 
 		return false;
@@ -221,7 +221,7 @@ public class PrototypeBuilder implements Prototype {
 				return v;
 			}
 
-			parent0 = parent0.getPrototype();
+			parent0 = parent0.getPrototype(scope.getContext());
 		}
 
 		return Special.NOT_FOUND;
@@ -244,7 +244,7 @@ public class PrototypeBuilder implements Prototype {
 				return true;
 			}
 
-			parent0 = parent0.getPrototype();
+			parent0 = parent0.getPrototype(scope.getContext());
 		}
 
 		return false;
@@ -267,14 +267,14 @@ public class PrototypeBuilder implements Prototype {
 				return true;
 			}
 
-			parent0 = parent0.getPrototype();
+			parent0 = parent0.getPrototype(scope.getContext());
 		}
 
 		return false;
 	}
 
 	@Override
-	public Object construct(Scope scope, Object[] args) {
+	public Object construct(Scope scope, Evaluable[] args) {
 		initLazy();
 
 		if (constructor != null) {
@@ -285,7 +285,7 @@ public class PrototypeBuilder implements Prototype {
 	}
 
 	@Override
-	public Object call(Scope scope, Object self, Object[] args) {
+	public Object call(Scope scope, Object self, Evaluable[] args) {
 		initLazy();
 
 		if (constructor != null) {
@@ -329,15 +329,5 @@ public class PrototypeBuilder implements Prototype {
 		}
 
 		return Boolean.TRUE;
-	}
-
-	public Set<String> memberKeys() {
-		initLazy();
-		return members == null ? Collections.emptySet() : members.keySet();
-	}
-
-	@Override
-	public Collection<?> keys(Scope scope, Object self) {
-		return memberKeys();
 	}
 }

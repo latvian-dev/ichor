@@ -2,8 +2,10 @@ package dev.latvian.apps.ichor.token;
 
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
+import dev.latvian.apps.ichor.ast.AstAppendable;
+import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
-public record StringToken(String value) implements Token, Evaluable {
+public record StringToken(String value) implements Token, Evaluable, AstAppendable {
 	public static final StringToken EMPTY = new StringToken("");
 
 	public static StringToken of(String string) {
@@ -12,7 +14,9 @@ public record StringToken(String value) implements Token, Evaluable {
 
 	@Override
 	public String toString() {
-		return '"' + value.replace("\\", "\\\\").replace("\"", "\\\"") + '"';
+		var sb = new StringBuilder();
+		AstStringBuilder.wrapString(value, sb);
+		return sb.toString();
 	}
 
 	@Override
@@ -21,12 +25,30 @@ public record StringToken(String value) implements Token, Evaluable {
 	}
 
 	@Override
-	public boolean hasValue() {
-		return true;
+	public double evalDouble(Scope scope) {
+		try {
+			return Double.parseDouble(value);
+		} catch (NumberFormatException ex) {
+			return Double.NaN;
+		}
 	}
 
 	@Override
-	public Object getValue() {
-		return value;
+	public int evalInt(Scope scope) {
+		try {
+			return (int) Double.parseDouble(value);
+		} catch (NumberFormatException ex) {
+			return 0;
+		}
+	}
+
+	@Override
+	public Evaluable toEvaluable() {
+		return this;
+	}
+
+	@Override
+	public void append(AstStringBuilder builder) {
+		AstStringBuilder.wrapString(value, builder.builder);
 	}
 }

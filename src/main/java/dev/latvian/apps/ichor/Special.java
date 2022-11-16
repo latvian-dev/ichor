@@ -6,7 +6,7 @@ import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
 import dev.latvian.apps.ichor.token.Token;
 import org.jetbrains.annotations.Nullable;
 
-public class Special implements PrototypeSupplier, Token, Evaluable {
+public class Special implements PrototypeSupplier, Token {
 	public static final Special NOT_FOUND = new Special("<not found>"); // Internal use only
 	public static final Special NULL = new Special("null");
 	public static final Special UNDEFINED = new Special("undefined");
@@ -23,7 +23,7 @@ public class Special implements PrototypeSupplier, Token, Evaluable {
 	}
 
 	@Override
-	public Prototype getPrototype() {
+	public Prototype getPrototype(Context cx) {
 		return prototype;
 	}
 
@@ -45,5 +45,10 @@ public class Special implements PrototypeSupplier, Token, Evaluable {
 	@Override
 	public Object eval(Scope scope) {
 		return null;
+	}
+
+	@Override
+	public boolean equals(Evaluable right, Scope scope, boolean shallow) {
+		return right instanceof Special || isInvalid(right.eval(scope));
 	}
 }

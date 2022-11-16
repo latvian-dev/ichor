@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.ast.expression;
 
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
@@ -67,7 +68,7 @@ public class AstFunction extends AstExpression implements PrototypeFunction, Com
 	}
 
 	@Override
-	public Object call(Scope scope, Object self, Object[] args) {
+	public Object call(Scope scope, Object self, Evaluable[] args) {
 		if (args.length < requiredParams) {
 			throw new ScriptError("Invalid number of arguments: " + args.length + " < " + requiredParams);
 		}
@@ -76,7 +77,7 @@ public class AstFunction extends AstExpression implements PrototypeFunction, Com
 
 		try {
 			for (int i = 0; i < params.length; i++) {
-				s.declareMember(params[i].name, i >= args.length ? params[i].defaultValue == Special.UNDEFINED ? Special.UNDEFINED : scope.eval(params[i].defaultValue) : scope.eval(args[i]), AssignType.MUTABLE);
+				s.declareMember(params[i].name, i >= args.length ? params[i].defaultValue == Special.UNDEFINED ? Special.UNDEFINED : params[i].defaultValue.eval(scope) : args[i].eval(scope), AssignType.MUTABLE);
 			}
 
 			body.interpret(s);

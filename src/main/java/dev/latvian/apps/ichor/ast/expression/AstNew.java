@@ -9,21 +9,11 @@ import dev.latvian.apps.ichor.error.ScriptError;
 
 public class AstNew extends AstExpression {
 	public final Evaluable callee;
-	public final Object[] arguments;
-	private boolean needEval;
+	public final Evaluable[] arguments;
 
-	public AstNew(Evaluable callee, Object[] arguments) {
+	public AstNew(Evaluable callee, Evaluable[] arguments) {
 		this.callee = callee;
 		this.arguments = arguments;
-
-		if (this.arguments.length > 0) {
-			for (var o : this.arguments) {
-				if (o instanceof Evaluable) {
-					needEval = true;
-					break;
-				}
-			}
-		}
 	}
 
 	@Override
@@ -51,19 +41,7 @@ public class AstNew extends AstExpression {
 			throw new ScriptError("Cannot construct " + o);
 		}
 
-		Object r;
-
-		if (needEval) {
-			var args = new Object[arguments.length];
-
-			for (int i = 0; i < arguments.length; i++) {
-				args[i] = scope.eval(arguments[i]);
-			}
-
-			r = ((Callable) o).construct(scope, args);
-		} else {
-			r = ((Callable) o).construct(scope, arguments);
-		}
+		var r = ((Callable) o).construct(scope, arguments);
 
 		if (r == Special.NOT_FOUND) {
 			throw new ScriptError("Cannot construct " + o);

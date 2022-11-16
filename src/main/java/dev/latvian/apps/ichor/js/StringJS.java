@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.js;
 
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
@@ -12,7 +13,7 @@ public class StringJS {
 	}
 
 	public static final Prototype PROTOTYPE = new PrototypeBuilder("String")
-			.constructor((scope, args, hasNew) -> args.length == 0 ? "" : scope.getContext().asString(scope, args[0]))
+			.constructor((scope, args, hasNew) -> args.length == 0 ? "" : args[0].evalString(scope))
 			.toString((scope, self, builder) -> AstStringBuilder.wrapString(self, builder))
 			.asNumber((scope, self) -> scope.toString().isEmpty() ? NumberJS.ZERO : NumberJS.ONE)
 			.asBoolean((scope, self) -> !scope.toString().isEmpty())
@@ -55,11 +56,11 @@ public class StringJS {
 		return self instanceof CharSequence c ? c : self.toString();
 	}
 
-	private static String unimpl(Scope scope, Object self, Object[] args) {
+	private static String unimpl(Scope scope, Object self, Evaluable[] args) {
 		throw new ScriptError("This function is not yet implemented!");
 	}
 
-	private static String fromCharCode(Scope scope, Object self, Object[] args) {
+	private static String fromCharCode(Scope scope, Object self, Evaluable[] args) {
 		int n = args.length;
 
 		if (n < 1) {
@@ -75,7 +76,7 @@ public class StringJS {
 		return new String(chars);
 	}
 
-	private static String fromCodePoint(Scope scope, Object self, Object[] args) {
+	private static String fromCodePoint(Scope scope, Object self, Evaluable[] args) {
 		int n = args.length;
 
 		if (n < 1) {
@@ -85,11 +86,10 @@ public class StringJS {
 		int[] codePoints = new int[n];
 
 		for (int i = 0; i != n; i++) {
-			Object arg = args[i];
-			int codePoint = scope.getContext().asInt(scope, arg);
+			int codePoint = args[i].evalInt(scope);
 
 			if (!Character.isValidCodePoint(codePoint)) {
-				throw new ScriptError("Invalid code point " + scope.getContext().asString(scope, arg));
+				throw new ScriptError("Invalid code point " + args[i].evalString(scope));
 			}
 
 			codePoints[i] = codePoint;
@@ -98,19 +98,19 @@ public class StringJS {
 		return new String(codePoints, 0, n);
 	}
 
-	private static String raw(Scope scope, Object self, Object[] args) {
-		return scope.getContext().asString(scope, args[0]);
+	private static String raw(Scope scope, Object self, Evaluable[] args) {
+		return args[0].evalString(scope);
 	}
 
 	private static Object length(Scope scope, Object self) {
 		return cs(self).length();
 	}
 
-	private static Object charAt(Scope scope, Object self, Object[] objects) {
-		return cs(self).charAt(scope.getContext().asInt(scope, objects[0]));
+	private static Object charAt(Scope scope, Object self, Evaluable[] objects) {
+		return cs(self).charAt(objects[0].evalInt(scope));
 	}
 
-	private static String trim(Scope scope, Object self, Object[] args) {
+	private static String trim(Scope scope, Object self, Evaluable[] args) {
 		return s(self).trim();
 	}
 }

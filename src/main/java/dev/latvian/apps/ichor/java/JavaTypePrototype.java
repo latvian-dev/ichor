@@ -1,6 +1,7 @@
 package dev.latvian.apps.ichor.java;
 
 import dev.latvian.apps.ichor.Context;
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.error.ScriptError;
@@ -43,7 +44,7 @@ public class JavaTypePrototype extends PrototypeBuilder {
 
 	private record MethodFunction(Method method, Class<?>[] methodParams) implements PrototypeFunction {
 		@Override
-		public Object call(Scope scope, Object self, Object[] args) {
+		public Object call(Scope scope, Object self, Evaluable[] args) {
 			try {
 				if (methodParams.length > 0) {
 					var args1 = new Object[methodParams.length];

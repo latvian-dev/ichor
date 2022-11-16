@@ -10,6 +10,16 @@ public class AstBitwiseAnd extends AstBinary {
 
 	@Override
 	public Object eval(Scope scope) {
-		return scope.getContext().asInt(scope, left) & scope.getContext().asInt(scope, right);
+		return evalInt(scope);
+	}
+
+	@Override
+	public int evalInt(Scope scope) {
+		return left.evalInt(scope) & right.evalInt(scope);
+	}
+
+	@Override
+	public boolean evalBoolean(Scope scope) {
+		return left.evalBoolean(scope) & right.evalBoolean(scope);
 	}
 }

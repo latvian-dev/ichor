@@ -30,7 +30,7 @@ public class AstGetByIndex extends AstGetFrom {
 	@Override
 	public Object eval(Scope scope) {
 		var cx = scope.getContext();
-		var self = scope.eval(from);
+		var self = from.eval(scope);
 		var p = cx.getPrototype(self);
 
 		if (cx.debugger != null) {
@@ -53,7 +53,7 @@ public class AstGetByIndex extends AstGetFrom {
 	@Override
 	public void set(Scope scope, Object value) {
 		var cx = scope.getContext();
-		var self = scope.eval(from);
+		var self = from.eval(scope);
 		var p = cx.getPrototype(self);
 
 		if (cx.debugger != null) {

@@ -13,7 +13,7 @@ public interface Debugger {
 	default void set(Scope scope, Object object, Object value) {
 	}
 
-	default void call(Scope scope, Object callee, Object[] args, Object returnValue) {
+	default void call(Scope scope, Object callee, Evaluable[] args, Object returnValue) {
 	}
 
 	default void assignNew(Scope scope, Object object, Object value) {

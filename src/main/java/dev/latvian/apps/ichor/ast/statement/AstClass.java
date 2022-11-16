@@ -1,6 +1,7 @@
 package dev.latvian.apps.ichor.ast.statement;
 
 import dev.latvian.apps.ichor.Callable;
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.ast.expression.AstClassFunction;
@@ -17,7 +18,7 @@ import java.util.Map;
 
 public class AstClass extends AstStatement implements Prototype, Callable {
 	public final String name;
-	public Object parent;
+	public Evaluable parent;
 	public AstClassFunction constructor;
 	public final Map<String, AstClassFunction> methods;
 	public final Map<String, AstClassFunction> getters;
@@ -88,7 +89,7 @@ public class AstClass extends AstStatement implements Prototype, Callable {
 		var p0 = parent;
 
 		while (p0 != null) {
-			var p1 = scope.eval(p0);
+			var p1 = p0.eval(scope);
 
 			if (!(p1 instanceof PrototypeSupplier)) {
 				throw new ScriptError("Cannot extend " + p0);
@@ -111,13 +112,13 @@ public class AstClass extends AstStatement implements Prototype, Callable {
 	}
 
 	@Override
-	public Object call(Scope scope, Object self, Object[] args) {
+	public Object call(Scope scope, Object self, Evaluable[] args) {
 		return construct(scope, args);
 	}
 
 	@Override
-	public Object construct(Scope scope, Object[] args) {
-		var p = scope.eval(parent);
+	public Object construct(Scope scope, Evaluable[] args) {
+		var p = parent.eval(scope);
 
 		if (parent != null && !(p instanceof PrototypeSupplier)) {
 			throw new ScriptError("Cannot extend " + p);

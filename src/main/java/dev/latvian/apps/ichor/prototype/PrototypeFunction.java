@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.prototype;
 
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 
 @FunctionalInterface
@@ -10,5 +11,5 @@ public interface PrototypeFunction extends Prototype {
 	}
 
 	@Override
-	Object call(Scope scope, Object self, Object[] args);
+	Object call(Scope scope, Object self, Evaluable[] args);
 }

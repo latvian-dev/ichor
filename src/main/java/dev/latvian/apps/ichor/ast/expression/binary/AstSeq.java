@@ -25,6 +25,6 @@ public class AstSeq extends AstBinaryBoolean {
 
 	@Override
 	public boolean evalBoolean(Scope scope) {
-		return shallowEquals(scope.eval(left), scope.eval(right));
+		return left.equals(right, scope, true);
 	}
 }

@@ -15,7 +15,7 @@ public class AstPow extends AstBinary {
 
 	@Override
 	public double evalDouble(Scope scope) {
-		return Math.pow(scope.getContext().asDouble(scope, left), scope.getContext().asDouble(scope, right));
+		return Math.pow(left.evalDouble(scope), right.evalDouble(scope));
 	}
 
 	@Override

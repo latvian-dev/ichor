@@ -17,6 +17,11 @@ public class AstBitwiseNot extends AstUnary {
 
 	@Override
 	public int evalInt(Scope scope) {
-		return ~scope.getContext().asInt(scope, node);
+		return ~node.evalInt(scope);
+	}
+
+	@Override
+	public double evalDouble(Scope scope) {
+		return evalInt(scope);
 	}
 }

@@ -51,16 +51,16 @@ public class AstGetScopeMember extends AstGetBase {
 	}
 
 	@Override
-	public Evaluable createCall(Object[] arguments, boolean isNew) {
+	public Evaluable createCall(Evaluable[] arguments, boolean isNew) {
 		return new AstCall(name, arguments, isNew);
 	}
 
 	public static class AstCall extends AstExpression {
 		public final String name;
-		public final Object[] arguments;
+		public final Evaluable[] arguments;
 		public final boolean isNew;
 
-		public AstCall(String name, Object[] arguments, boolean isNew) {
+		public AstCall(String name, Evaluable[] arguments, boolean isNew) {
 			this.name = name;
 			this.arguments = arguments;
 			this.isNew = isNew;
@@ -76,7 +76,7 @@ public class AstGetScopeMember extends AstGetBase {
 					builder.append(',');
 				}
 
-				builder.appendValue(arguments[i]);
+				builder.append(arguments[i]);
 			}
 
 			builder.append(')');

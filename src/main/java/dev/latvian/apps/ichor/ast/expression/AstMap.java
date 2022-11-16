@@ -4,21 +4,22 @@ import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
-public class AstSpread extends AstExpression {
-	public final Evaluable value;
+import java.util.Map;
 
-	public AstSpread(Evaluable v) {
-		value = v;
+public class AstMap extends AstExpression {
+	public final Map<String, Evaluable> map;
+
+	public AstMap(Map<String, Evaluable> map) {
+		this.map = map;
 	}
 
 	@Override
 	public Object eval(Scope scope) {
-		return value.eval(scope);
+		return null;
 	}
 
 	@Override
 	public void append(AstStringBuilder builder) {
-		builder.append("...");
-		builder.append(value);
+
 	}
 }
