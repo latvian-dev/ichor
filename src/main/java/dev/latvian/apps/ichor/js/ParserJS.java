@@ -184,15 +184,21 @@ public class ParserJS {
 			return deleteStatement();
 		} else if (check(SymbolToken.LC)) {
 			return block(false);
-		} else if ((peekToken() == KeywordToken.THIS || peekToken() == KeywordToken.SUPER) && peekToken(1) == SymbolToken.LP) {
+		} else if ((check(KeywordToken.THIS) || check(KeywordToken.SUPER)) && peekToken(1) == SymbolToken.LP) {
 			var k = advance();
 			advance();
 
-			var args = new ArrayList<Evaluable>();
+			var arguments = new ArrayList<Evaluable>();
 
-			// this() and super() args
+			if (!check(SymbolToken.RP)) {
+				do {
+					arguments.add(expression().optimize());
+				} while (match(SymbolToken.COMMA));
+			}
 
-			return k.token() == KeywordToken.THIS ? new AstThisStatement(args.toArray(EmptyArrays.EVALUABLES)) : new AstSuperStatement(args.toArray(EmptyArrays.EVALUABLES));
+			consume(SymbolToken.RP, "Expected ')' after arguments");
+
+			return k.token() == KeywordToken.THIS ? new AstThisStatement(arguments.toArray(EmptyArrays.EVALUABLES)) : new AstSuperStatement(arguments.toArray(EmptyArrays.EVALUABLES));
 		}
 
 		return expressionStatement();

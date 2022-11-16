@@ -9,7 +9,7 @@ public class AstThisStatement extends AstStatement {
 	public final Evaluable[] arguments;
 
 	public AstThisStatement(Evaluable[] a) {
-		arguments = a;
+		this.arguments = a;
 	}
 
 	public String getStatementName() {
