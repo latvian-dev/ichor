@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.test.js;
 
-import dev.latvian.apps.ichor.TokenSource;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
 import dev.latvian.apps.ichor.token.BooleanToken;
 import dev.latvian.apps.ichor.token.KeywordToken;
@@ -10,6 +9,7 @@ import dev.latvian.apps.ichor.token.PositionedToken;
 import dev.latvian.apps.ichor.token.StringToken;
 import dev.latvian.apps.ichor.token.SymbolToken;
 import dev.latvian.apps.ichor.token.Token;
+import dev.latvian.apps.ichor.util.NamedTokenSource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -19,7 +19,7 @@ public class TokenTests {
 	private static void testTokenStream(String input, Token... match) {
 		System.out.println("--- Token Test ---");
 		System.out.println("Input: " + input);
-		var tokenStream = new TokenStreamJS(new TokenSource.Named("<token test>"), input);
+		var tokenStream = new TokenStreamJS(new NamedTokenSource("<token test>"), input);
 		var tokens = tokenStream.getTokens().stream().map(PositionedToken::token).toArray(Token[]::new);
 		System.out.println("Expected: " + Arrays.toString(match));
 		System.out.println("Parsed:   " + Arrays.toString(tokens));

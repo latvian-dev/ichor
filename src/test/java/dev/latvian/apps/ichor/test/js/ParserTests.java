@@ -1,9 +1,9 @@
 package dev.latvian.apps.ichor.test.js;
 
-import dev.latvian.apps.ichor.TokenSource;
 import dev.latvian.apps.ichor.js.ContextJS;
 import dev.latvian.apps.ichor.js.ParserJS;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
+import dev.latvian.apps.ichor.util.NamedTokenSource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +13,7 @@ public class ParserTests {
 		System.out.println("Input: " + input);
 		System.out.println("Expected: " + match);
 		var cx = new ContextJS();
-		var tokenStream = new TokenStreamJS(new TokenSource.Named("<parser test>"), input);
+		var tokenStream = new TokenStreamJS(new NamedTokenSource("<parser test>"), input);
 		var tokens = tokenStream.getTokens();
 		var parser = new ParserJS(cx, tokens);
 		var ast = parser.parse();

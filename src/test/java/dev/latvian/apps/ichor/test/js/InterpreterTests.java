@@ -1,7 +1,6 @@
 package dev.latvian.apps.ichor.test.js;
 
 import dev.latvian.apps.ichor.RootScope;
-import dev.latvian.apps.ichor.TokenSource;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.exit.ScopeExit;
 import dev.latvian.apps.ichor.js.ContextJS;
@@ -12,6 +11,7 @@ import dev.latvian.apps.ichor.test.ReflectionExample;
 import dev.latvian.apps.ichor.test.TestConsole;
 import dev.latvian.apps.ichor.util.AssignType;
 import dev.latvian.apps.ichor.util.ConsoleDebugger;
+import dev.latvian.apps.ichor.util.NamedTokenSource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +46,7 @@ public class InterpreterTests {
 		rootScopeCallback.accept(rootScope);
 		cx.debugger = new ConsoleDebugger();
 
-		var tokenStream = new TokenStreamJS(new TokenSource.Named("<interpreter test>"), input);
+		var tokenStream = new TokenStreamJS(new NamedTokenSource("<interpreter test>"), input);
 		var tokens = tokenStream.getTokens();
 		var parser = new ParserJS(cx, tokens);
 		var ast = parser.parse();
