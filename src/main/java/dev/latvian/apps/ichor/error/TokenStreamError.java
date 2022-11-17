@@ -1,7 +1,10 @@
 package dev.latvian.apps.ichor.error;
 
+import dev.latvian.apps.ichor.token.TokenPos;
+
 public class TokenStreamError extends IchorError {
-	public TokenStreamError(int line, int pos, String message) {
-		super(line + ":" + pos + ": " + message);
+	public TokenStreamError(TokenPos pos, String message) {
+		super(message);
+		tokenPos = pos;
 	}
 }

@@ -6,7 +6,6 @@ import dev.latvian.apps.ichor.ast.AstAppendable;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
 public class AstParam implements AstAppendable {
-	public static final AstParam[] EMPTY_PARAM_ARRAY = new AstParam[0];
 	private static final String DEFAULT_TYPE = "any";
 
 	public final String name;

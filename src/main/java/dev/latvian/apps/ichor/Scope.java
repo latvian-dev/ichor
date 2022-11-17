@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor;
 
+import dev.latvian.apps.ichor.ast.expression.AstParam;
 import dev.latvian.apps.ichor.ast.statement.AstClass;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.prototype.Prototype;
@@ -87,6 +88,10 @@ public class Scope {
 				root.context.debugger.assignNew(this, name, value);
 			}
 		}
+	}
+
+	public void declareParam(AstParam param, AssignType type) {
+		declareMember(param.name, param.defaultValue.eval(this), type);
 	}
 
 	public AssignType hasDeclaredMember(String name) {

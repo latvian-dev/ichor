@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.test.js;
 
+import dev.latvian.apps.ichor.TokenSource;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
 import dev.latvian.apps.ichor.token.BooleanToken;
 import dev.latvian.apps.ichor.token.KeywordToken;
@@ -18,7 +19,7 @@ public class TokenTests {
 	private static void testTokenStream(String input, Token... match) {
 		System.out.println("--- Token Test ---");
 		System.out.println("Input: " + input);
-		var tokenStream = new TokenStreamJS(input);
+		var tokenStream = new TokenStreamJS(new TokenSource.Named("<token test>"), input);
 		var tokens = tokenStream.getTokens().stream().map(PositionedToken::token).toArray(Token[]::new);
 		System.out.println("Expected: " + Arrays.toString(match));
 		System.out.println("Parsed:   " + Arrays.toString(tokens));

@@ -1,10 +1,17 @@
 package dev.latvian.apps.ichor.token;
 
-public record TokenPos(int line, int pos) {
-	public static final TokenPos UNKNOWN = new TokenPos(-1, -1);
+import dev.latvian.apps.ichor.TokenSource;
+
+public record TokenPos(TokenSource source, int line, int pos) implements TokenPosSupplier {
+	public static final TokenPos UNKNOWN = new TokenPos(null, -1, -1);
 
 	@Override
 	public String toString() {
-		return line == -1 || pos == -1 ? "unknown" : (line + ":" + pos);
+		return this == UNKNOWN ? "<unknown>" : "%s:%d:%d".formatted(source, line + 1, pos + 1);
+	}
+
+	@Override
+	public TokenPos getPos() {
+		return this;
 	}
 }

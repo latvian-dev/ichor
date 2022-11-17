@@ -1,67 +1,19 @@
 package dev.latvian.apps.ichor.token;
 
 import dev.latvian.apps.ichor.Special;
+import dev.latvian.apps.ichor.ast.expression.binary.AstBinary;
+import dev.latvian.apps.ichor.ast.expression.binary.AstIn;
+import dev.latvian.apps.ichor.ast.expression.binary.AstInstanceOf;
+import dev.latvian.apps.ichor.error.ParseError;
+import dev.latvian.apps.ichor.error.ParseErrorType;
 
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public enum KeywordToken implements StaticToken {
-	ARGUMENTS("arguments"),
-	AS("as"),
-	ASYNC("async"),
-	AWAIT("await"),
-	BREAK("break"),
-	CASE("case"),
-	CATCH("catch"),
-	CLASS("class"),
-	CONST("const"),
-	CONTINUE("continue"),
-	DEBUGGER("debugger"),
-	DEFAULT("default"),
-	DELETE("delete"),
-	DO("do"),
-	ELSE("else"),
-	ENUM("enum"),
-	EVAL("eval"),
-	EXPORT("export"),
-	EXTENDS("extends"),
-	FALSE("false"),
-	FINALLY("finally"),
-	FOR("for"),
-	FROM("from"),
-	FUNCTION("function"),
-	GET("get"),
-	IF("if"),
-	IMPORT("import"),
-	IN("in"),
-	INSTANCEOF("instanceof"),
-	INTERFACE("interface"),
-	LET("let"),
-	NEW("new"),
-	NULL("null"),
-	OF("of"),
-	PACKAGE("package"),
-	PRIVATE("private"),
-	PROTECTED("protected"),
-	PUBLIC("public"),
-	RETURN("return"),
-	SET("set"),
-	STATIC("static"),
-	SUPER("super"),
-	SWITCH("switch"),
-	THIS("this"),
-	THROW("throw"),
-	TRUE("true"),
-	TRY("try"),
-	TYPEOF("typeof"),
-	UNDEFINED("undefined"),
-	VAR("var"),
-	VOID("void"),
-	WHILE("while"),
-	WITH("with"),
-	YIELD("yield"),
+public enum KeywordToken implements StaticToken, BinaryOpToken {
+	ARGUMENTS("arguments"), AS("as"), ASYNC("async"), AWAIT("await"), BREAK("break"), CASE("case"), CATCH("catch"), CLASS("class"), CONST("const"), CONTINUE("continue"), DEBUGGER("debugger"), DEFAULT("default"), DELETE("delete"), DO("do"), ELSE("else"), ENUM("enum"), EVAL("eval"), EXPORT("export"), EXTENDS("extends"), FALSE("false"), FINALLY("finally"), FOR("for"), FROM("from"), FUNCTION("function"), GET("get"), IF("if"), IMPORT("import"), IN("in"), INSTANCEOF("instanceof"), INTERFACE("interface"), LET("let"), NEW("new"), NULL("null"), OF("of"), PACKAGE("package"), PRIVATE("private"), PROTECTED("protected"), PUBLIC("public"), RETURN("return"), SET("set"), STATIC("static"), SUPER("super"), SWITCH("switch"), THIS("this"), THROW("throw"), TRUE("true"), TRY("try"), TYPEOF("typeof"), UNDEFINED("undefined"), VAR("var"), VOID("void"), WHILE("while"), WITH("with"), YIELD("yield"),
 
 	;
 
@@ -85,5 +37,16 @@ public enum KeywordToken implements StaticToken {
 			case FALSE -> BooleanToken.FALSE;
 			default -> this;
 		};
+	}
+
+	@Override
+	public AstBinary createBinaryAst(PositionedToken pos) {
+		if (this == IN) {
+			return new AstIn();
+		} else if (this == INSTANCEOF) {
+			return new AstInstanceOf();
+		}
+
+		throw new ParseError(pos, ParseErrorType.INVALID_BINARY, name);
 	}
 }

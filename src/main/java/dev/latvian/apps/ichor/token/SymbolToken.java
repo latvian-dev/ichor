@@ -2,6 +2,7 @@ package dev.latvian.apps.ichor.token;
 
 import dev.latvian.apps.ichor.ast.expression.binary.AstAdd;
 import dev.latvian.apps.ichor.ast.expression.binary.AstAnd;
+import dev.latvian.apps.ichor.ast.expression.binary.AstBinary;
 import dev.latvian.apps.ichor.ast.expression.binary.AstBitwiseAnd;
 import dev.latvian.apps.ichor.ast.expression.binary.AstBitwiseOr;
 import dev.latvian.apps.ichor.ast.expression.binary.AstDiv;
@@ -28,9 +29,11 @@ import dev.latvian.apps.ichor.ast.expression.unary.AstBitwiseNot;
 import dev.latvian.apps.ichor.ast.expression.unary.AstNegate;
 import dev.latvian.apps.ichor.ast.expression.unary.AstPositive;
 import dev.latvian.apps.ichor.ast.expression.unary.AstSub1L;
+import dev.latvian.apps.ichor.error.ParseError;
+import dev.latvian.apps.ichor.error.ParseErrorType;
 import dev.latvian.apps.ichor.util.EvaluableFactory;
 
-public enum SymbolToken implements StaticToken {
+public enum SymbolToken implements StaticToken, BinaryOpToken {
 	EOF("EOF"), // end of file
 	DOT("."), // dot
 	DDOT(".."), // double dot
@@ -85,6 +88,7 @@ public enum SymbolToken implements StaticToken {
 	SEMI(";"), // semicolon
 	OC("?."), // optional chaining
 	NC("??", AstNc::new), // nullish coalescing
+	NC_SET("??=", AstNc::new), // nullish coalescing
 	ARROW("=>"), // arrow
 
 	;
@@ -122,5 +126,14 @@ public enum SymbolToken implements StaticToken {
 	@Override
 	public String toString() {
 		return name;
+	}
+
+	@Override
+	public AstBinary createBinaryAst(PositionedToken pos) {
+		if (astBinary != null && astBinary.create() instanceof AstBinary bin) {
+			return bin;
+		}
+
+		throw new ParseError(pos, ParseErrorType.INVALID_BINARY, name);
 	}
 }

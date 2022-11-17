@@ -1,9 +1,9 @@
 package dev.latvian.apps.ichor.ast;
 
-import dev.latvian.apps.ichor.token.PositionedToken;
 import dev.latvian.apps.ichor.token.TokenPos;
+import dev.latvian.apps.ichor.token.TokenPosSupplier;
 
-public abstract class Ast implements AstAppendable {
+public abstract class Ast implements AstAppendable, TokenPosSupplier {
 	public TokenPos pos = TokenPos.UNKNOWN;
 
 	@Override
@@ -13,13 +13,13 @@ public abstract class Ast implements AstAppendable {
 		return sb.toString();
 	}
 
-	public Ast pos(PositionedToken token) {
-		pos = token.pos();
+	public Ast pos(TokenPosSupplier pos) {
+		this.pos = pos.getPos();
 		return this;
 	}
 
-	public Ast pos(Ast other) {
-		pos = other.pos;
-		return this;
+	@Override
+	public TokenPos getPos() {
+		return pos;
 	}
 }

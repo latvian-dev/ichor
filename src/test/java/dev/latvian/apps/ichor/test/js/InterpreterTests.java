@@ -1,6 +1,7 @@
 package dev.latvian.apps.ichor.test.js;
 
 import dev.latvian.apps.ichor.RootScope;
+import dev.latvian.apps.ichor.TokenSource;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.exit.ScopeExit;
 import dev.latvian.apps.ichor.js.ContextJS;
@@ -45,7 +46,7 @@ public class InterpreterTests {
 		rootScopeCallback.accept(rootScope);
 		cx.debugger = new ConsoleDebugger();
 
-		var tokenStream = new TokenStreamJS(input);
+		var tokenStream = new TokenStreamJS(new TokenSource.Named("<interpreter test>"), input);
 		var tokens = tokenStream.getTokens();
 		var parser = new ParserJS(cx, tokens);
 		var ast = parser.parse();
@@ -355,6 +356,24 @@ public class InterpreterTests {
 				40
 				dev.latvian.apps.ichor.test.ReflectionExample
 				java.lang.Class
+				""");
+	}
+
+	@Test
+	public void ternary() {
+		testInterpreter("""
+				let x = 40;
+				let y = 60;
+				print();
+				// before
+				print('A')
+				/* block comment
+				print('B')
+				*/
+				print('C')
+				""", """
+				A
+				C
 				""");
 	}
 }

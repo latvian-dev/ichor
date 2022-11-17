@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.js;
 
+import dev.latvian.apps.ichor.TokenSource;
 import dev.latvian.apps.ichor.error.TokenStreamError;
 import dev.latvian.apps.ichor.token.KeywordToken;
 import dev.latvian.apps.ichor.token.NameToken;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 public class TokenStreamJS {
+	private final TokenSource tokenSource;
 	private final char[] input;
 	private int line;
 	private int pos;
@@ -25,7 +27,8 @@ public class TokenStreamJS {
 	private final Map<String, StringToken> stringTokenCache;
 	private final Map<String, TemplateLiteralToken> templateLiteralTokenMap;
 
-	public TokenStreamJS(String string) {
+	public TokenStreamJS(TokenSource source, String string) {
+		tokenSource = source;
 		input = string.toCharArray();
 		line = 0;
 		pos = 0;
@@ -76,7 +79,7 @@ public class TokenStreamJS {
 	}
 
 	private Token error(String msg) {
-		throw new TokenStreamError(line + 1, pos + 1, msg);
+		throw new TokenStreamError(new TokenPos(tokenSource, line, pos), msg);
 	}
 
 	private static boolean isDigit(char t) {
@@ -277,7 +280,7 @@ public class TokenStreamJS {
 			if (t == SymbolToken.EOF) {
 				return tokens;
 			} else {
-				tokens.add(new PositionedToken(t, new TokenPos(l, p)));
+				tokens.add(new PositionedToken(t, new TokenPos(tokenSource, l, p)));
 			}
 		}
 	}
