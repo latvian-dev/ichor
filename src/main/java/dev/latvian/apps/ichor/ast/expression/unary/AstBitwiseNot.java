@@ -1,7 +1,9 @@
 package dev.latvian.apps.ichor.ast.expression.unary;
 
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
+import dev.latvian.apps.ichor.token.NumberToken;
 
 public class AstBitwiseNot extends AstUnary {
 	@Override
@@ -23,5 +25,14 @@ public class AstBitwiseNot extends AstUnary {
 	@Override
 	public double evalDouble(Scope scope) {
 		return evalInt(scope);
+	}
+
+	@Override
+	public Evaluable optimize() {
+		if (node instanceof NumberToken n) {
+			return NumberToken.of(~((int) n.value()));
+		}
+
+		return this;
 	}
 }

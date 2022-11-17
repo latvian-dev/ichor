@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.ast.expression.binary;
 
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.token.StringToken;
 
@@ -31,5 +32,14 @@ public class AstAdd extends AstBinary {
 	@Override
 	public int evalInt(Scope scope) {
 		return left.evalInt(scope) + right.evalInt(scope);
+	}
+
+	@Override
+	public Evaluable optimize() {
+		if (left instanceof StringToken l && right instanceof StringToken r) {
+			return StringToken.of(l.value() + r.value());
+		}
+
+		return super.optimize();
 	}
 }
