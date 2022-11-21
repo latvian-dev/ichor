@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.token;
 
-import dev.latvian.apps.ichor.TokenStream;
 import dev.latvian.apps.ichor.ast.expression.binary.AstAdd;
 import dev.latvian.apps.ichor.ast.expression.binary.AstAnd;
 import dev.latvian.apps.ichor.ast.expression.binary.AstBinary;

@@ -1,7 +1,5 @@
 package dev.latvian.apps.ichor.js;
 
-import dev.latvian.apps.ichor.TokenSource;
-import dev.latvian.apps.ichor.TokenStream;
 import dev.latvian.apps.ichor.error.TokenStreamError;
 import dev.latvian.apps.ichor.token.KeywordToken;
 import dev.latvian.apps.ichor.token.NameToken;
@@ -11,6 +9,8 @@ import dev.latvian.apps.ichor.token.StringToken;
 import dev.latvian.apps.ichor.token.SymbolToken;
 import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.token.TokenPos;
+import dev.latvian.apps.ichor.token.TokenSource;
+import dev.latvian.apps.ichor.token.TokenStream;
 
 import java.util.ArrayList;
 import java.util.HashMap;
