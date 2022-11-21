@@ -147,7 +147,9 @@ public class TokenStreamJS implements TokenStream {
 					}
 				}
 			}
-		} else if (t == '.' && isDigit(peek(1))) {
+		}
+
+		if (t == '.' && isDigit(peek(1))) {
 			return readNumber();
 		} else if (t == '\'' || t == '"') {
 			var sb = new StringBuilder();
