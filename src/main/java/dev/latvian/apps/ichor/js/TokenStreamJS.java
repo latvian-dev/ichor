@@ -1,6 +1,7 @@
 package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.TokenSource;
+import dev.latvian.apps.ichor.TokenStream;
 import dev.latvian.apps.ichor.error.TokenStreamError;
 import dev.latvian.apps.ichor.token.KeywordToken;
 import dev.latvian.apps.ichor.token.NameToken;
@@ -8,7 +9,6 @@ import dev.latvian.apps.ichor.token.NumberToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
 import dev.latvian.apps.ichor.token.StringToken;
 import dev.latvian.apps.ichor.token.SymbolToken;
-import dev.latvian.apps.ichor.token.TemplateLiteralToken;
 import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.token.TokenPos;
 
@@ -17,24 +17,47 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TokenStreamJS {
+public class TokenStreamJS implements TokenStream {
 	private final TokenSource tokenSource;
 	private final char[] input;
-	private int line;
 	private int pos;
+	private int row;
+	private int col;
 	private List<PositionedToken> tokens;
 	private final Map<String, NumberToken> numberTokenCache;
 	private final Map<String, StringToken> stringTokenCache;
-	private final Map<String, TemplateLiteralToken> templateLiteralTokenMap;
+	private final Map<String, NameToken> nameTokenCache;
+	private int depth;
+	private final int isTemplateLiteral;
+	private long timeoutTime;
+	private long timeout;
 
 	public TokenStreamJS(TokenSource source, String string) {
 		tokenSource = source;
 		input = string.toCharArray();
-		line = 0;
 		pos = 0;
+		row = 1;
+		col = 1;
 		numberTokenCache = new HashMap<>();
 		stringTokenCache = new HashMap<>();
-		templateLiteralTokenMap = new HashMap<>();
+		nameTokenCache = new HashMap<>();
+		depth = 0;
+		isTemplateLiteral = 0;
+		timeoutTime = 0L;
+		timeout = 5000L;
+	}
+
+	public TokenStreamJS timeout(long t) {
+		timeout = t;
+		return this;
+	}
+
+	private StringToken makeString(String s) {
+		return stringTokenCache.computeIfAbsent(s, StringToken::of);
+	}
+
+	private NameToken makeName(String s) {
+		return nameTokenCache.computeIfAbsent(s, NameToken::new);
 	}
 
 	private char peek(int i) {
@@ -42,6 +65,10 @@ public class TokenStreamJS {
 	}
 
 	private char read() {
+		if (timeoutTime > 0L && System.currentTimeMillis() > timeoutTime) {
+			throw error("Timeout");
+		}
+
 		if (pos >= input.length) {
 			return 0;
 		}
@@ -49,13 +76,15 @@ public class TokenStreamJS {
 		char c = input[pos++];
 
 		if (c == '\n') {
-			line++;
+			row++;
+			col = 1;
 		}
 
 		return c;
 	}
 
-	private boolean readIf(char c) {
+	@Override
+	public boolean readIf(char c) {
 		if (peek(1) == c) {
 			read();
 			return true;
@@ -78,27 +107,27 @@ public class TokenStreamJS {
 		return t;
 	}
 
-	private Token error(String msg) {
-		throw new TokenStreamError(new TokenPos(tokenSource, line, pos), msg);
+	private TokenStreamError error(String msg) {
+		return new TokenStreamError(new TokenPos(tokenSource, row, pos), msg);
 	}
 
 	private static boolean isDigit(char t) {
 		return t >= '0' && t <= '9';
 	}
 
-	private static boolean isName(char t) {
-		return t >= 'a' && t <= 'z' || t >= 'A' && t <= 'Z' || t == '_' || t == '$' || t >= '0' && t <= '9';
-	}
-
 	private Token readToken() {
 		var t = readSkippingWhitespace();
 
-		if (t == '/') {
+		if (t == 0) {
+			return SymbolToken.EOF;
+		} else if (t == '/') {
 			if (peek(1) == '/') {
 				while (true) {
 					t = read();
 
-					if (t == '\n') {
+					if (t == 0) {
+						return SymbolToken.EOF;
+					} else if (t == '\n') {
 						t = readSkippingWhitespace();
 						break;
 					}
@@ -109,92 +138,76 @@ public class TokenStreamJS {
 				while (true) {
 					t = read();
 
-					if (t == '*' && peek(1) == '/') {
+					if (t == 0) {
+						return SymbolToken.EOF;
+					} else if (t == '*' && peek(1) == '/') {
 						read();
 						t = readSkippingWhitespace();
 						break;
 					}
 				}
 			}
+		} else if (t == '.' && isDigit(peek(1))) {
+			return readNumber();
+		} else if (t == '\'' || t == '"') {
+			var sb = new StringBuilder();
+
+			while (true) {
+				char c = read();
+
+				if (c == '\\') {
+					sb.append(readEscape(read()));
+				} else if (c == t) {
+					break;
+				} else if (c == '\n') {
+					throw error("Newline isn't allowed!");
+				} else {
+					sb.append(c);
+				}
+			}
+
+			return makeString(sb.toString());
 		}
 
-		return switch (t) {
-			case 0 -> SymbolToken.EOF;
-			case '.' -> {
-				if (isDigit(peek(1))) {
-					yield readNumber();
+		var symbol = SymbolToken.read(this, t);
+
+		if (symbol != null) {
+			if (symbol == SymbolToken.TEMPLATE_LITERAL_VAR || symbol == SymbolToken.LC || symbol == SymbolToken.LP || symbol == SymbolToken.LS) {
+				depth++;
+			} else if (symbol == SymbolToken.RC || symbol == SymbolToken.RP || symbol == SymbolToken.RS) {
+				depth--;
+			}
+
+			return symbol;
+		}
+
+		return readLiteral(t);
+	}
+
+	private Token readLiteral(char t) {
+		if (isDigit(t)) {
+			return readNumber();
+		} else if (Character.isJavaIdentifierStart(t)) {
+			int p = pos - 1;
+			int len = 1;
+
+			while (true) {
+				char c = peek(1);
+
+				if (Character.isJavaIdentifierPart(c)) {
+					len++;
+					read();
 				} else {
-					yield readIf('.') ? readIf('.') ? SymbolToken.TDOT : SymbolToken.DDOT : SymbolToken.DOT;
+					break;
 				}
 			}
-			case ',' -> SymbolToken.COMMA;
-			case '(' -> SymbolToken.LP;
-			case ')' -> SymbolToken.RP;
-			case '[' -> SymbolToken.LS;
-			case ']' -> SymbolToken.RS;
-			case '{' -> SymbolToken.LC;
-			case '}' -> SymbolToken.RC;
-			case '=' -> readIf('>') ? SymbolToken.ARROW : readIf('=') ? readIf('=') ? SymbolToken.SEQ : SymbolToken.EQ : SymbolToken.SET;
-			case '+' -> readIf('=') ? SymbolToken.ADD_SET : readIf('+') ? SymbolToken.ADD1 : SymbolToken.ADD;
-			case '-' -> readIf('=') ? SymbolToken.SUB_SET : readIf('-') ? SymbolToken.SUB1 : SymbolToken.SUB;
-			case '*' -> readIf('=') ? SymbolToken.MUL_SET : readIf('*') ? SymbolToken.POW : SymbolToken.MUL;
-			case '/' -> readIf('=') ? SymbolToken.DIV_SET : SymbolToken.DIV;
-			case '%' -> readIf('=') ? SymbolToken.MOD_SET : SymbolToken.MOD;
-			case '!' -> readIf('=') ? readIf('=') ? SymbolToken.SNEQ : SymbolToken.NEQ : SymbolToken.NOT;
-			case '~' -> SymbolToken.BNOT;
-			case '<' -> readIf('<') ? readIf('=') ? SymbolToken.LSH_SET : SymbolToken.LSH : readIf('=') ? SymbolToken.LTE : SymbolToken.LT;
-			case '>' -> readIf('>') ? readIf('>') ? readIf('=') ? SymbolToken.URSH_SET : SymbolToken.URSH : readIf('=') ? SymbolToken.RSH_SET : SymbolToken.RSH : readIf('=') ? SymbolToken.GTE : SymbolToken.GT;
-			case '^' -> readIf('=') ? SymbolToken.XOR_SET : SymbolToken.XOR;
-			case '?' -> readIf('.') ? SymbolToken.OC : readIf('?') ? SymbolToken.NC : SymbolToken.HOOK;
-			case '|' -> readIf('=') ? SymbolToken.BOR_SET : readIf('|') ? SymbolToken.OR : SymbolToken.BOR;
-			case '&' -> readIf('=') ? SymbolToken.BAND_SET : readIf('&') ? SymbolToken.AND : SymbolToken.BAND;
-			case ':' -> SymbolToken.COL;
-			case ';' -> SymbolToken.SEMI;
-			case '\'', '\"', '`' -> {
-				var sb = new StringBuilder();
 
-				while (true) {
-					char c = read();
-
-					if (c == '\\') {
-						sb.append(readEscape(read()));
-					} else if (c == t) {
-						break;
-					} else if (c == '\n' && t != '`') {
-						yield error("Newline isn't allowed!");
-					} else {
-						sb.append(c);
-					}
-				}
-
-				yield t == '`' ? templateLiteralTokenMap.computeIfAbsent(sb.toString(), TemplateLiteralToken::new) : stringTokenCache.computeIfAbsent(sb.toString(), StringToken::of);
-			}
-			default -> {
-				if (isDigit(t)) {
-					yield readNumber();
-				} else if (isName(t)) {
-					int p = pos - 1;
-					int len = 1;
-
-					while (true) {
-						char c = peek(1);
-
-						if (isName(c) || isDigit(c)) {
-							len++;
-							read();
-						} else {
-							break;
-						}
-					}
-
-					var nameStr = new String(input, p, len);
-					var k = KeywordToken.MAP.get(nameStr);
-					yield k != null ? k.toLiteralOrSelf() : new NameToken(nameStr);
-				} else {
-					yield error("Unexpected token: " + t);
-				}
-			}
-		};
+			var nameStr = new String(input, p, len);
+			var k = KeywordToken.MAP.get(nameStr);
+			return k != null ? k.toLiteralOrSelf() : makeName(nameStr);
+		} else {
+			throw error("Unexpected token: " + t);
+		}
 	}
 
 	private Token readNumber() {
@@ -212,7 +225,7 @@ public class TokenStreamJS {
 			if (c == '.') {
 				if (isDigit(peek(2))) {
 					if (hasDec) {
-						return error("Number can't contain decimal point twice!");
+						throw error("Number can't contain decimal point twice!");
 					} else {
 						hasDec = true;
 						len++;
@@ -242,26 +255,24 @@ public class TokenStreamJS {
 			numberTokenCache.put(numStr, num);
 			return num;
 		} catch (Exception ex) {
-			return error("Invalid number: " + numStr);
+			throw error("Invalid number: " + numStr);
 		}
 	}
 
 	private char readEscape(char c) {
+		if (c < ' ') {
+			throw error("Can't escape whitespace!");
+		}
+
 		return switch (c) {
-			case '\\' -> '\\';
+			case '\\', '"', '\'', '`' -> c;
 			case 'n' -> '\n';
 			case 't' -> '\t';
 			case 'b' -> '\b';
 			case 'f' -> '\f';
 			case 'r' -> '\r';
-			case '"' -> '"';
-			case '\'' -> '\'';
-			case '`' -> '`';
 			// case 'v' -> '\v';
-			default -> {
-				error("Invalid escape character: " + c);
-				yield 0;
-			}
+			default -> throw error("Invalid escape character: '" + c + "'");
 		};
 	}
 
@@ -272,15 +283,23 @@ public class TokenStreamJS {
 			return tokens;
 		}
 
+		timeoutTime = timeout <= 0L ? 0L : (System.currentTimeMillis() + timeout);
+
 		while (true) {
-			int l = line;
-			int p = pos;
+			int _row = row;
+			int _col = col;
 			var t = readToken();
 
 			if (t == SymbolToken.EOF) {
+				if (depth > 0) {
+					throw error("Invalid depth! Too few [ { ( or ${");
+				} else if (depth < 0) {
+					throw error("Invalid depth! Too few ] } or )");
+				}
+
 				return tokens;
 			} else {
-				tokens.add(new PositionedToken(t, new TokenPos(tokenSource, l, p)));
+				tokens.add(new PositionedToken(t, new TokenPos(tokenSource, _row, _col)));
 			}
 		}
 	}

@@ -22,4 +22,13 @@ public abstract class IchorError extends RuntimeException {
 		tokenPos = pos.getPos();
 		return this;
 	}
+
+	@Override
+	public String getMessage() {
+		if (tokenPos != TokenPos.UNKNOWN) {
+			return tokenPos + ": " + super.getMessage();
+		}
+
+		return super.getMessage();
+	}
 }

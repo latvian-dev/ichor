@@ -7,7 +7,7 @@ public record PositionedToken(Token token, TokenPos pos) implements TokenPosSupp
 
 	@Override
 	public String toString() {
-		return "%d:%d %s".formatted(pos.line(), pos.pos(), token);
+		return "%d:%d:'%s'".formatted(pos.row(), pos.col(), token);
 	}
 
 	@Override

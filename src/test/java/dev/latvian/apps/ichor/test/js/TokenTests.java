@@ -88,4 +88,28 @@ public class TokenTests {
 				SymbolToken.RC
 		);
 	}
+
+	@Test
+	public void templateLiterals() {
+		testTokenStream("`Entity has spawned at X: ${location.pos.x}, Y: ${location.pos.y}`",
+				SymbolToken.TEMPLATE_LITERAL,
+				StringToken.of("Entity has spawned at X: "),
+				SymbolToken.TEMPLATE_LITERAL_VAR,
+				new NameToken("location"),
+				SymbolToken.DOT,
+				new NameToken("pos"),
+				SymbolToken.DOT,
+				new NameToken("x"),
+				SymbolToken.RC,
+				StringToken.of(", Y: "),
+				SymbolToken.TEMPLATE_LITERAL_VAR,
+				new NameToken("location"),
+				SymbolToken.DOT,
+				new NameToken("pos"),
+				SymbolToken.DOT,
+				new NameToken("x"),
+				SymbolToken.RC,
+				SymbolToken.TEMPLATE_LITERAL
+		);
+	}
 }

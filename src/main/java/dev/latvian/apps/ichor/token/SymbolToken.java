@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.token;
 
+import dev.latvian.apps.ichor.TokenStream;
 import dev.latvian.apps.ichor.ast.expression.binary.AstAdd;
 import dev.latvian.apps.ichor.ast.expression.binary.AstAnd;
 import dev.latvian.apps.ichor.ast.expression.binary.AstBinary;
@@ -32,6 +33,7 @@ import dev.latvian.apps.ichor.ast.expression.unary.AstSub1L;
 import dev.latvian.apps.ichor.error.ParseError;
 import dev.latvian.apps.ichor.error.ParseErrorType;
 import dev.latvian.apps.ichor.util.EvaluableFactory;
+import org.jetbrains.annotations.Nullable;
 
 public enum SymbolToken implements StaticToken, BinaryOpToken {
 	EOF("EOF"), // end of file
@@ -85,11 +87,14 @@ public enum SymbolToken implements StaticToken, BinaryOpToken {
 	POW("**", AstPow::new), // power
 	HOOK("?"), // hook
 	COL(":"), // colon
+	DCOL("::"), // double colon
 	SEMI(";"), // semicolon
 	OC("?."), // optional chaining
 	NC("??", AstNc::new), // nullish coalescing
 	NC_SET("??=", AstNc::new), // nullish coalescing
 	ARROW("=>"), // arrow
+	TEMPLATE_LITERAL("`"), // template literal
+	TEMPLATE_LITERAL_VAR("${"), // template literal variable
 
 	;
 
@@ -99,6 +104,7 @@ public enum SymbolToken implements StaticToken, BinaryOpToken {
 		ADD.astUnary = AstPositive::new;
 		SUB.astUnary = AstNegate::new;
 	}
+
 
 	public final String name;
 	public EvaluableFactory astUnary;
@@ -134,6 +140,40 @@ public enum SymbolToken implements StaticToken, BinaryOpToken {
 			return bin;
 		}
 
-		throw new ParseError(pos, ParseErrorType.INVALID_BINARY, name);
+		throw new ParseError(pos, ParseErrorType.INVALID_BINARY.format(name));
+	}
+
+	@Nullable
+	public static SymbolToken read(TokenStream s, char t) {
+		return switch (t) {
+			case 0 -> EOF;
+			case '.' -> s.readIf('.') ? s.readIf('.') ? TDOT : DDOT : DOT;
+			case ',' -> COMMA;
+			case '(' -> LP;
+			case ')' -> RP;
+			case '[' -> LS;
+			case ']' -> RS;
+			case '{' -> LC;
+			case '}' -> RC;
+			case '=' -> s.readIf('>') ? ARROW : s.readIf('=') ? s.readIf('=') ? SEQ : EQ : SET;
+			case '+' -> s.readIf('=') ? ADD_SET : s.readIf('+') ? ADD1 : ADD;
+			case '-' -> s.readIf('=') ? SUB_SET : s.readIf('-') ? SUB1 : SUB;
+			case '*' -> s.readIf('=') ? MUL_SET : s.readIf('*') ? POW : MUL;
+			case '/' -> s.readIf('=') ? DIV_SET : DIV;
+			case '%' -> s.readIf('=') ? MOD_SET : MOD;
+			case '!' -> s.readIf('=') ? s.readIf('=') ? SNEQ : NEQ : NOT;
+			case '~' -> BNOT;
+			case '<' -> s.readIf('<') ? s.readIf('=') ? LSH_SET : LSH : s.readIf('=') ? LTE : LT;
+			case '>' -> s.readIf('>') ? s.readIf('>') ? s.readIf('=') ? URSH_SET : URSH : s.readIf('=') ? RSH_SET : RSH : s.readIf('=') ? GTE : GT;
+			case '^' -> s.readIf('=') ? XOR_SET : XOR;
+			case '?' -> s.readIf('.') ? OC : s.readIf('?') ? NC : HOOK;
+			case '|' -> s.readIf('=') ? BOR_SET : s.readIf('|') ? OR : BOR;
+			case '&' -> s.readIf('=') ? BAND_SET : s.readIf('&') ? AND : BAND;
+			case ':' -> s.readIf(':') ? DCOL : COL;
+			case ';' -> SEMI;
+			case '`' -> TEMPLATE_LITERAL;
+			case '$' -> s.readIf('{') ? TEMPLATE_LITERAL_VAR : null;
+			default -> null;
+		};
 	}
 }

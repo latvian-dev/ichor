@@ -11,6 +11,7 @@ import dev.latvian.apps.ichor.test.ReflectionExample;
 import dev.latvian.apps.ichor.test.TestConsole;
 import dev.latvian.apps.ichor.util.AssignType;
 import dev.latvian.apps.ichor.util.ConsoleDebugger;
+import dev.latvian.apps.ichor.util.EmptyArrays;
 import dev.latvian.apps.ichor.util.NamedTokenSource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -28,7 +29,7 @@ public class InterpreterTests {
 		}
 	}
 
-	public static void testInterpreter(String input, Consumer<RootScope> rootScopeCallback, String match) {
+	public static void testInterpreter(String filename, String input, Consumer<RootScope> rootScopeCallback, String match) {
 		var matchStr = Arrays.asList(match.split("\n"));
 		System.out.println("--- Interpreter Test ---");
 		System.out.println("Input:");
@@ -46,7 +47,8 @@ public class InterpreterTests {
 		rootScopeCallback.accept(rootScope);
 		cx.debugger = new ConsoleDebugger();
 
-		var tokenStream = new TokenStreamJS(new NamedTokenSource("<interpreter test>"), input);
+		var tokenStream = new TokenStreamJS(new NamedTokenSource(filename), input);
+		tokenStream.timeout(1500L);
 		var tokens = tokenStream.getTokens();
 		var parser = new ParserJS(cx, tokens);
 		var ast = parser.parse();
@@ -69,9 +71,12 @@ public class InterpreterTests {
 		Assertions.assertEquals(matchStr, console.output());
 	}
 
+	public static void testInterpreter(String input, Consumer<RootScope> rootScopeCallback, String match) {
+		testInterpreter("<interpreter test>", input, rootScopeCallback, match);
+	}
+
 	public static void testInterpreter(String input, String match) {
-		testInterpreter(input, cx -> {
-		}, match);
+		testInterpreter(input, EmptyArrays.consumer(), match);
 	}
 
 	@Test

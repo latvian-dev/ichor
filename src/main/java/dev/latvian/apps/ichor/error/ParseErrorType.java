@@ -1,9 +1,9 @@
 package dev.latvian.apps.ichor.error;
 
-public enum ParseErrorType {
+public enum ParseErrorType implements ParseErrorMessage {
 	INVALID_TARGET("Invalid assignment target"),
 	INVALID_BINARY("'%s' is not a binary operator"),
-	EXP_EXPR("Expected expression"),
+	EXP_EXPR("Expected expression, got '%s' instead"),
 	EXP_FUNC_NAME("Expected function name"),
 	EXP_CLASS_NAME("Expected class name"),
 	EXP_PARAM_NAME("Expected parameter name"),
@@ -12,6 +12,8 @@ public enum ParseErrorType {
 	EXP_LC_BLOCK("Expected '{' before block"),
 	EXP_RC_BLOCK("Expected '}' after block"),
 	EXP_RC_OBJECT("Expected '}' after object"),
+	EXP_RC_TEMPLATE_LITERAL("Expected '}' after template literal"),
+	EXP_COL_OBJECT("Expected ':' after name"),
 	EXP_RS_ARRAY("Expected ']' after array"),
 	EXP_RP_EXPR("Expected ')' after expression"),
 	EXP_LP_ARGS("Expected '(' before arguments"),
@@ -37,10 +39,30 @@ public enum ParseErrorType {
 
 	;
 
+	public record Formatted(ParseErrorType t, String msg) implements ParseErrorMessage {
+
+		@Override
+		public String getMessage() {
+			return msg;
+		}
+	}
+
 	public final String message;
 
 	ParseErrorType(String m) {
 		message = m;
 	}
 
+	@Override
+	public String getMessage() {
+		return message;
+	}
+
+	public ParseErrorMessage format(Object... args) {
+		if (args.length == 0) {
+			return this;
+		}
+
+		return new Formatted(this, message.formatted(args));
+	}
 }

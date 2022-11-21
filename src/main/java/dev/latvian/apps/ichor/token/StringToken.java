@@ -1,6 +1,7 @@
 package dev.latvian.apps.ichor.token;
 
 import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstAppendable;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -43,7 +44,7 @@ public record StringToken(String value) implements Token, Evaluable, AstAppendab
 	}
 
 	@Override
-	public Evaluable toEvaluable() {
+	public Evaluable toEvaluable(Parser parser) {
 		return this;
 	}
 
