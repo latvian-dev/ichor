@@ -45,8 +45,13 @@ public class AstForOf extends AstStatement {
 	public void interpret(Scope scope) {
 		var f = from.eval(scope);
 		var p = scope.getContext().getPrototype(f);
+		var itr = getIterable(scope, p, f);
 
-		for (var it : getIterable(scope, p, f)) {
+		if (itr.isEmpty()) {
+			return;
+		}
+
+		for (var it : itr) {
 			var s = scope.push();
 			s.declareMember(name, it, AssignType.MUTABLE);
 			body.interpret(s);

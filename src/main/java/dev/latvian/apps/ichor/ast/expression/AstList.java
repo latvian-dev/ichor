@@ -3,6 +3,7 @@ package dev.latvian.apps.ichor.ast.expression;
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
+import dev.latvian.apps.ichor.error.ScriptError;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +43,7 @@ public class AstList extends AstExpression {
 						list.add(o1);
 					}
 				} else {
-					list.add(s);
+					throw new ScriptError("Spread used on non-array").pos(pos);
 				}
 			} else {
 				list.add(o.eval(scope));

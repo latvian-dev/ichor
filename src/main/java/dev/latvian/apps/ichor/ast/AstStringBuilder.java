@@ -80,17 +80,11 @@ public class AstStringBuilder {
 
 	public void appendValue(Object o) {
 		if (o instanceof CharSequence) {
-			builder.append('"');
-		}
-
-		if (o instanceof AstAppendable ast) {
+			wrapString(o, builder);
+		} else if (o instanceof AstAppendable ast) {
 			ast.append(this);
 		} else {
 			builder.append(o);
-		}
-
-		if (o instanceof CharSequence) {
-			builder.append('"');
 		}
 	}
 

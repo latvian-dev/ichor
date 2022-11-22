@@ -423,7 +423,7 @@ public class InterpreterTests {
 	}
 
 	@Test
-	public void forOf() {
+	public void forOfArr() {
 		testInterpreter("""
 				const arr = ['a', 'b', 'c']
 								
@@ -438,7 +438,7 @@ public class InterpreterTests {
 	}
 
 	@Test
-	public void forIn() {
+	public void forInArr() {
 		testInterpreter("""
 				const arr = ['a', 'b', 'c']
 								
@@ -449,6 +449,36 @@ public class InterpreterTests {
 				0
 				1
 				2
+				""");
+	}
+
+	@Test
+	public void forOfObj() {
+		testInterpreter("""
+				const obj = {a: 'X', b: 'Y', c: 'Z'}
+								
+				for (const x of obj) {
+				  print(x)
+				}
+				""", """
+				X
+				Y
+				Z
+				""");
+	}
+
+	@Test
+	public void forInObj() {
+		testInterpreter("""
+				const obj = {a: 'X', b: 'Y', c: 'Z'}
+								
+				for (x in obj) {
+				  print(x)
+				}
+				""", """
+				a
+				b
+				c
 				""");
 	}
 }

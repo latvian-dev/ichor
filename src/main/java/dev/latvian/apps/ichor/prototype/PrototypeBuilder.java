@@ -198,22 +198,26 @@ public class PrototypeBuilder implements Prototype {
 
 	@Override
 	public Collection<?> keys(Scope scope, Object self) {
-		return indexedValueHandler != null ? indexedValueHandler.keys(scope, self) : Collections.emptySet();
+		var h = namedValueHandler != null ? namedValueHandler : indexedValueHandler;
+		return h != null ? h.keys(scope, self) : Collections.emptySet();
 	}
 
 	@Override
 	public Collection<?> values(Scope scope, Object self) {
-		return indexedValueHandler != null ? indexedValueHandler.values(scope, self) : Collections.emptySet();
+		var h = namedValueHandler != null ? namedValueHandler : indexedValueHandler;
+		return h != null ? h.values(scope, self) : Collections.emptySet();
 	}
 
 	@Override
 	public Collection<?> entries(Scope scope, Object self) {
-		return indexedValueHandler != null ? indexedValueHandler.entries(scope, self) : Collections.emptySet();
+		var h = namedValueHandler != null ? namedValueHandler : indexedValueHandler;
+		return h != null ? h.entries(scope, self) : Collections.emptySet();
 	}
 
 	@Override
 	public int getMemberCount(Scope scope, Object self) {
-		return indexedValueHandler != null ? indexedValueHandler.getMemberCount(scope, self) : 0;
+		var h = namedValueHandler != null ? namedValueHandler : indexedValueHandler;
+		return h != null ? h.getMemberCount(scope, self) : 0;
 	}
 
 	@Override
