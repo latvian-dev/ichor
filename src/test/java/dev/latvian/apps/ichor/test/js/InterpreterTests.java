@@ -481,4 +481,16 @@ public class InterpreterTests {
 				c
 				""");
 	}
+
+	@Test
+	public void assignExpr() {
+		testInterpreter("""
+				let y = 28;
+				let x;
+				if((x = y/2) > 10)
+				  print(x)
+				""", """
+				14.0
+				""");
+	}
 }
