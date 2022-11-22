@@ -6,6 +6,8 @@ import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.js.NumberJS;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -192,6 +194,26 @@ public class PrototypeBuilder implements Prototype {
 		}
 
 		return false;
+	}
+
+	@Override
+	public Collection<?> keys(Scope scope, Object self) {
+		return indexedValueHandler != null ? indexedValueHandler.keys(scope, self) : Collections.emptySet();
+	}
+
+	@Override
+	public Collection<?> values(Scope scope, Object self) {
+		return indexedValueHandler != null ? indexedValueHandler.values(scope, self) : Collections.emptySet();
+	}
+
+	@Override
+	public Collection<?> entries(Scope scope, Object self) {
+		return indexedValueHandler != null ? indexedValueHandler.entries(scope, self) : Collections.emptySet();
+	}
+
+	@Override
+	public int getMemberCount(Scope scope, Object self) {
+		return indexedValueHandler != null ? indexedValueHandler.getMemberCount(scope, self) : 0;
 	}
 
 	@Override

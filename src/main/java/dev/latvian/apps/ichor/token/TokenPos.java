@@ -5,7 +5,7 @@ public record TokenPos(TokenSource source, int row, int col) implements TokenPos
 
 	@Override
 	public String toString() {
-		return this == UNKNOWN ? "<unknown>" : "%s:%d:%d".formatted(source, row, col);
+		return this == UNKNOWN ? "<unknown>" : "%s:%d:%d".formatted(source.getSourceName(), row, col);
 	}
 
 	@Override

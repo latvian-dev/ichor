@@ -87,13 +87,13 @@ public class InterpreterTests {
 	@Test
 	public void whileLoop() {
 		testInterpreter("""
-				let x = 2.0, i = 0;
+				let x = 2.0, i = 0
 				 
 				while(++i < 8) {
-				  x *= 2;
+				  x *= 2
 				}
 								
-				print(x);
+				print(x)
 				""", "256.0");
 	}
 
@@ -108,7 +108,7 @@ public class InterpreterTests {
 	public void functionPrintDash() {
 		testInterpreter("""
 				function test(x) {
-				  print('- ' + x);
+				  print('- ' + x)
 				}
 								
 				test("Hello");
@@ -119,17 +119,17 @@ public class InterpreterTests {
 	public void functionPrintPowWithComment() {
 		testInterpreter("""
 				function printPower(x, pow) {
-				  var y = 1;
+				  var y = 1
 								
 				  while(--pow >= 0) {
-				  	y *= x;
-				  	// print(y);
+				  	y *= x
+				  	// print(y)
 				  }
 				  
-				  print(y);
+				  print(y)
 				}
 								
-				printPower(2, 3);
+				printPower(2, 3)
 				""", "8.0");
 	}
 
@@ -138,14 +138,14 @@ public class InterpreterTests {
 		testInterpreter("""
 				function a(x) {
 				  function b(y) {
-				    return y * y;
+				    return y * y
 				  }
 								
-				  return b(x) + b(x);
+				  return b(x) + b(x)
 				}
 								
-				let z = a(3.5);
-				print(z);
+				let z = a(3.5)
+				print(z)
 				""", "24.5");
 	}
 
@@ -154,13 +154,13 @@ public class InterpreterTests {
 		testInterpreter("""
 				const fib = function(n) {
 				  if (n <= 1) {
-				    return n;
+				    return n
 				  }
 								
-				  return fib(n - 1) + fib(n - 2);
-				};
+				  return fib(n - 1) + fib(n - 2)
+				}
 								
-				let z = fib(10);
+				let z = fib(10)
 				print(z);
 				""", "55.0");
 	}
@@ -169,17 +169,17 @@ public class InterpreterTests {
 	public void recursionOddEven() {
 		testInterpreter("""
 				function isOdd(n) {
-				  if (n == 0) return false;
-				  return isEven(n - 1);
+				  if (n == 0) return false
+				  return isEven(n - 1)
 				}
 								
 				function isEven(n) {
-				  if (n == 0) return true;
-				  return isOdd(n - 1);
+				  if (n == 0) return true
+				  return isOdd(n - 1)
 				}
 								
-				print(isOdd(7));
-				print(isEven(7));
+				print(isOdd(7))
+				print(isEven(7))
 				""", """
 				true
 				false
@@ -189,16 +189,16 @@ public class InterpreterTests {
 	@Test
 	public void redeclaration() {
 		testInterpreter("""
-				var x = 10;
-				print(x);
+				var x = 10
+				print(x)
 								
 				{
-				  print(x);
-				  var x = 20;
-				  print(x);
+				  print(x)
+				  var x = 20
+				  print(x)
 				}
 								
-				print(x);
+				print(x)
 				""", """
 				10.0
 				10.0
@@ -218,12 +218,12 @@ public class InterpreterTests {
 	public void nestedArrowFunction() {
 		testInterpreter("""
 				const a = x => {
-				  const b = y => { return y * y; };
-				  return b(x) * 2;
-				};
+				  const b = y => { return y * y; }
+				  return b(x) * 2
+				}
 								
-				let z = a(3.5);
-				print(z);
+				let z = a(3.5)
+				print(z)
 				""", "24.5");
 	}
 
@@ -231,12 +231,12 @@ public class InterpreterTests {
 	public void defaultParams() {
 		testInterpreter("""
 				const a = (x, y = 'Y', z = 'Z') => {
-				  print(String(x) + " : " + String(y) + " : " + String(z));
-				};
+				  print(String(x) + " : " + String(y) + " : " + String(z))
+				}
 								
-				a('a', 'b', 'c');
-				a('a', 'b');
-				a('a');
+				a('a', 'b', 'c')
+				a('a', 'b')
+				a('a')
 				""", """
 				a : b : c
 				a : b : Z
@@ -249,29 +249,29 @@ public class InterpreterTests {
 		testInterpreter("""
 				class TestParent {
 				  constructor(param) {
-				    this.param = param;
+				    this.param = param
 				  }
 								
 				  printTest(y) {
-				    print(y);
+				    print(y)
 				  }
 				}
 								
-				let t1 = new TestParent(-439);
-				t1.printTest('Hi 1');
+				let t1 = new TestParent(-439)
+				t1.printTest('Hi 1')
 								
 				class Test extends TestParent {
 				  constructor(x, y = 10, z = 30) {
-				    super(x);
+				    super(x)
 				  }
 				  
 				  printTest2(y) {
-				    printTest(y);
+				    printTest(y)
 				  }
 				}
 								
-				let t2 = new Test(9);
-				t2.printTest2('Hi 2');
+				let t2 = new Test(9)
+				t2.printTest2('Hi 2')
 				""", """
 				Hi 1
 				Hi 2
@@ -281,10 +281,10 @@ public class InterpreterTests {
 	@Test
 	public void propertyTest() {
 		testInterpreter("""
-				print('A');
-				print('B');
-				print('C');
-				print(print.lastLine);
+				print('A')
+				print('B')
+				print('C')
+				print(print.lastLine)
 				""", """
 				A
 				B
@@ -296,10 +296,10 @@ public class InterpreterTests {
 	@Test
 	public void stringProto() {
 		testInterpreter("""
-				print('Hello'.length);
-				print('Hello'.charAt(0));
-				print(String(4));
-				print(new String(true));
+				print('Hello'.length)
+				print('Hello'.charAt(0))
+				print(String(4))
+				print(new String(true))
 				""", """
 				5
 				H
@@ -311,18 +311,18 @@ public class InterpreterTests {
 	@Test
 	public void emptyArray() {
 		testInterpreter("""
-				let empty = [];
-				print(empty.length);
+				let empty = []
+				print(empty.length)
 				""", "0");
 	}
 
 	@Test
 	public void arrays() {
 		testInterpreter("""
-				let a = [1, 2, 'Hi'];
-				print(a.length);
-				print(a[0]);
-				print(a[2]);
+				let a = [1, 2, 'Hi']
+				print(a.length)
+				print(a[0])
+				print(a[2])
 				""", """
 				3
 				1.0
@@ -367,9 +367,9 @@ public class InterpreterTests {
 	@Test
 	public void ternary() {
 		testInterpreter("""
-				let x = 40;
-				let y = 60;
-				print();
+				let x = 40
+				let y = 60
+				print()
 				// before
 				print('A')
 				/* block comment
@@ -392,8 +392,8 @@ public class InterpreterTests {
 	@Test
 	public void templateLiteralExpression() {
 		testInterpreter("""
-				let x = 10;
-				let y = 20;
+				let x = 10
+				let y = 20
 				print(`Hello ${x} + ${y} = ${x + y}`)
 				""", "Hello 10.0 + 20.0 = 30.0");
 	}
@@ -401,9 +401,54 @@ public class InterpreterTests {
 	@Test
 	public void nestedTemplateLiteralExpression() {
 		testInterpreter("""
-				let x = 10;
-				let y = 20;
+				let x = 10
+				let y = 20
 				print(`Hello ${x} + ${y} = ${true ? `${x + y}` : 'impossible'}`)
 				""", "Hello 10.0 + 20.0 = 30.0");
+	}
+
+	@Test
+	public void forIndex() {
+		testInterpreter("""
+				const arr = ['a', 'b', 'c']
+								
+				for (let i = 0; i < arr.length; i++) {
+				  print(`${i}: ${arr[i]}`)
+				}
+				""", """
+				0.0: a
+				1.0: b
+				2.0: c
+				""");
+	}
+
+	@Test
+	public void forOf() {
+		testInterpreter("""
+				const arr = ['a', 'b', 'c']
+								
+				for (const x of arr) {
+				  print(x)
+				}
+				""", """
+				a
+				b
+				c
+				""");
+	}
+
+	@Test
+	public void forIn() {
+		testInterpreter("""
+				const arr = ['a', 'b', 'c']
+								
+				for (x in arr) {
+				  print(x)
+				}
+				""", """
+				0
+				1
+				2
+				""");
 	}
 }

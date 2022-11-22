@@ -5,7 +5,6 @@ import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.ast.Ast;
 import dev.latvian.apps.ichor.ast.CallableAst;
-import dev.latvian.apps.ichor.ast.expression.AstBoolean;
 import dev.latvian.apps.ichor.ast.expression.AstClassFunction;
 import dev.latvian.apps.ichor.ast.expression.AstFunction;
 import dev.latvian.apps.ichor.ast.expression.AstGetBase;
@@ -37,6 +36,9 @@ import dev.latvian.apps.ichor.ast.statement.AstClass;
 import dev.latvian.apps.ichor.ast.statement.AstContinue;
 import dev.latvian.apps.ichor.ast.statement.AstDelete;
 import dev.latvian.apps.ichor.ast.statement.AstExpressionStatement;
+import dev.latvian.apps.ichor.ast.statement.AstFor;
+import dev.latvian.apps.ichor.ast.statement.AstForIn;
+import dev.latvian.apps.ichor.ast.statement.AstForOf;
 import dev.latvian.apps.ichor.ast.statement.AstIf;
 import dev.latvian.apps.ichor.ast.statement.AstInterpretableGroup;
 import dev.latvian.apps.ichor.ast.statement.AstMultiDeclareStatement;
@@ -84,7 +86,23 @@ public class ParserJS implements Parser {
 	private static final BinaryOp BIN_ADDITIVE = new BinaryOp(ParserJS::multiplicative, SymbolToken.ADD, SymbolToken.SUB);
 	private static final BinaryOp BIN_MULTIPLICATIVE = new BinaryOp(ParserJS::exponential, SymbolToken.MUL, SymbolToken.DIV, SymbolToken.MOD);
 	private static final BinaryOp BIN_EXPONENTIAL = new BinaryOp(ParserJS::unary, SymbolToken.POW);
-	private static final StaticToken[] SET_OP_TOKENS = {SymbolToken.ADD_SET, SymbolToken.SUB_SET, SymbolToken.MUL_SET, SymbolToken.DIV_SET, SymbolToken.MOD_SET, SymbolToken.BOR_SET, SymbolToken.BAND_SET, SymbolToken.XOR_SET, SymbolToken.LSH_SET, SymbolToken.RSH_SET, SymbolToken.URSH_SET, SymbolToken.NC_SET,};
+
+	private static final StaticToken[] SET_OP_TOKENS = {
+			SymbolToken.ADD_SET,
+			SymbolToken.SUB_SET,
+			SymbolToken.MUL_SET,
+			SymbolToken.DIV_SET,
+			SymbolToken.MOD_SET,
+			SymbolToken.BOR_SET,
+			SymbolToken.BAND_SET,
+			SymbolToken.XOR_SET,
+			SymbolToken.LSH_SET,
+			SymbolToken.RSH_SET,
+			SymbolToken.URSH_SET,
+			SymbolToken.NC_SET,
+	};
+
+	private static final StaticToken[] FOR_OF_IN_TOKENS = {KeywordToken.OF, KeywordToken.IN};
 
 	private final ContextJS context;
 	private final List<PositionedToken> tokens;
@@ -237,7 +255,7 @@ public class ParserJS implements Parser {
 			return (k.token() == KeywordToken.THIS ? new AstThisStatement(arguments.toArray(EmptyArrays.EVALUABLES)) : new AstSuperStatement(arguments.toArray(EmptyArrays.EVALUABLES))).pos(k);
 		}
 
-		return expressionStatement();
+		return expressionStatement(true);
 	}
 
 	private Interpretable forStatement() {
@@ -249,8 +267,31 @@ public class ParserJS implements Parser {
 			initializer = null;
 		} else if (match(VAR_TOKENS)) {
 			initializer = varDeclaration(previous());
+		} else if (peekToken() instanceof NameToken n) {
+			advance();
+			initializer = new AstSingleDeclareStatement(KeywordToken.LET, new AstParam(n.name()));
 		} else {
-			initializer = expressionStatement();
+			initializer = expressionStatement(false);
+		}
+
+		if (match(FOR_OF_IN_TOKENS)) {
+			String name;
+
+			if (initializer instanceof AstSingleDeclareStatement s) {
+				name = s.variable.name;
+			} else {
+				throw error(previous(), ParseErrorType.EXP_INIT);
+			}
+
+			boolean of = previous().token() == KeywordToken.OF;
+
+			var from = expression();
+
+			consume(SymbolToken.RP, ParseErrorType.EXP_RP_FOR);
+			var body = statementBody();
+
+
+			return (of ? new AstForOf(name, from, body) : new AstForIn(name, from, body)).pos(pos);
 		}
 
 		Evaluable condition = null;
@@ -259,31 +300,15 @@ public class ParserJS implements Parser {
 		}
 		consume(SymbolToken.SEMI, ParseErrorType.EXP_SEMI_FOR);
 
-		Evaluable increment = null;
+		Interpretable increment = null;
 		if (!check(SymbolToken.RP)) {
-			increment = expression();
+			increment = expressionStatement(true);
 		}
+
 		consume(SymbolToken.RP, ParseErrorType.EXP_RP_FOR);
-		var body = statement();
+		var body = statementBody();
 
-		if (increment != null) {
-			body = new AstInterpretableGroup(body, new AstExpressionStatement(increment));
-		}
-
-		if (condition == null) {
-			condition = new AstBoolean(true).pos(pos);
-		}
-		body = new AstWhile(condition, new AstInterpretableGroup(body));
-
-		if (initializer != null) {
-			body = new AstInterpretableGroup(initializer, body);
-		}
-
-		if (body instanceof Ast) {
-			((Ast) body).pos(pos);
-		}
-
-		return body;
+		return new AstFor(initializer, condition, increment, body).pos(pos);
 	}
 
 	private Interpretable ifStatement() {
@@ -293,11 +318,11 @@ public class ParserJS implements Parser {
 		var condition = expression();
 		consume(SymbolToken.RP, ParseErrorType.EXP_RP_IF_COND);
 
-		var ifTrue = block(false);
+		var ifTrue = statementBody();
 		Interpretable ifFalse = null;
 
 		if (match(KeywordToken.ELSE)) {
-			ifFalse = block(false);
+			ifFalse = statementBody();
 		}
 
 		return new AstIf(condition, ifTrue, ifFalse).pos(pos);
@@ -356,8 +381,7 @@ public class ParserJS implements Parser {
 		consume(SymbolToken.LP, ParseErrorType.EXP_LP_WHILE_COND);
 		var condition = expression();
 		consume(SymbolToken.RP, ParseErrorType.EXP_RP_WHILE_COND);
-		var body = block(false);
-
+		var body = statementBody();
 		return new AstWhile(condition, body);
 	}
 
@@ -371,9 +395,13 @@ public class ParserJS implements Parser {
 		}
 	}
 
-	private Interpretable expressionStatement() {
+	private Interpretable expressionStatement(boolean ignoreSemi) {
 		var expr = expression();
-		ignoreSemi();
+
+		if (ignoreSemi) {
+			ignoreSemi();
+		}
+
 		return new AstExpressionStatement(expr);
 	}
 
@@ -423,6 +451,21 @@ public class ParserJS implements Parser {
 
 			return statement;
 		}
+	}
+
+	@Nullable
+	private Interpretable statementBody() {
+		if (match(SymbolToken.SEMI)) {
+			return null;
+		}
+
+		var b = block(false);
+
+		if (b instanceof AstInterpretableGroup g && g.interpretable.length == 0) {
+			return null;
+		}
+
+		return b;
 	}
 
 	@Override

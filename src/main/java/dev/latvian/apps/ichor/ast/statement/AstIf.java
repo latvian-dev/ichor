@@ -4,13 +4,14 @@ import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
+import org.jetbrains.annotations.Nullable;
 
 public class AstIf extends AstStatement {
 	public final Evaluable condition;
 	public final Interpretable trueBody;
 	public final Interpretable falseBody;
 
-	public AstIf(Evaluable condition, Interpretable ifTrue, Interpretable ifFalse) {
+	public AstIf(Evaluable condition, @Nullable Interpretable ifTrue, @Nullable Interpretable ifFalse) {
 		this.condition = condition;
 		this.trueBody = ifTrue;
 		this.falseBody = ifFalse;
@@ -21,7 +22,12 @@ public class AstIf extends AstStatement {
 		builder.append("if (");
 		builder.append(condition);
 		builder.append(") ");
-		builder.append(trueBody);
+
+		if (trueBody != null) {
+			builder.append(trueBody);
+		} else {
+			builder.append(';');
+		}
 
 		if (falseBody != null) {
 			builder.append(" else ");
@@ -32,7 +38,9 @@ public class AstIf extends AstStatement {
 	@Override
 	public void interpret(Scope scope) {
 		if (condition.evalBoolean(scope)) {
-			trueBody.interpret(scope);
+			if (trueBody != null) {
+				trueBody.interpret(scope);
+			}
 		} else if (falseBody != null) {
 			falseBody.interpret(scope);
 		}

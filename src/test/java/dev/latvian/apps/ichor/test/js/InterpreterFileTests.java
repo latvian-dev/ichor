@@ -21,6 +21,6 @@ public class InterpreterFileTests {
 
 	//@Test
 	public void test1() throws IOException {
-		testInterpreter("run/test.js", "256.0");
+		testInterpreter("run/test.js", "");
 	}
 }

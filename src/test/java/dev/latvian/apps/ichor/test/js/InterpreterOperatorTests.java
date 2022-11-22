@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 public class InterpreterOperatorTests {
 	@Test
 	public void add() {
-		InterpreterTests.testInterpreter("print(2.0 + 3.0)", "5.0");
+		InterpreterTests.testInterpreter("print(2 + 3)", "5.0");
 	}
 
 	@Test
@@ -21,12 +21,17 @@ public class InterpreterOperatorTests {
 
 	@Test
 	public void addns() {
-		InterpreterTests.testInterpreter("print(2.0 + '3.0')", "2.03.0"); // TODO: check if JS typecasts
+		InterpreterTests.testInterpreter("print('11' + 1)", "111.0");
+	}
+
+	@Test
+	public void subns() {
+		InterpreterTests.testInterpreter("print('11' - 1)", "10.0");
 	}
 
 	@Test
 	public void mul() {
-		InterpreterTests.testInterpreter("print(2.0 * 3.0)", "6.0");
+		InterpreterTests.testInterpreter("print(2 * 3)", "6.0");
 	}
 
 	@Test
@@ -36,11 +41,11 @@ public class InterpreterOperatorTests {
 
 	@Test
 	public void div() {
-		InterpreterTests.testInterpreter("print(3.0 / 2.0)", "1.5");
+		InterpreterTests.testInterpreter("print(3 / 2)", "1.5");
 	}
 
 	@Test
 	public void divf() {
-		InterpreterTests.testInterpreter("print(2.0 / 0.5)", "4.0");
+		InterpreterTests.testInterpreter("print(2 / 0.5)", "4.0");
 	}
 }
