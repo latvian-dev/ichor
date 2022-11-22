@@ -4,7 +4,6 @@ import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.exit.ScopeExit;
 
 public class AstIf extends AstStatement {
 	public final Evaluable condition;
@@ -31,7 +30,7 @@ public class AstIf extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) throws ScopeExit {
+	public void interpret(Scope scope) {
 		if (condition.evalBoolean(scope)) {
 			trueBody.interpret(scope);
 		} else if (falseBody != null) {

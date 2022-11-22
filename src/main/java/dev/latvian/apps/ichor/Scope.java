@@ -15,14 +15,10 @@ public class Scope {
 	public static class Slot {
 		public Object value;
 		public boolean immutable;
-		public Prototype prototype;
 
-		public Prototype getPrototype(Context cx) {
-			if (prototype == null) {
-				prototype = cx.getPrototype(value);
-			}
-
-			return prototype;
+		@Override
+		public String toString() {
+			return String.valueOf(value);
 		}
 	}
 
@@ -63,7 +59,7 @@ public class Scope {
 				throw new ScriptError("Can't reassign constant " + name);
 			} else {
 				slot.value = value;
-				slot.prototype = null;
+				// slot.prototype = null;
 
 				if (root.context.debugger != null) {
 					root.context.debugger.assignSet(this, name, value);
@@ -82,7 +78,7 @@ public class Scope {
 
 			slot.value = value;
 			slot.immutable = type == AssignType.IMMUTABLE;
-			slot.prototype = null;
+			// slot.prototype = null;
 
 			if (root.context.debugger != null) {
 				root.context.debugger.assignNew(this, name, value);

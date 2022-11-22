@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.test.js;
 
+import dev.latvian.apps.ichor.error.TokenStreamError;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
 import dev.latvian.apps.ichor.token.BooleanToken;
 import dev.latvian.apps.ichor.token.KeywordToken;
@@ -27,7 +28,12 @@ public class TokenTests {
 	}
 
 	@Test
-	public void number() {
+	public void numberInt() {
+		testTokenStream("4", NumberToken.of(4));
+	}
+
+	@Test
+	public void numberDec() {
 		testTokenStream("4.0", NumberToken.of(4));
 	}
 
@@ -90,7 +96,36 @@ public class TokenTests {
 	}
 
 	@Test
-	public void templateLiterals() {
+	public void brackets() {
+		testTokenStream("{}", SymbolToken.LC, SymbolToken.RC);
+	}
+
+	@Test
+	public void bracketsOpen() {
+		Assertions.assertThrows(TokenStreamError.class, () -> testTokenStream("{", SymbolToken.LC));
+	}
+
+	@Test
+	public void bracketsClosed() {
+		Assertions.assertThrows(TokenStreamError.class, () -> testTokenStream("}", SymbolToken.RC));
+	}
+
+	@Test
+	public void bracketsMismatch() {
+		Assertions.assertThrows(TokenStreamError.class, () -> testTokenStream("{]", SymbolToken.LC, SymbolToken.RS));
+	}
+
+	@Test
+	public void templateLiteralString() {
+		testTokenStream("`Entity has spawned`",
+				SymbolToken.TEMPLATE_LITERAL,
+				StringToken.of("Entity has spawned"),
+				SymbolToken.TEMPLATE_LITERAL
+		);
+	}
+
+	@Test
+	public void templateLiteralExpression() {
 		testTokenStream("`Entity has spawned at X: ${location.pos.x}, Y: ${location.pos.y}`",
 				SymbolToken.TEMPLATE_LITERAL,
 				StringToken.of("Entity has spawned at X: "),
@@ -107,7 +142,7 @@ public class TokenTests {
 				SymbolToken.DOT,
 				new NameToken("pos"),
 				SymbolToken.DOT,
-				new NameToken("x"),
+				new NameToken("y"),
 				SymbolToken.RC,
 				SymbolToken.TEMPLATE_LITERAL
 		);

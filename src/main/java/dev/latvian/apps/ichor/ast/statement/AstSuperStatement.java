@@ -4,7 +4,6 @@ import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.expression.AstClassFunction;
 import dev.latvian.apps.ichor.error.ScriptError;
-import dev.latvian.apps.ichor.exit.ScopeExit;
 
 public class AstSuperStatement extends AstThisStatement {
 	public AstSuperStatement(Evaluable[] a) {
@@ -17,7 +16,7 @@ public class AstSuperStatement extends AstThisStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) throws ScopeExit {
+	public void interpret(Scope scope) {
 		if (scope.owner instanceof AstClassFunction func && func.type == AstClassFunction.Type.CONSTRUCTOR) {
 			var c = scope.parent.findOwnerClass();
 

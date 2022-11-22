@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 public interface Token {
 	@Nullable
-	default Evaluable toEvaluable(Parser parser) {
+	default Evaluable toEvaluable(Parser parser, TokenPos pos) {
 		return null;
 	}
 }

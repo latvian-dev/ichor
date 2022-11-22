@@ -5,6 +5,7 @@ import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.ast.Ast;
 import dev.latvian.apps.ichor.ast.CallableAst;
+import dev.latvian.apps.ichor.ast.expression.AstBoolean;
 import dev.latvian.apps.ichor.ast.expression.AstClassFunction;
 import dev.latvian.apps.ichor.ast.expression.AstFunction;
 import dev.latvian.apps.ichor.ast.expression.AstGetBase;
@@ -18,9 +19,11 @@ import dev.latvian.apps.ichor.ast.expression.AstGrouping;
 import dev.latvian.apps.ichor.ast.expression.AstList;
 import dev.latvian.apps.ichor.ast.expression.AstMap;
 import dev.latvian.apps.ichor.ast.expression.AstNew;
+import dev.latvian.apps.ichor.ast.expression.AstNumber;
 import dev.latvian.apps.ichor.ast.expression.AstParam;
 import dev.latvian.apps.ichor.ast.expression.AstSet;
 import dev.latvian.apps.ichor.ast.expression.AstSpread;
+import dev.latvian.apps.ichor.ast.expression.AstString;
 import dev.latvian.apps.ichor.ast.expression.AstSuperExpression;
 import dev.latvian.apps.ichor.ast.expression.AstTemplateLiteral;
 import dev.latvian.apps.ichor.ast.expression.AstTernary;
@@ -46,13 +49,10 @@ import dev.latvian.apps.ichor.error.ParseError;
 import dev.latvian.apps.ichor.error.ParseErrorMessage;
 import dev.latvian.apps.ichor.error.ParseErrorType;
 import dev.latvian.apps.ichor.token.BinaryOpToken;
-import dev.latvian.apps.ichor.token.BooleanToken;
 import dev.latvian.apps.ichor.token.KeywordToken;
 import dev.latvian.apps.ichor.token.NameToken;
-import dev.latvian.apps.ichor.token.NumberToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
 import dev.latvian.apps.ichor.token.StaticToken;
-import dev.latvian.apps.ichor.token.StringToken;
 import dev.latvian.apps.ichor.token.SymbolToken;
 import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.token.TokenPosSupplier;
@@ -241,6 +241,7 @@ public class ParserJS implements Parser {
 	}
 
 	private Interpretable forStatement() {
+		var pos = previous();
 		consume(SymbolToken.LP, ParseErrorType.EXP_LP_FOR);
 
 		Interpretable initializer;
@@ -270,12 +271,16 @@ public class ParserJS implements Parser {
 		}
 
 		if (condition == null) {
-			condition = BooleanToken.TRUE;
+			condition = new AstBoolean(true).pos(pos);
 		}
 		body = new AstWhile(condition, new AstInterpretableGroup(body));
 
 		if (initializer != null) {
 			body = new AstInterpretableGroup(initializer, body);
+		}
+
+		if (body instanceof Ast) {
+			((Ast) body).pos(pos);
 		}
 
 		return body;
@@ -603,10 +608,10 @@ public class ParserJS implements Parser {
 			} else if (match(SymbolToken.LS)) {
 				var keyo = expression().optimize();
 
-				if (keyo instanceof StringToken str) {
-					expr = new AstGetByName(expr, str.value()).pos(previous());
-				} else if (keyo instanceof NumberToken n) {
-					expr = new AstGetByIndex(expr, (int) n.value()).pos(previous());
+				if (keyo instanceof AstString str) {
+					expr = new AstGetByName(expr, str.value).pos(previous());
+				} else if (keyo instanceof AstNumber n) {
+					expr = new AstGetByIndex(expr, (int) n.value).pos(previous());
 				} else {
 					expr = new AstGetByEvaluable(expr, keyo);
 				}
@@ -621,7 +626,8 @@ public class ParserJS implements Parser {
 	}
 
 	private Evaluable primary() {
-		var literal = peekToken().toEvaluable(this);
+		var peekToken = peek();
+		var literal = peekToken.token().toEvaluable(this, peekToken.pos());
 
 		if (literal != null) {
 			var token = advance();
@@ -717,17 +723,29 @@ public class ParserJS implements Parser {
 			var next = advance();
 
 			if (next.token() == SymbolToken.TEMPLATE_LITERAL) {
-				return StringToken.EMPTY;
+				return new AstString("").pos(pos);
 			}
 
 			var parts = new ArrayList<Evaluable>();
+			boolean onlyStrings = true;
+			Evaluable nextEval;
 
 			do {
 				if (next.token() == SymbolToken.TEMPLATE_LITERAL_VAR) {
-					parts.add(expression());
+					var expr = expression();
+
+					if (!(expr instanceof AstString)) {
+						onlyStrings = false;
+					}
+
+					parts.add(expr);
 					consume(SymbolToken.RC, ParseErrorType.EXP_RC_TEMPLATE_LITERAL);
-				} else if (next.token() instanceof Evaluable e) {
-					parts.add(e);
+				} else if ((nextEval = next.token().toEvaluable(this, next.pos())) != null) {
+					parts.add(nextEval);
+
+					if (!(nextEval instanceof AstString)) {
+						onlyStrings = false;
+					}
 				} else {
 					throw error(next, ParseErrorType.EXP_EXPR.format(next.token()));
 				}
@@ -735,6 +753,20 @@ public class ParserJS implements Parser {
 				next = advance();
 			}
 			while (next.token() != SymbolToken.TEMPLATE_LITERAL);
+
+			if (parts.isEmpty()) {
+				return new AstString("").pos(pos);
+			}
+
+			if (onlyStrings) {
+				var sb = new StringBuilder();
+
+				for (var part : parts) {
+					sb.append(((AstString) part).value);
+				}
+
+				return new AstString(sb.toString()).pos(pos);
+			}
 
 			return new AstTemplateLiteral(parts.toArray(EmptyArrays.EVALUABLES)).pos(pos);
 		}
@@ -803,11 +835,12 @@ public class ParserJS implements Parser {
 	}
 
 	private boolean canAdvance() {
-		return current < tokens.size() && peek().token() != SymbolToken.EOF;
+		return current < tokens.size();
 	}
 
+	@Nullable
 	private PositionedToken peek() {
-		return tokens.get(current);
+		return current >= tokens.size() ? null : tokens.get(current);
 	}
 
 	private PositionedToken peek(int offset) {
@@ -815,11 +848,11 @@ public class ParserJS implements Parser {
 	}
 
 	private Token peekToken() {
-		return canAdvance() ? peek().token() : SymbolToken.EOF;
+		return canAdvance() ? peek().token() : null;
 	}
 
 	private Token peekToken(int offset) {
-		return canAdvance() ? peek(offset).token() : SymbolToken.EOF;
+		return canAdvance() ? peek(offset).token() : null;
 	}
 
 	private PositionedToken previous() {

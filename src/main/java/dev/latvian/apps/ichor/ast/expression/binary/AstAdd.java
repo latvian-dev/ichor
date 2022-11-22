@@ -2,7 +2,8 @@ package dev.latvian.apps.ichor.ast.expression.binary;
 
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.token.StringToken;
+import dev.latvian.apps.ichor.ast.expression.AstString;
+import dev.latvian.apps.ichor.error.ScriptError;
 
 public class AstAdd extends AstBinary {
 	@Override
@@ -12,16 +13,16 @@ public class AstAdd extends AstBinary {
 
 	@Override
 	public Object eval(Scope scope) {
-		if (left instanceof StringToken || right instanceof StringToken) {
-			return evalString(scope);
+		var l = left.eval(scope);
+		var r = right.eval(scope);
+
+		if (l instanceof CharSequence || l instanceof Character || r instanceof CharSequence || r instanceof Character) {
+			return String.valueOf(l) + r;
+		} else if (l instanceof Number && r instanceof Number) {
+			return ((Number) l).doubleValue() + ((Number) r).doubleValue();
+		} else {
+			throw new ScriptError("Can't add " + left + " + " + right).pos(pos);
 		}
-
-		return evalDouble(scope);
-	}
-
-	@Override
-	public String evalString(Scope scope) {
-		return left.evalString(scope) + right.evalString(scope);
 	}
 
 	@Override
@@ -36,10 +37,12 @@ public class AstAdd extends AstBinary {
 
 	@Override
 	public Evaluable optimize() {
-		if (left instanceof StringToken l && right instanceof StringToken r) {
-			return StringToken.of(l.value() + r.value());
+		var s = super.optimize();
+
+		if (s == this && left instanceof AstString l && right instanceof AstString r) {
+			return new AstString(l.value + r.value).pos(l.pos);
 		}
 
-		return super.optimize();
+		return s;
 	}
 }

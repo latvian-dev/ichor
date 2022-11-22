@@ -3,7 +3,6 @@ package dev.latvian.apps.ichor.ast.statement;
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.exit.ScopeExit;
 
 public class AstThisStatement extends AstStatement {
 	public final Evaluable[] arguments;
@@ -33,6 +32,6 @@ public class AstThisStatement extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) throws ScopeExit {
+	public void interpret(Scope scope) {
 	}
 }

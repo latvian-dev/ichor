@@ -381,4 +381,29 @@ public class InterpreterTests {
 				C
 				""");
 	}
+
+	@Test
+	public void templateLiteralString() {
+		testInterpreter("""
+				print(`Hello`)
+				""", "Hello");
+	}
+
+	@Test
+	public void templateLiteralExpression() {
+		testInterpreter("""
+				let x = 10;
+				let y = 20;
+				print(`Hello ${x} + ${y} = ${x + y}`)
+				""", "Hello 10.0 + 20.0 = 30.0");
+	}
+
+	@Test
+	public void nestedTemplateLiteralExpression() {
+		testInterpreter("""
+				let x = 10;
+				let y = 20;
+				print(`Hello ${x} + ${y} = ${true ? `${x + y}` : 'impossible'}`)
+				""", "Hello 10.0 + 20.0 = 30.0");
+	}
 }

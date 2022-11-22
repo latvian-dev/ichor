@@ -1,6 +1,7 @@
 package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.error.TokenStreamError;
+import dev.latvian.apps.ichor.exit.EndOfFileExit;
 import dev.latvian.apps.ichor.token.KeywordToken;
 import dev.latvian.apps.ichor.token.NameToken;
 import dev.latvian.apps.ichor.token.NumberToken;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 public class TokenStreamJS implements TokenStream {
 	private final TokenSource tokenSource;
@@ -27,8 +29,8 @@ public class TokenStreamJS implements TokenStream {
 	private final Map<String, NumberToken> numberTokenCache;
 	private final Map<String, StringToken> stringTokenCache;
 	private final Map<String, NameToken> nameTokenCache;
-	private int depth;
-	private final int isTemplateLiteral;
+	private final Stack<SymbolToken> depth;
+	private SymbolToken currentDepth;
 	private long timeoutTime;
 	private long timeout;
 
@@ -41,8 +43,8 @@ public class TokenStreamJS implements TokenStream {
 		numberTokenCache = new HashMap<>();
 		stringTokenCache = new HashMap<>();
 		nameTokenCache = new HashMap<>();
-		depth = 0;
-		isTemplateLiteral = 0;
+		depth = new Stack<>();
+		currentDepth = null;
 		timeoutTime = 0L;
 		timeout = 5000L;
 	}
@@ -70,7 +72,7 @@ public class TokenStreamJS implements TokenStream {
 		}
 
 		if (pos >= input.length) {
-			return 0;
+			throw new EndOfFileExit();
 		}
 
 		char c = input[pos++];
@@ -116,18 +118,35 @@ public class TokenStreamJS implements TokenStream {
 	}
 
 	private Token readToken() {
+		if (currentDepth == SymbolToken.TEMPLATE_LITERAL && peek(1) != '`' && !(peek(1) == '$' && peek(2) == '{')) {
+			var sb = new StringBuilder();
+
+			while (true) {
+				char c = peek(1);
+
+				if (c == '\\') {
+					read();
+					char n = read();
+					sb.append(n == '\n' ? '\n' : readEscape(n));
+				} else if (c == '`' || c == '$' && peek(2) == '{') {
+					break;
+				} else {
+					read();
+					sb.append(c);
+				}
+			}
+
+			return makeString(sb.toString());
+		}
+
 		var t = readSkippingWhitespace();
 
-		if (t == 0) {
-			return SymbolToken.EOF;
-		} else if (t == '/') {
+		if (t == '/') {
 			if (peek(1) == '/') {
 				while (true) {
 					t = read();
 
-					if (t == 0) {
-						return SymbolToken.EOF;
-					} else if (t == '\n') {
+					if (t == '\n') {
 						t = readSkippingWhitespace();
 						break;
 					}
@@ -138,9 +157,7 @@ public class TokenStreamJS implements TokenStream {
 				while (true) {
 					t = read();
 
-					if (t == 0) {
-						return SymbolToken.EOF;
-					} else if (t == '*' && peek(1) == '/') {
+					if (t == '*' && peek(1) == '/') {
 						read();
 						t = readSkippingWhitespace();
 						break;
@@ -171,19 +188,44 @@ public class TokenStreamJS implements TokenStream {
 			return makeString(sb.toString());
 		}
 
-		var symbol = SymbolToken.read(this, t);
+		var s = SymbolToken.read(this, t);
 
-		if (symbol != null) {
-			if (symbol == SymbolToken.TEMPLATE_LITERAL_VAR || symbol == SymbolToken.LC || symbol == SymbolToken.LP || symbol == SymbolToken.LS) {
-				depth++;
-			} else if (symbol == SymbolToken.RC || symbol == SymbolToken.RP || symbol == SymbolToken.RS) {
-				depth--;
+		if (s != null) {
+			if (s == SymbolToken.TEMPLATE_LITERAL_VAR || s == SymbolToken.LC || s == SymbolToken.LP || s == SymbolToken.LS) {
+				depth.push(s);
+				currentDepth = s;
+			} else if (s == SymbolToken.RC || s == SymbolToken.RP || s == SymbolToken.RS) {
+				if (currentDepth == null || depth.isEmpty()) {
+					throw error("Unexpected closing bracket " + s);
+				}
+
+				test(SymbolToken.TEMPLATE_LITERAL_VAR, s, SymbolToken.RC);
+				test(SymbolToken.LC, s, SymbolToken.RC);
+				test(SymbolToken.LP, s, SymbolToken.RP);
+				test(SymbolToken.LS, s, SymbolToken.RS);
+
+				depth.pop();
+				currentDepth = depth.isEmpty() ? null : depth.peek();
+			} else if (s == SymbolToken.TEMPLATE_LITERAL) {
+				if (currentDepth == SymbolToken.TEMPLATE_LITERAL) {
+					depth.pop();
+					currentDepth = depth.isEmpty() ? null : depth.peek();
+				} else {
+					depth.push(s);
+					currentDepth = s;
+				}
 			}
 
-			return symbol;
+			return s;
 		}
 
 		return readLiteral(t);
+	}
+
+	private void test(SymbolToken ifToken, SymbolToken symbol, SymbolToken expected) {
+		if (currentDepth == ifToken && symbol != expected) {
+			throw error("Expected '" + ifToken + "' to be closed with '" + expected + "', got '" + symbol + "' instead");
+		}
 	}
 
 	private Token readLiteral(char t) {
@@ -290,18 +332,15 @@ public class TokenStreamJS implements TokenStream {
 		while (true) {
 			int _row = row;
 			int _col = col;
-			var t = readToken();
 
-			if (t == SymbolToken.EOF) {
-				if (depth > 0) {
-					throw error("Invalid depth! Too few [ { ( or ${");
-				} else if (depth < 0) {
-					throw error("Invalid depth! Too few ] } or )");
+			try {
+				tokens.add(new PositionedToken(readToken(), new TokenPos(tokenSource, _row, _col)));
+			} catch (EndOfFileExit exit) {
+				if (currentDepth != null) {
+					throw error("Expected '" + currentDepth + "' to be closed!");
 				}
 
 				return tokens;
-			} else {
-				tokens.add(new PositionedToken(t, new TokenPos(tokenSource, _row, _col)));
 			}
 		}
 	}

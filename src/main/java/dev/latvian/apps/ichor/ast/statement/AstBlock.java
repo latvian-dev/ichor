@@ -3,7 +3,6 @@ package dev.latvian.apps.ichor.ast.statement;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.exit.ScopeExit;
 
 import java.util.Collection;
 
@@ -21,7 +20,7 @@ public class AstBlock extends AstInterpretableGroup {
 	}
 
 	@Override
-	public void interpret(Scope scope) throws ScopeExit {
+	public void interpret(Scope scope) {
 		super.interpret(scope.push());
 	}
 }

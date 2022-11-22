@@ -4,7 +4,6 @@ import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.ReturnExit;
-import dev.latvian.apps.ichor.exit.ScopeExit;
 
 public class AstReturn extends AstStatement {
 	public final Evaluable value;
@@ -20,7 +19,7 @@ public class AstReturn extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) throws ScopeExit {
+	public void interpret(Scope scope) {
 		throw new ReturnExit(value.eval(scope));
 	}
 }

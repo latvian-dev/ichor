@@ -19,6 +19,6 @@ public class AstPositive extends AstUnary {
 
 	@Override
 	public Evaluable optimize() {
-		return node;
+		return node.optimize();
 	}
 }

@@ -3,8 +3,8 @@ package dev.latvian.apps.ichor.ast.expression.unary;
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
+import dev.latvian.apps.ichor.ast.expression.AstNumber;
 import dev.latvian.apps.ichor.error.ScriptError;
-import dev.latvian.apps.ichor.token.NumberToken;
 
 public class AstNegate extends AstUnary {
 	@Override
@@ -40,8 +40,10 @@ public class AstNegate extends AstUnary {
 
 	@Override
 	public Evaluable optimize() {
-		if (node instanceof NumberToken n) {
-			return NumberToken.of(-n.value());
+		node = node.optimize();
+
+		if (node instanceof AstNumber n) {
+			return new AstNumber(-n.value).pos(pos);
 		}
 
 		return this;

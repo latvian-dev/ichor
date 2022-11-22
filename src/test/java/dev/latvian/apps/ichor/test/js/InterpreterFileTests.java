@@ -1,7 +1,6 @@
 package dev.latvian.apps.ichor.test.js;
 
 import dev.latvian.apps.ichor.util.EmptyArrays;
-import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,7 +19,7 @@ public class InterpreterFileTests {
 		}
 	}
 
-	@Test
+	//@Test
 	public void test1() throws IOException {
 		testInterpreter("run/test.js", "256.0");
 	}

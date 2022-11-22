@@ -6,7 +6,6 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.BreakExit;
 import dev.latvian.apps.ichor.exit.ContinueExit;
-import dev.latvian.apps.ichor.exit.ScopeExit;
 
 public class AstWhile extends AstStatement {
 	public final Evaluable condition;
@@ -26,7 +25,7 @@ public class AstWhile extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) throws ScopeExit {
+	public void interpret(Scope scope) {
 		while (condition.evalBoolean(scope)) {
 			try {
 				body.interpret(scope.push());

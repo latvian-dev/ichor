@@ -35,7 +35,6 @@ import dev.latvian.apps.ichor.util.EvaluableFactory;
 import org.jetbrains.annotations.Nullable;
 
 public enum SymbolToken implements StaticToken, BinaryOpToken {
-	EOF("EOF"), // end of file
 	DOT("."), // dot
 	DDOT(".."), // double dot
 	TDOT("..."), // triple dot
@@ -145,7 +144,6 @@ public enum SymbolToken implements StaticToken, BinaryOpToken {
 	@Nullable
 	public static SymbolToken read(TokenStream s, char t) {
 		return switch (t) {
-			case 0 -> EOF;
 			case '.' -> s.readIf('.') ? s.readIf('.') ? TDOT : DDOT : DOT;
 			case ',' -> COMMA;
 			case '(' -> LP;
