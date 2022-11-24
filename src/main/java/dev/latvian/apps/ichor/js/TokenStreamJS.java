@@ -6,6 +6,7 @@ import dev.latvian.apps.ichor.token.KeywordToken;
 import dev.latvian.apps.ichor.token.NameToken;
 import dev.latvian.apps.ichor.token.NumberToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
+import dev.latvian.apps.ichor.token.RegExToken;
 import dev.latvian.apps.ichor.token.StringToken;
 import dev.latvian.apps.ichor.token.SymbolToken;
 import dev.latvian.apps.ichor.token.Token;
@@ -17,9 +18,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
+import java.util.regex.Pattern;
 
 public class TokenStreamJS implements TokenStream {
+	public static final Set<Token> LITERAL_PRE = Set.of(
+			SymbolToken.LP,
+			SymbolToken.SET,
+			SymbolToken.ARROW,
+			KeywordToken.RETURN,
+			KeywordToken.TYPEOF,
+			KeywordToken.IN,
+			KeywordToken.OF
+	);
+
 	private final TokenSource tokenSource;
 	private final char[] input;
 	private int pos;
@@ -110,7 +123,7 @@ public class TokenStreamJS implements TokenStream {
 	}
 
 	private TokenStreamError error(String msg) {
-		return new TokenStreamError(new TokenPos(tokenSource, row, pos), msg);
+		return new TokenStreamError(new TokenPos(tokenSource, row, col), msg);
 	}
 
 	private static boolean isDigit(char t) {
@@ -163,6 +176,51 @@ public class TokenStreamJS implements TokenStream {
 						break;
 					}
 				}
+			} else if (!tokens.isEmpty() && LITERAL_PRE.contains(tokens.get(tokens.size() - 1).token())) {
+				var sbP = new StringBuilder();
+				var sbF = new StringBuilder();
+
+				while (true) {
+					char c = read();
+
+					if (c == '\\' && peek(1) == '/') {
+						read();
+						sbP.append('\\');
+						sbP.append('/');
+					} else if (c == '/') {
+						char p = peek(1);
+
+						while (p >= 'a' && p <= 'z' || p >= 'A' && p <= 'Z') {
+							sbF.append(read());
+							p = peek(1);
+						}
+
+						break;
+					} else if (c == '\n') {
+						throw error("Newline isn't allowed in RegEx!");
+					} else {
+						sbP.append(c);
+					}
+				}
+
+				int flags = 0;
+
+				for (int i = 0; i < sbF.length(); i++) {
+					switch (sbF.charAt(i)) {
+						case 'd' -> flags |= Pattern.UNIX_LINES;
+						case 'i' -> flags |= Pattern.CASE_INSENSITIVE;
+						case 'x' -> flags |= Pattern.COMMENTS;
+						case 'm' -> flags |= Pattern.MULTILINE;
+						case 's' -> flags |= Pattern.DOTALL;
+						case 'u' -> flags |= Pattern.UNICODE_CASE;
+						case 'U' -> flags |= Pattern.UNICODE_CHARACTER_CLASS;
+						case 'g' -> {
+						}
+						default -> throw error("Invalid RegEx flag: '" + sbF.charAt(i) + "'");
+					}
+				}
+
+				return new RegExToken(Pattern.compile(sbP.toString(), flags));
 			}
 		}
 
@@ -179,7 +237,7 @@ public class TokenStreamJS implements TokenStream {
 				} else if (c == t) {
 					break;
 				} else if (c == '\n') {
-					throw error("Newline isn't allowed!");
+					throw error("Newline isn't allowed in regular strings!");
 				} else {
 					sb.append(c);
 				}
@@ -309,7 +367,7 @@ public class TokenStreamJS implements TokenStream {
 		}
 
 		return switch (c) {
-			case '\\', '"', '\'', '`' -> c;
+			case '\\', '"', '\'', '`', '/' -> c;
 			case 'n' -> '\n';
 			case 't' -> '\t';
 			case 'b' -> '\b';
