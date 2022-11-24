@@ -27,6 +27,7 @@ import dev.latvian.apps.ichor.ast.expression.AstSuperExpression;
 import dev.latvian.apps.ichor.ast.expression.AstTemplateLiteral;
 import dev.latvian.apps.ichor.ast.expression.AstTernary;
 import dev.latvian.apps.ichor.ast.expression.AstThisExpression;
+import dev.latvian.apps.ichor.ast.expression.AstTypeOf;
 import dev.latvian.apps.ichor.ast.expression.unary.AstAdd1R;
 import dev.latvian.apps.ichor.ast.expression.unary.AstSub1R;
 import dev.latvian.apps.ichor.ast.expression.unary.AstUnary;
@@ -585,7 +586,7 @@ public class ParserJS implements Parser {
 			return ast;
 		}
 
-		return call();
+		return typeof();
 	}
 
 	private AstParam param() {
@@ -602,6 +603,14 @@ public class ParserJS implements Parser {
 		}
 
 		return param;
+	}
+
+	private Evaluable typeof() {
+		if (match(KeywordToken.TYPEOF)) {
+			return new AstTypeOf(call());
+		}
+
+		return call();
 	}
 
 	private Evaluable call() {

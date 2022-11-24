@@ -9,8 +9,8 @@ import java.util.regex.Pattern;
 public class AstRegEx extends AstExpression {
 	public final Pattern pattern;
 
-	public AstRegEx(Pattern p) {
-		pattern = p;
+	public AstRegEx(Pattern pattern) {
+		this.pattern = pattern;
 	}
 
 	@Override
