@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 public abstract class Context {
 	public Debugger debugger = null;
@@ -24,6 +25,8 @@ public abstract class Context {
 	public final List<Prototype> safePrototypes;
 	private Map<Class<?>, Prototype> classPrototypeCache;
 	private Map<String, Object> properties;
+	public Executor timeoutExecutor;
+	public Executor timeoutExecutorFinal;
 
 	public Context() {
 		safePrototypes = new ArrayList<>();

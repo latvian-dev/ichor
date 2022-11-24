@@ -13,33 +13,33 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public enum KeywordToken implements StaticToken, BinaryOpToken {
-	ARGUMENTS("arguments"),
-	AS("as"),
-	ASYNC("async"),
-	AWAIT("await"),
+	ARGUMENTS("arguments"), // TODO
+	AS("as"), // TODO
+	ASYNC("async"), // TODO
+	AWAIT("await"), // TODO
 	BREAK("break"),
-	CASE("case"),
-	CATCH("catch"),
+	CASE("case"), // TODO
+	CATCH("catch"), // TODO
 	CLASS("class"),
 	CONST("const"),
 	CONTINUE("continue"),
-	DEBUGGER("debugger"),
-	DEFAULT("default"),
+	DEBUGGER("debugger"), // TODO
+	DEFAULT("default"), // TODO
 	DELETE("delete"),
-	DO("do"),
+	DO("do"), // TODO
 	ELSE("else"),
-	ENUM("enum"),
-	EVAL("eval"),
-	EXPORT("export"),
+	ENUM("enum"), // TODO
+	EVAL("eval"), // TODO
+	EXPORT("export"), // TODO
 	EXTENDS("extends"),
 	FALSE("false"),
-	FINALLY("finally"),
+	FINALLY("finally"), // TODO
 	FOR("for"),
-	FROM("from"),
+	FROM("from"), // TODO
 	FUNCTION("function"),
-	GET("get"),
+	GET("get"), // TODO
 	IF("if"),
-	IMPORT("import"),
+	IMPORT("import"), // TODO
 	IN("in"),
 	INSTANCEOF("instanceof"),
 	INTERFACE("interface"),
@@ -47,26 +47,26 @@ public enum KeywordToken implements StaticToken, BinaryOpToken {
 	NEW("new"),
 	NULL("null"),
 	OF("of"),
-	PACKAGE("package"),
-	PRIVATE("private"),
-	PROTECTED("protected"),
-	PUBLIC("public"),
+	PACKAGE("package"), // TODO
+	PRIVATE("private"), // TODO
+	PROTECTED("protected"), // TODO
+	PUBLIC("public"), // TODO
 	RETURN("return"),
-	SET("set"),
-	STATIC("static"),
-	SUPER("super"),
-	SWITCH("switch"),
-	THIS("this"),
-	THROW("throw"),
+	SET("set"), // TODO
+	STATIC("static"), // TODO
+	SUPER("super"), // TODO
+	SWITCH("switch"), // TODO
+	THIS("this"), // TODO
+	THROW("throw"), // TODO
 	TRUE("true"),
-	TRY("try"),
+	TRY("try"), // TODO
 	TYPEOF("typeof"),
 	UNDEFINED("undefined"),
 	VAR("var"),
-	VOID("void"),
+	VOID("void"), // TODO
 	WHILE("while"),
-	WITH("with"),
-	YIELD("yield"),
+	WITH("with"), // TODO
+	YIELD("yield"), // TODO
 
 	;
 

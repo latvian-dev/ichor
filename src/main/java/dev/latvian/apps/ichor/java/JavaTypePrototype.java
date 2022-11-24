@@ -8,7 +8,7 @@ import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 import dev.latvian.apps.ichor.prototype.PrototypeFunction;
 import dev.latvian.apps.ichor.prototype.PrototypeProperty;
-import dev.latvian.apps.ichor.util.EmptyArrays;
+import dev.latvian.apps.ichor.util.Empty;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
@@ -55,7 +55,7 @@ public class JavaTypePrototype extends PrototypeBuilder {
 
 					return method.invoke(self, args1);
 				} else {
-					return method.invoke(self, EmptyArrays.OBJECTS);
+					return method.invoke(self, Empty.OBJECTS);
 				}
 			} catch (Exception ex) {
 				return Special.NOT_FOUND;
@@ -97,7 +97,7 @@ public class JavaTypePrototype extends PrototypeBuilder {
 					int mod = m.getModifiers();
 
 					if (Modifier.isPublic(mod)) {
-						function(m.getName(), new MethodFunction(m, m.getParameterCount() == 0 ? EmptyArrays.CLASSES : m.getParameterTypes()));
+						function(m.getName(), new MethodFunction(m, m.getParameterCount() == 0 ? Empty.CLASSES : m.getParameterTypes()));
 					}
 				}
 			} catch (Exception ex) {

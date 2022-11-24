@@ -11,11 +11,18 @@ import dev.latvian.apps.ichor.token.StringToken;
 import dev.latvian.apps.ichor.token.SymbolToken;
 import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.util.NamedTokenSource;
+import dev.latvian.apps.ichor.util.PrintStreamOrWriter;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.function.Executable;
 
 import java.util.Arrays;
 
+@Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class TokenTests {
 	private static void testTokenStream(String input, Token... match) {
 		System.out.println("--- Token Test ---");
@@ -25,6 +32,17 @@ public class TokenTests {
 		System.out.println("Expected: " + Arrays.toString(match));
 		System.out.println("Parsed:   " + Arrays.toString(tokens));
 		Assertions.assertArrayEquals(match, tokens);
+	}
+
+	private static void testError(Executable test) {
+		Assertions.assertThrows(TokenStreamError.class, () -> {
+			try {
+				test.execute();
+			} catch (TokenStreamError e) {
+				e.printPrettyError(new PrintStreamOrWriter.WrappedPrintStream(System.err));
+				throw e;
+			}
+		});
 	}
 
 	@Test
@@ -102,17 +120,17 @@ public class TokenTests {
 
 	@Test
 	public void bracketsOpen() {
-		Assertions.assertThrows(TokenStreamError.class, () -> testTokenStream("{", SymbolToken.LC));
+		testError(() -> testTokenStream("{", SymbolToken.LC));
 	}
 
 	@Test
 	public void bracketsClosed() {
-		Assertions.assertThrows(TokenStreamError.class, () -> testTokenStream("}", SymbolToken.RC));
+		testError(() -> testTokenStream("}", SymbolToken.RC));
 	}
 
 	@Test
 	public void bracketsMismatch() {
-		Assertions.assertThrows(TokenStreamError.class, () -> testTokenStream("{]", SymbolToken.LC, SymbolToken.RS));
+		testError(() -> testTokenStream("{]", SymbolToken.LC, SymbolToken.RS));
 	}
 
 	@Test

@@ -1,8 +1,12 @@
 package dev.latvian.apps.ichor.test.js;
 
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.Timeout;
 
-// @Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+@Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class InterpreterOperatorTests {
 	@Test
 	public void add() {

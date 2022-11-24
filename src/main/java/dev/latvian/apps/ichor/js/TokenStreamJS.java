@@ -35,9 +35,13 @@ public class TokenStreamJS implements TokenStream {
 
 	private final TokenSource tokenSource;
 	private final char[] input;
+	private final String[] lines;
 	private int pos;
 	private int row;
 	private int col;
+	private int prevPos;
+	private int prevRow;
+	private int prevCol;
 	private List<PositionedToken> tokens;
 	private final Map<String, NumberToken> numberTokenCache;
 	private final Map<String, StringToken> stringTokenCache;
@@ -50,6 +54,7 @@ public class TokenStreamJS implements TokenStream {
 	public TokenStreamJS(TokenSource source, String string) {
 		tokenSource = source;
 		input = string.toCharArray();
+		lines = string.split("\n");
 		pos = 0;
 		row = 1;
 		col = 1;
@@ -89,10 +94,14 @@ public class TokenStreamJS implements TokenStream {
 		}
 
 		char c = input[pos++];
+		col++;
 
 		if (c == '\n') {
 			row++;
 			col = 1;
+		} else if (c == '\t') {
+			input[pos - 1] = ' ';
+			return ' ';
 		}
 
 		return c;
@@ -123,7 +132,7 @@ public class TokenStreamJS implements TokenStream {
 	}
 
 	private TokenStreamError error(String msg) {
-		return new TokenStreamError(new TokenPos(tokenSource, row, col), msg);
+		return new TokenStreamError(new TokenPos(tokenSource, row, col), msg, lines[row - 1].replace('\n', ' '));
 	}
 
 	private static boolean isDigit(char t) {
@@ -250,6 +259,11 @@ public class TokenStreamJS implements TokenStream {
 
 		if (s != null) {
 			if (s == SymbolToken.TEMPLATE_LITERAL_VAR || s == SymbolToken.LC || s == SymbolToken.LP || s == SymbolToken.LS) {
+				if (currentDepth == null && s == SymbolToken.RC) {
+					// System.out.println(prevRow + ":" + prevCol + ": " + lines[prevRow - 1]);
+					System.out.println(error("").getMessage());
+				}
+
 				depth.push(s);
 				currentDepth = s;
 			} else if (s == SymbolToken.RC || s == SymbolToken.RP || s == SymbolToken.RS) {
@@ -264,6 +278,10 @@ public class TokenStreamJS implements TokenStream {
 
 				depth.pop();
 				currentDepth = depth.isEmpty() ? null : depth.peek();
+
+				if (currentDepth == null && s == SymbolToken.RC) {
+					System.out.println(error("").getMessage());
+				}
 			} else if (s == SymbolToken.TEMPLATE_LITERAL) {
 				if (currentDepth == SymbolToken.TEMPLATE_LITERAL) {
 					depth.pop();
@@ -388,11 +406,12 @@ public class TokenStreamJS implements TokenStream {
 		timeoutTime = timeout <= 0L ? 0L : (System.currentTimeMillis() + timeout);
 
 		while (true) {
-			int _row = row;
-			int _col = col;
+			prevPos = pos;
+			prevRow = row;
+			prevCol = col;
 
 			try {
-				tokens.add(new PositionedToken(readToken(), new TokenPos(tokenSource, _row, _col)));
+				tokens.add(new PositionedToken(readToken(), new TokenPos(tokenSource, prevRow, prevCol)));
 			} catch (EndOfFileExit exit) {
 				if (currentDepth != null) {
 					throw error("Expected '" + currentDepth + "' to be closed!");

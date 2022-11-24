@@ -5,7 +5,7 @@ import dev.latvian.apps.ichor.ast.expression.AstParam;
 
 import java.util.function.Consumer;
 
-public class EmptyArrays {
+public class Empty {
 	public static final Object[] OBJECTS = new Object[0];
 	public static final Class<?>[] CLASSES = new Class[0];
 	public static final String[] STRINGS = new String[0];

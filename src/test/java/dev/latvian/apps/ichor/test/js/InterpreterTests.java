@@ -11,17 +11,21 @@ import dev.latvian.apps.ichor.test.ReflectionExample;
 import dev.latvian.apps.ichor.test.TestConsole;
 import dev.latvian.apps.ichor.util.AssignType;
 import dev.latvian.apps.ichor.util.ConsoleDebugger;
-import dev.latvian.apps.ichor.util.EmptyArrays;
+import dev.latvian.apps.ichor.util.Empty;
 import dev.latvian.apps.ichor.util.NamedTokenSource;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.Timeout;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-// @Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+@Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class InterpreterTests {
 	private static void printLines(List<String> lines) {
 		for (int i = 0; i < lines.size(); i++) {
@@ -32,6 +36,7 @@ public class InterpreterTests {
 	public static void testInterpreter(String filename, String input, Consumer<RootScope> rootScopeCallback, String match) {
 		var matchStr = Arrays.asList(match.split("\n"));
 		System.out.println("--- Interpreter Test ---");
+		System.out.println();
 		System.out.println("Input:");
 		printLines(Arrays.asList(input.split("\n")));
 		System.out.println();
@@ -48,7 +53,7 @@ public class InterpreterTests {
 		cx.debugger = new ConsoleDebugger();
 
 		var tokenStream = new TokenStreamJS(new NamedTokenSource(filename), input);
-		tokenStream.timeout(1500L);
+		tokenStream.timeout(filename.equals("<interpreter test>") ? 1500L : 0L);
 		var tokens = tokenStream.getTokens();
 		var parser = new ParserJS(cx, tokens);
 		var ast = parser.parse();
@@ -66,6 +71,7 @@ public class InterpreterTests {
 			ex.printStackTrace();
 		}
 
+		System.out.println();
 		System.out.println("Returned:");
 		printLines(console.output());
 		Assertions.assertEquals(matchStr, console.output());
@@ -76,7 +82,7 @@ public class InterpreterTests {
 	}
 
 	public static void testInterpreter(String input, String match) {
-		testInterpreter(input, EmptyArrays.consumer(), match);
+		testInterpreter(input, Empty.consumer(), match);
 	}
 
 	@Test
@@ -491,6 +497,36 @@ public class InterpreterTests {
 				  print(x)
 				""", """
 				14.0
+				""");
+	}
+
+	@Test
+	public void callRef() {
+		testInterpreter("""
+				const a = print
+				a('Hi')
+				""", """
+				Hi
+				""");
+	}
+
+	@Test
+	public void callRefArrow() {
+		testInterpreter("""
+				const a = text => print(text)
+				a('Hi')
+				""", """
+				Hi
+				""");
+	}
+
+	@Test
+	public void callChain() {
+		testInterpreter("""
+				const a = () => () => () => print('Hi')
+				a()()()
+				""", """
+				Hi
 				""");
 	}
 }

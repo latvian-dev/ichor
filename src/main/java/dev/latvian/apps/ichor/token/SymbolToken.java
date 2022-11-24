@@ -96,8 +96,6 @@ public enum SymbolToken implements StaticToken, BinaryOpToken {
 
 	;
 
-	public static final int RIGHT_ASSOCIATIVE = 4;
-
 	static {
 		ADD.astUnary = AstPositive::new;
 		SUB.astUnary = AstNegate::new;

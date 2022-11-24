@@ -44,7 +44,7 @@ public class Special implements PrototypeSupplier, Token {
 
 	@Override
 	public Object eval(Scope scope) {
-		return null;
+		return this == UNDEFINED ? this : null;
 	}
 
 	@Override

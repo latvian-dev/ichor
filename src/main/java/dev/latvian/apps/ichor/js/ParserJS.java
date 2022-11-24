@@ -58,8 +58,7 @@ import dev.latvian.apps.ichor.token.PositionedToken;
 import dev.latvian.apps.ichor.token.StaticToken;
 import dev.latvian.apps.ichor.token.SymbolToken;
 import dev.latvian.apps.ichor.token.Token;
-import dev.latvian.apps.ichor.token.TokenPosSupplier;
-import dev.latvian.apps.ichor.util.EmptyArrays;
+import dev.latvian.apps.ichor.util.Empty;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -199,7 +198,7 @@ public class ParserJS implements Parser {
 				type = AstClassFunction.Type.CONSTRUCTOR;
 
 				if (astClass.constructor != null) {
-					throw error(fname, ParseErrorType.CONSTRUCTOR_EXISTS);
+					throw new ParseError(fname, ParseErrorType.CONSTRUCTOR_EXISTS);
 				}
 
 				astClass.constructor = (AstClassFunction) function(astClass, type, modifiers);
@@ -211,7 +210,7 @@ public class ParserJS implements Parser {
 				};
 
 				if (map.containsKey(fname.asString())) {
-					throw error(fname, ParseErrorType.METHOD_EXISTS);
+					throw new ParseError(fname, ParseErrorType.METHOD_EXISTS);
 				}
 
 				map.put(fname.asString(), (AstClassFunction) function(astClass, type, modifiers));
@@ -253,7 +252,7 @@ public class ParserJS implements Parser {
 
 			consume(SymbolToken.RP, ParseErrorType.EXP_RP_ARGS);
 
-			return (k.token() == KeywordToken.THIS ? new AstThisStatement(arguments.toArray(EmptyArrays.EVALUABLES)) : new AstSuperStatement(arguments.toArray(EmptyArrays.EVALUABLES))).pos(k);
+			return (k.token() == KeywordToken.THIS ? new AstThisStatement(arguments.toArray(Empty.EVALUABLES)) : new AstSuperStatement(arguments.toArray(Empty.EVALUABLES))).pos(k);
 		}
 
 		return expressionStatement(true);
@@ -281,7 +280,7 @@ public class ParserJS implements Parser {
 			if (initializer instanceof AstSingleDeclareStatement s) {
 				name = s.variable.name;
 			} else {
-				throw error(previous(), ParseErrorType.EXP_INIT);
+				throw new ParseError(previous(), ParseErrorType.EXP_INIT);
 			}
 
 			boolean of = previous().token() == KeywordToken.OF;
@@ -333,26 +332,23 @@ public class ParserJS implements Parser {
 		var keyword = previous();
 		Evaluable value = null;
 
-		if (!check(SymbolToken.SEMI)) {
+		if (!check(SymbolToken.SEMI) && !check(SymbolToken.RC)) {
 			value = expression().optimize();
 		}
 
 		ignoreSemi();
-		// consume(SymbolToken.SEMI, "Expected ';' after return value");
 		return new AstReturn(value).pos(keyword);
 	}
 
 	private Interpretable breakStatement() {
 		var keyword = previous();
 		ignoreSemi();
-		//consume(SymbolToken.SEMI, "Expected ';' after break");
 		return new AstBreak().pos(keyword);
 	}
 
 	private Interpretable continueStatement() {
 		var keyword = previous();
 		ignoreSemi();
-		//consume(SymbolToken.SEMI, "Expected ';' after continue");
 		return new AstContinue().pos(keyword);
 	}
 
@@ -368,14 +364,14 @@ public class ParserJS implements Parser {
 
 			list.add(param);
 		} while (ignoreComma());
-		// consume(SymbolToken.SEMI, "Expected ';' after variable declaration");
+
 		ignoreSemi();
 
 		if (list.size() == 1) {
 			return new AstSingleDeclareStatement((StaticToken) token.token(), list.get(0)).pos(token);
 		}
 
-		return new AstMultiDeclareStatement((StaticToken) token.token(), list.toArray(EmptyArrays.AST_PARAMS)).pos(token);
+		return new AstMultiDeclareStatement((StaticToken) token.token(), list.toArray(Empty.AST_PARAMS)).pos(token);
 	}
 
 	private Interpretable whileStatement() {
@@ -392,7 +388,7 @@ public class ParserJS implements Parser {
 		if (call() instanceof AstGetFrom get) {
 			return new AstDelete(get);
 		} else {
-			throw error(keyword, ParseErrorType.EXP_VAR_NAME);
+			throw new ParseError(keyword, ParseErrorType.EXP_VAR_NAME);
 		}
 	}
 
@@ -418,10 +414,10 @@ public class ParserJS implements Parser {
 		var body = block(false);
 
 		if (owner != null) {
-			return new AstClassFunction(owner, parameters.toArray(EmptyArrays.AST_PARAMS), body, modifiers, type);
+			return new AstClassFunction(owner, parameters.toArray(Empty.AST_PARAMS), body, modifiers, type);
 		}
 
-		return new AstFunction(parameters.toArray(EmptyArrays.AST_PARAMS), body, modifiers);
+		return new AstFunction(parameters.toArray(Empty.AST_PARAMS), body, modifiers);
 	}
 
 	private Interpretable block(boolean forceReturn) {
@@ -446,7 +442,7 @@ public class ParserJS implements Parser {
 				if (statement instanceof AstExpressionStatement expr) {
 					return new AstReturn(expr.expression);
 				} else {
-					throw error(pos, ParseErrorType.EXP_EXPR.format(statement));
+					throw new ParseError(pos, ParseErrorType.EXP_EXPR.format(statement));
 				}
 			}
 
@@ -485,7 +481,7 @@ public class ParserJS implements Parser {
 				return new AstSet(get, value.optimize());
 			}
 
-			throw error(operator, ParseErrorType.INVALID_TARGET);
+			throw new ParseError(operator, ParseErrorType.INVALID_TARGET);
 		} else if (match(SET_OP_TOKENS)) {
 			var operator = previous();
 			var value = expression();
@@ -498,7 +494,7 @@ public class ParserJS implements Parser {
 				return new AstSet(get, ast);
 			}
 
-			throw error(operator, ParseErrorType.INVALID_TARGET);
+			throw new ParseError(operator, ParseErrorType.INVALID_TARGET);
 		} else if (match(SymbolToken.HOOK)) {
 			var ifTrue = expression();
 			consume(SymbolToken.COL, ParseErrorType.EXP_TERNARY_COL);
@@ -631,15 +627,15 @@ public class ParserJS implements Parser {
 				consume(SymbolToken.RP, ParseErrorType.EXP_RP_ARGS);
 
 				if (newToken != null) {
-					expr = new AstNew(expr, arguments.toArray(EmptyArrays.EVALUABLES)).pos(newToken);
+					expr = new AstNew(expr, arguments.toArray(Empty.EVALUABLES)).pos(newToken);
 				} else if (expr instanceof CallableAst c) {
-					expr = c.createCall(arguments.toArray(EmptyArrays.EVALUABLES), false);
+					expr = c.createCall(arguments.toArray(Empty.EVALUABLES), false);
 
 					if (expr instanceof Ast ast) {
 						ast.pos(lp);
 					}
 				} else {
-					throw error(lp, ParseErrorType.EXPR_NOT_CALLABLE.format(expr));
+					throw new ParseError(lp, ParseErrorType.EXPR_NOT_CALLABLE.format(expr));
 				}
 			} else if (match(SymbolToken.DOT)) {
 				var name = consumeName(ParseErrorType.EXP_NAME_DOT);
@@ -714,7 +710,7 @@ public class ParserJS implements Parser {
 				consume(SymbolToken.ARROW, ParseErrorType.EXP_ARROW);
 
 				var body = block(true);
-				return new AstFunction(EmptyArrays.AST_PARAMS, body, AstFunction.MOD_ARROW).pos(previous());
+				return new AstFunction(Empty.AST_PARAMS, body, AstFunction.MOD_ARROW).pos(previous());
 			} else if (peekToken() instanceof NameToken && (peekToken(1) == SymbolToken.RP || peekToken(1) == SymbolToken.COMMA)) {
 				var list = new ArrayList<AstParam>(1);
 
@@ -725,7 +721,7 @@ public class ParserJS implements Parser {
 				consume(SymbolToken.ARROW, ParseErrorType.EXP_ARROW);
 
 				var body = block(true);
-				return new AstFunction(list.toArray(EmptyArrays.AST_PARAMS), body, AstFunction.MOD_ARROW).pos(previous());
+				return new AstFunction(list.toArray(Empty.AST_PARAMS), body, AstFunction.MOD_ARROW).pos(previous());
 			}
 
 			var lp = previous();
@@ -799,7 +795,7 @@ public class ParserJS implements Parser {
 						onlyStrings = false;
 					}
 				} else {
-					throw error(next, ParseErrorType.EXP_EXPR.format(next.token()));
+					throw new ParseError(next, ParseErrorType.EXP_EXPR.format(next.token()));
 				}
 
 				next = advance();
@@ -820,17 +816,13 @@ public class ParserJS implements Parser {
 				return new AstString(sb.toString()).pos(pos);
 			}
 
-			return new AstTemplateLiteral(parts.toArray(EmptyArrays.EVALUABLES)).pos(pos);
+			return new AstTemplateLiteral(parts.toArray(Empty.EVALUABLES)).pos(pos);
 		}
 
-		throw error(peek(), ParseErrorType.EXP_EXPR.format(peekToken()));
+		throw new ParseError(peek(), ParseErrorType.EXP_EXPR.format(peekToken()));
 	}
 
 	//
-
-	private ParseError error(TokenPosSupplier pos, ParseErrorMessage message) {
-		throw new ParseError(pos, message);
-	}
 
 	private boolean match(StaticToken token) {
 		if (check(token)) {

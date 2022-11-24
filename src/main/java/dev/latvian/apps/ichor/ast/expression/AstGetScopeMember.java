@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
@@ -52,69 +51,31 @@ public class AstGetScopeMember extends AstGetBase {
 
 	@Override
 	public Evaluable createCall(Evaluable[] arguments, boolean isNew) {
-		return new AstCall(name, arguments, isNew);
+		return new AstScopeMemberCall(name, arguments, isNew);
 	}
 
-	public static class AstCall extends AstExpression {
+	public static class AstScopeMemberCall extends AstCallBase {
 		public final String name;
-		public final Evaluable[] arguments;
-		public final boolean isNew;
 
-		public AstCall(String name, Evaluable[] arguments, boolean isNew) {
+		public AstScopeMemberCall(String name, Evaluable[] arguments, boolean isNew) {
+			super(arguments, isNew);
 			this.name = name;
-			this.arguments = arguments;
-			this.isNew = isNew;
 		}
 
 		@Override
 		public void append(AstStringBuilder builder) {
 			builder.append(name);
-			builder.append('(');
-
-			for (int i = 0; i < arguments.length; i++) {
-				if (i > 0) {
-					builder.append(',');
-				}
-
-				builder.append(arguments[i]);
-			}
-
-			builder.append(')');
+			super.append(builder);
 		}
 
 		@Override
-		public Object eval(Scope scope) {
-			var func = scope.getMember(name);
+		public String calleeName() {
+			return name;
+		}
 
-			if (func == Special.NOT_FOUND) {
-				throw new ScriptError("Cannot find " + name);
-			} else if (!(func instanceof Callable)) {
-				throw new ScriptError("Cannot call " + name);
-			}
-
-			var cx = scope.getContext();
-
-			if (cx.debugger != null) {
-				cx.debugger.pushSelf(scope, null);
-			}
-
-			Object r;
-
-			if (isNew) {
-				r = ((Callable) func).construct(scope, arguments);
-			} else {
-				r = ((Callable) func).call(scope, null, arguments);
-			}
-
-			if (r == Special.NOT_FOUND) {
-				throw new ScriptError("Cannot call " + name);
-			}
-
-			if (cx.debugger != null) {
-				cx.debugger.call(scope, name, arguments, r);
-			}
-
-			return r;
+		@Override
+		public Object evalFunc(Scope scope) {
+			return scope.getMember(name);
 		}
 	}
 }
