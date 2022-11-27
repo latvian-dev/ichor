@@ -47,6 +47,7 @@ import dev.latvian.apps.ichor.ast.statement.AstReturn;
 import dev.latvian.apps.ichor.ast.statement.AstSingleDeclareStatement;
 import dev.latvian.apps.ichor.ast.statement.AstSuperStatement;
 import dev.latvian.apps.ichor.ast.statement.AstThisStatement;
+import dev.latvian.apps.ichor.ast.statement.AstTry;
 import dev.latvian.apps.ichor.ast.statement.AstWhile;
 import dev.latvian.apps.ichor.error.ParseError;
 import dev.latvian.apps.ichor.error.ParseErrorMessage;
@@ -236,6 +237,8 @@ public class ParserJS implements Parser {
 			return whileStatement();
 		} else if (match(KeywordToken.DELETE)) {
 			return deleteStatement();
+		} else if (match(KeywordToken.TRY)) {
+			return tryStatement();
 		} else if (check(SymbolToken.LC)) {
 			return block(false);
 		} else if ((check(KeywordToken.THIS) || check(KeywordToken.SUPER)) && peekToken(1) == SymbolToken.LP) {
@@ -329,7 +332,7 @@ public class ParserJS implements Parser {
 	}
 
 	private Interpretable returnStatement() {
-		var keyword = previous();
+		var pos = previous();
 		Evaluable value = null;
 
 		if (!check(SymbolToken.SEMI) && !check(SymbolToken.RC)) {
@@ -337,19 +340,19 @@ public class ParserJS implements Parser {
 		}
 
 		ignoreSemi();
-		return new AstReturn(value).pos(keyword);
+		return new AstReturn(value).pos(pos);
 	}
 
 	private Interpretable breakStatement() {
-		var keyword = previous();
+		var pos = previous();
 		ignoreSemi();
-		return new AstBreak().pos(keyword);
+		return new AstBreak().pos(pos);
 	}
 
 	private Interpretable continueStatement() {
-		var keyword = previous();
+		var pos = previous();
 		ignoreSemi();
-		return new AstContinue().pos(keyword);
+		return new AstContinue().pos(pos);
 	}
 
 	private Interpretable varDeclaration(PositionedToken token) {
@@ -375,21 +378,42 @@ public class ParserJS implements Parser {
 	}
 
 	private Interpretable whileStatement() {
+		var pos = previous();
 		consume(SymbolToken.LP, ParseErrorType.EXP_LP_WHILE_COND);
 		var condition = expression();
 		consume(SymbolToken.RP, ParseErrorType.EXP_RP_WHILE_COND);
 		var body = statementBody();
-		return new AstWhile(condition, body);
+		return new AstWhile(condition, body).pos(pos);
 	}
 
 	private Interpretable deleteStatement() {
-		var keyword = previous();
+		var pos = previous();
 
 		if (call() instanceof AstGetFrom get) {
 			return new AstDelete(get);
 		} else {
-			throw new ParseError(keyword, ParseErrorType.EXP_VAR_NAME);
+			throw new ParseError(pos, ParseErrorType.EXP_VAR_NAME);
 		}
+	}
+
+	private Interpretable tryStatement() {
+		var pos = previous();
+		var tryBlock = block(false);
+		AstTry.AstCatch catchBlock = null;
+		Interpretable finallyBlock = null;
+
+		if (match(KeywordToken.CATCH)) {
+			consume(SymbolToken.LP, ParseErrorType.EXP_LP_ARGS);
+			var name = consumeName(ParseErrorType.EXP_ARG_NAME).asString();
+			consume(SymbolToken.RP, ParseErrorType.EXP_RP_ARGS);
+			catchBlock = new AstTry.AstCatch(name, block(false));
+		}
+
+		if (match(KeywordToken.FINALLY)) {
+			finallyBlock = block(false);
+		}
+
+		return new AstTry(tryBlock, catchBlock, finallyBlock).pos(pos);
 	}
 
 	private Interpretable expressionStatement(boolean ignoreSemi) {
@@ -586,7 +610,7 @@ public class ParserJS implements Parser {
 	}
 
 	private AstParam param() {
-		var name = consumeName(ParseErrorType.EXP_PARAM_NAME);
+		var name = consumeName(ParseErrorType.EXP_ARG_NAME);
 		var param = new AstParam(name.asString());
 
 		if (match(SymbolToken.COL)) {

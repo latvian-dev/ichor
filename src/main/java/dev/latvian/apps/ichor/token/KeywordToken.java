@@ -19,7 +19,7 @@ public enum KeywordToken implements StaticToken, BinaryOpToken {
 	AWAIT("await"), // TODO
 	BREAK("break"),
 	CASE("case"), // TODO
-	CATCH("catch"), // TODO
+	CATCH("catch"),
 	CLASS("class"),
 	CONST("const"),
 	CONTINUE("continue"),
@@ -33,7 +33,7 @@ public enum KeywordToken implements StaticToken, BinaryOpToken {
 	EXPORT("export"), // TODO
 	EXTENDS("extends"),
 	FALSE("false"),
-	FINALLY("finally"), // TODO
+	FINALLY("finally"),
 	FOR("for"),
 	FROM("from"), // TODO
 	FUNCTION("function"),
@@ -59,7 +59,7 @@ public enum KeywordToken implements StaticToken, BinaryOpToken {
 	THIS("this"), // TODO
 	THROW("throw"), // TODO
 	TRUE("true"),
-	TRY("try"), // TODO
+	TRY("try"),
 	TYPEOF("typeof"),
 	UNDEFINED("undefined"),
 	VAR("var"),

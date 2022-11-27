@@ -7,7 +7,7 @@ public enum ParseErrorType implements ParseErrorMessage {
 	EXP_INIT("Expected initializer"),
 	EXP_FUNC_NAME("Expected function name"),
 	EXP_CLASS_NAME("Expected class name"),
-	EXP_PARAM_NAME("Expected parameter name"),
+	EXP_ARG_NAME("Expected argument name"),
 	EXP_TYPE_NAME("Expected type name"),
 	EXP_VAR_NAME("Expected variable name"),
 	EXP_LC_BLOCK("Expected '{' before block"),
