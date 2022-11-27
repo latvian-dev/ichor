@@ -5,13 +5,14 @@ import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
+import dev.latvian.apps.ichor.ast.CallableAst;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.exit.ReturnExit;
 import dev.latvian.apps.ichor.exit.ScopeExit;
 import dev.latvian.apps.ichor.prototype.PrototypeFunction;
 import dev.latvian.apps.ichor.util.AssignType;
 
-public class AstFunction extends AstExpression implements PrototypeFunction, Comparable<AstFunction> {
+public class AstFunction extends AstExpression implements PrototypeFunction, Comparable<AstFunction>, CallableAst {
 	public static final int MOD_ARROW = 1;
 	public static final int MOD_CLASS = 2;
 	public static final int MOD_STATIC = 4;
@@ -23,6 +24,7 @@ public class AstFunction extends AstExpression implements PrototypeFunction, Com
 	public final Interpretable body;
 	public final int modifiers;
 	public final int requiredParams;
+	public String functionName;
 
 	public AstFunction(AstParam[] params, Interpretable body, int modifiers) {
 		this.params = params;
@@ -44,6 +46,10 @@ public class AstFunction extends AstExpression implements PrototypeFunction, Com
 
 	@Override
 	public String getPrototypeName() {
+		if (functionName != null) {
+			return functionName;
+		}
+
 		return "<function>";
 	}
 
@@ -57,13 +63,13 @@ public class AstFunction extends AstExpression implements PrototypeFunction, Com
 
 		for (int i = 0; i < params.length; i++) {
 			if (i > 0) {
-				builder.append(", ");
+				builder.append(',');
 			}
 
 			params[i].append(builder);
 		}
 
-		builder.append(") => ");
+		builder.append(")=>");
 		builder.append(body);
 	}
 
@@ -93,5 +99,29 @@ public class AstFunction extends AstExpression implements PrototypeFunction, Com
 	@Override
 	public int compareTo(AstFunction o) {
 		return Integer.compare(o.params.length, params.length);
+	}
+
+	@Override
+	public Evaluable createCall(Evaluable[] arguments, boolean isNew) {
+		return new AstFunctionCall(this, arguments, isNew);
+	}
+
+	private static class AstFunctionCall extends AstCallBase {
+		private final AstFunction function;
+
+		public AstFunctionCall(AstFunction function, Evaluable[] arguments, boolean isNew) {
+			super(arguments, isNew);
+			this.function = function;
+		}
+
+		@Override
+		public String calleeName() {
+			return function.toString();
+		}
+
+		@Override
+		public Object evalFunc(Scope scope) {
+			return function;
+		}
 	}
 }

@@ -429,6 +429,22 @@ public class InterpreterTests {
 	}
 
 	@Test
+	public void forIndexPredef() {
+		testInterpreter("""
+				const arr = ['a', 'b', 'c']
+				let i;
+								
+				for (i = 0; i < arr.length; i++) {
+				  print(`${i}: ${arr[i]}`)
+				}
+				""", """
+				0.0: a
+				1.0: b
+				2.0: c
+				""");
+	}
+
+	@Test
 	public void forOfArr() {
 		testInterpreter("""
 				const arr = ['a', 'b', 'c']
@@ -527,6 +543,35 @@ public class InterpreterTests {
 				a()()()
 				""", """
 				Hi
+				""");
+	}
+
+	@Test
+	public void singleGroupedStr() {
+		testInterpreter("""
+				print(('hi'))
+				""", """
+				hi
+				""");
+	}
+
+	@Test
+	public void singleGroupedNum() {
+		testInterpreter("""
+				print((5.0))
+				""", """
+				5.0
+				""");
+	}
+
+	@Test
+	public void selfInvokingFunction() {
+		testInterpreter("""
+				(() => print('im self invoking'))()
+				print('hi')
+				""", """
+				im self invoking
+				hi
 				""");
 	}
 }

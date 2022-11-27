@@ -10,6 +10,6 @@ public class AstEq extends AstBinaryBoolean {
 
 	@Override
 	public boolean evalBoolean(Scope scope) {
-		return left.equals(right, scope, false);
+		return left.equals(right.eval(scope), scope, false);
 	}
 }

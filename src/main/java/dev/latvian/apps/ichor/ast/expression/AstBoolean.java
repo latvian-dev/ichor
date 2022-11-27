@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
@@ -44,12 +43,12 @@ public class AstBoolean extends AstExpression {
 	}
 
 	@Override
-	public boolean equals(Evaluable right, Scope scope, boolean shallow) {
-		return value == right.evalBoolean(scope);
+	public boolean equals(Object right, Scope scope, boolean shallow) {
+		return right instanceof Boolean && valueObj == right;
 	}
 
 	@Override
-	public int compareTo(Evaluable right, Scope scope) {
-		return Boolean.compare(value, right.evalBoolean(scope));
+	public int compareTo(Object right, Scope scope) {
+		return Boolean.compare(value, right instanceof Boolean b ? b : false);
 	}
 }

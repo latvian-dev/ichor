@@ -25,17 +25,17 @@ public interface Evaluable {
 		return this;
 	}
 
-	default boolean equals(Evaluable right, Scope scope, boolean shallow) {
+	default boolean equals(Object right, Scope scope, boolean shallow) {
 		if (this == right) {
 			return true;
 		} else if (shallow) {
-			return eval(scope) == right.eval(scope);
+			return eval(scope) == right;
 		} else {
-			return Objects.equals(eval(scope), right.eval(scope));
+			return Objects.equals(eval(scope), right);
 		}
 	}
 
-	default int compareTo(Evaluable right, Scope scope) {
-		return Double.compare(evalDouble(scope), right.evalDouble(scope));
+	default int compareTo(Object right, Scope scope) {
+		return Double.compare(evalDouble(scope), right instanceof Number n ? n.doubleValue() : Double.NaN);
 	}
 }

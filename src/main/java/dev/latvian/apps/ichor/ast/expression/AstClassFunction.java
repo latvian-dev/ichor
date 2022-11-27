@@ -26,7 +26,11 @@ public class AstClassFunction extends AstFunction {
 
 	@Override
 	public String getPrototypeName() {
-		return "<class " + type.name().toLowerCase() + " function>";
+		if (functionName == null) {
+			functionName = "<class " + type.name().toLowerCase() + " function>";
+		}
+
+		return functionName;
 	}
 
 	@Override

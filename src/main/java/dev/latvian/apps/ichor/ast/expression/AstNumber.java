@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
@@ -39,12 +38,7 @@ public class AstNumber extends AstExpression {
 	}
 
 	@Override
-	public int compareTo(Evaluable right, Scope scope) {
-		return Double.compare(value, right.evalDouble(scope));
-	}
-
-	@Override
-	public boolean equals(Evaluable right, Scope scope, boolean shallow) {
-		return Math.abs(value - (shallow ? right instanceof AstNumber n ? n.value : Double.NaN : right.evalDouble(scope))) < 0.00001D;
+	public boolean equals(Object right, Scope scope, boolean shallow) {
+		return Math.abs(value - (right instanceof Number n ? n.doubleValue() : Double.NaN)) < 0.00001D;
 	}
 }

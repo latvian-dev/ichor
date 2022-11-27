@@ -18,13 +18,13 @@ public enum KeywordToken implements StaticToken, BinaryOpToken {
 	ASYNC("async"), // TODO
 	AWAIT("await"), // TODO
 	BREAK("break"),
-	CASE("case"), // TODO
+	CASE("case"),
 	CATCH("catch"),
 	CLASS("class"),
 	CONST("const"),
 	CONTINUE("continue"),
 	DEBUGGER("debugger"), // TODO
-	DEFAULT("default"), // TODO
+	DEFAULT("default"),
 	DELETE("delete"),
 	DO("do"), // TODO
 	ELSE("else"),
@@ -55,7 +55,7 @@ public enum KeywordToken implements StaticToken, BinaryOpToken {
 	SET("set"), // TODO
 	STATIC("static"), // TODO
 	SUPER("super"), // TODO
-	SWITCH("switch"), // TODO
+	SWITCH("switch"),
 	THIS("this"), // TODO
 	THROW("throw"), // TODO
 	TRUE("true"),

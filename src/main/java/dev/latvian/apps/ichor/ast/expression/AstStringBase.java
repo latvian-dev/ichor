@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 
 public abstract class AstStringBase extends AstExpression {
@@ -36,7 +35,7 @@ public abstract class AstStringBase extends AstExpression {
 	}
 
 	@Override
-	public boolean equals(Evaluable right, Scope scope, boolean shallow) {
-		return evalString(scope).equals(right.evalString(scope));
+	public boolean equals(Object right, Scope scope, boolean shallow) {
+		return evalString(scope).equals(String.valueOf(right));
 	}
 }

@@ -14,7 +14,6 @@ import dev.latvian.apps.ichor.ast.expression.AstGetByName;
 import dev.latvian.apps.ichor.ast.expression.AstGetByNameOptional;
 import dev.latvian.apps.ichor.ast.expression.AstGetFrom;
 import dev.latvian.apps.ichor.ast.expression.AstGetScopeMember;
-import dev.latvian.apps.ichor.ast.expression.AstGrouping;
 import dev.latvian.apps.ichor.ast.expression.AstList;
 import dev.latvian.apps.ichor.ast.expression.AstMap;
 import dev.latvian.apps.ichor.ast.expression.AstNew;
@@ -46,6 +45,7 @@ import dev.latvian.apps.ichor.ast.statement.AstMultiDeclareStatement;
 import dev.latvian.apps.ichor.ast.statement.AstReturn;
 import dev.latvian.apps.ichor.ast.statement.AstSingleDeclareStatement;
 import dev.latvian.apps.ichor.ast.statement.AstSuperStatement;
+import dev.latvian.apps.ichor.ast.statement.AstSwitch;
 import dev.latvian.apps.ichor.ast.statement.AstThisStatement;
 import dev.latvian.apps.ichor.ast.statement.AstTry;
 import dev.latvian.apps.ichor.ast.statement.AstWhile;
@@ -137,6 +137,7 @@ public class ParserJS implements Parser {
 			var fn = previous();
 			var param = new AstParam(consumeName(ParseErrorType.EXP_FUNC_NAME).asString());
 			param.defaultValue = function(null, null, 0);
+			((AstFunction) param.defaultValue).functionName = param.name;
 			return new AstSingleDeclareStatement(KeywordToken.CONST, param).pos(fn);
 		} else if (match(VAR_TOKENS)) {
 			return varDeclaration(previous());
@@ -203,6 +204,7 @@ public class ParserJS implements Parser {
 				}
 
 				astClass.constructor = (AstClassFunction) function(astClass, type, modifiers);
+				astClass.constructor.functionName = "constructor";
 			} else {
 				var map = switch (type) {
 					case GETTER -> astClass.getters;
@@ -214,7 +216,9 @@ public class ParserJS implements Parser {
 					throw new ParseError(fname, ParseErrorType.METHOD_EXISTS);
 				}
 
-				map.put(fname.asString(), (AstClassFunction) function(astClass, type, modifiers));
+				var func = (AstClassFunction) function(astClass, type, modifiers);
+				func.functionName = fname.asString();
+				map.put(fname.asString(), func);
 			}
 		}
 
@@ -239,6 +243,8 @@ public class ParserJS implements Parser {
 			return deleteStatement();
 		} else if (match(KeywordToken.TRY)) {
 			return tryStatement();
+		} else if (match(KeywordToken.SWITCH)) {
+			return switchStatement();
 		} else if (check(SymbolToken.LC)) {
 			return block(false);
 		} else if ((check(KeywordToken.THIS) || check(KeywordToken.SUPER)) && peekToken(1) == SymbolToken.LP) {
@@ -390,6 +396,7 @@ public class ParserJS implements Parser {
 		var pos = previous();
 
 		if (call() instanceof AstGetFrom get) {
+			ignoreSemi();
 			return new AstDelete(get);
 		} else {
 			throw new ParseError(pos, ParseErrorType.EXP_VAR_NAME);
@@ -414,6 +421,34 @@ public class ParserJS implements Parser {
 		}
 
 		return new AstTry(tryBlock, catchBlock, finallyBlock).pos(pos);
+	}
+
+	private Interpretable switchStatement() {
+		var pos = previous();
+		consume(SymbolToken.LP, ParseErrorType.EXP_LP_ARGS);
+		var condition = expression();
+		consume(SymbolToken.RP, ParseErrorType.EXP_RP_ARGS);
+		consume(SymbolToken.LC, ParseErrorType.EXP_LC_BLOCK);
+
+		var cases = new ArrayList<AstSwitch.AstCase>(1);
+		AstSwitch.AstCase defaultCase = null;
+
+		while (!check(SymbolToken.RC)) {
+			if (match(KeywordToken.CASE)) {
+				var value = expression();
+				consume(SymbolToken.COL, ParseErrorType.EXP_COL_CASE);
+				cases.add(new AstSwitch.AstCase(value, block(true)));
+			} else if (match(KeywordToken.DEFAULT)) {
+				consume(SymbolToken.COL, ParseErrorType.EXP_COL_CASE);
+				defaultCase = new AstSwitch.AstCase(null, block(true));
+			} else {
+				throw new ParseError(previous(), ParseErrorType.EXP_CASE);
+			}
+		}
+
+		consume(SymbolToken.RC, ParseErrorType.EXP_RC_BLOCK);
+
+		return new AstSwitch(condition, cases.toArray(AstSwitch.AstCase.EMPTY), defaultCase).pos(pos);
 	}
 
 	private Interpretable expressionStatement(boolean ignoreSemi) {
@@ -659,7 +694,7 @@ public class ParserJS implements Parser {
 						ast.pos(lp);
 					}
 				} else {
-					throw new ParseError(lp, ParseErrorType.EXPR_NOT_CALLABLE.format(expr));
+					throw new ParseError(lp, ParseErrorType.EXPR_NOT_CALLABLE.format(expr, expr.getClass().toString()));
 				}
 			} else if (match(SymbolToken.DOT)) {
 				var name = consumeName(ParseErrorType.EXP_NAME_DOT);
@@ -715,7 +750,15 @@ public class ParserJS implements Parser {
 		} else if (match(KeywordToken.THIS)) {
 			return new AstThisExpression().pos(previous());
 		} else if (match(KeywordToken.FUNCTION)) {
-			return function(null, null, 0);
+			String funcName = null;
+
+			if (hasName()) {
+				funcName = consumeName(ParseErrorType.EXP_FUNC_NAME).asString();
+			}
+
+			var func = function(null, null, 0);
+			func.functionName = funcName;
+			return func;
 		} else if (peekToken() instanceof NameToken name) {
 			int current0 = current;
 			var param = param();
@@ -735,7 +778,7 @@ public class ParserJS implements Parser {
 
 				var body = block(true);
 				return new AstFunction(Empty.AST_PARAMS, body, AstFunction.MOD_ARROW).pos(previous());
-			} else if (peekToken() instanceof NameToken && (peekToken(1) == SymbolToken.RP && peekToken(2) == SymbolToken.ARROW || peekToken(1) == SymbolToken.COMMA)) {
+			} else if (hasName() && (peekToken(1) == SymbolToken.RP && peekToken(2) == SymbolToken.ARROW || peekToken(1) == SymbolToken.COMMA)) {
 				var list = new ArrayList<AstParam>(1);
 
 				do {
@@ -748,10 +791,11 @@ public class ParserJS implements Parser {
 				return new AstFunction(list.toArray(Empty.AST_PARAMS), body, AstFunction.MOD_ARROW).pos(previous());
 			}
 
-			var lp = previous();
+			// var lp = previous();
 			var expr = expression();
 			consume(SymbolToken.RP, ParseErrorType.EXP_RP_EXPR);
-			return new AstGrouping(expr).pos(lp);
+			// return new AstGrouping(expr).pos(lp);
+			return expr;
 		} else if (match(SymbolToken.LS)) {
 			var ls = previous();
 			var list = new ArrayList<Evaluable>();
@@ -776,6 +820,7 @@ public class ParserJS implements Parser {
 
 				if (peekToken() == SymbolToken.LP) {
 					var func = function(null, null, 0);
+					func.functionName = name.asString();
 					map.put(name.asString(), func);
 				} else {
 					consume(SymbolToken.COL, ParseErrorType.EXP_COL_OBJECT);
@@ -875,8 +920,12 @@ public class ParserJS implements Parser {
 		return false;
 	}
 
+	private boolean hasName() {
+		return peekToken() instanceof NameToken || peekToken() instanceof KeywordToken;
+	}
+
 	private PositionedToken consumeName(ParseErrorType message) {
-		if (peekToken() instanceof NameToken || peekToken() instanceof KeywordToken) {
+		if (hasName()) {
 			return advance();
 		}
 

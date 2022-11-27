@@ -15,6 +15,7 @@ public enum ParseErrorType implements ParseErrorMessage {
 	EXP_RC_OBJECT("Expected '}' after object"),
 	EXP_RC_TEMPLATE_LITERAL("Expected '}' after template literal"),
 	EXP_COL_OBJECT("Expected ':' after name"),
+	EXP_COL_CASE("Expected ':' after case"),
 	EXP_RS_ARRAY("Expected ']' after array"),
 	EXP_RP_EXPR("Expected ')' after expression"),
 	EXP_LP_ARGS("Expected '(' before arguments"),
@@ -34,9 +35,10 @@ public enum ParseErrorType implements ParseErrorMessage {
 	EXP_TERNARY_COL("Expected ':' in ternary expression"),
 	EXP_NAME_DOT("Expected property name after '.'"),
 	EXP_NAME_OC("Expected property name after '?.'"),
+	EXP_CASE("Expected 'case' or 'default'"),
 	METHOD_EXISTS("Method already defined"),
 	CONSTRUCTOR_EXISTS("Constructor already defined"),
-	EXPR_NOT_CALLABLE("Expression %s is not callable"),
+	EXPR_NOT_CALLABLE("Expression %s is not callable (%s)"),
 
 	;
 

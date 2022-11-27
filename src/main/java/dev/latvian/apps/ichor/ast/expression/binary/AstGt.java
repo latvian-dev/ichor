@@ -10,6 +10,6 @@ public class AstGt extends AstBinaryBoolean {
 
 	@Override
 	public boolean evalBoolean(Scope scope) {
-		return left.compareTo(right, scope) > 0;
+		return left.compareTo(right.eval(scope), scope) > 0;
 	}
 }

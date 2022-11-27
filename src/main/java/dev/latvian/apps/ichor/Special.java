@@ -49,8 +49,8 @@ public class Special implements PrototypeSupplier, Token {
 	}
 
 	@Override
-	public boolean equals(Evaluable right, Scope scope, boolean shallow) {
-		return right instanceof Special || isInvalid(right.eval(scope));
+	public boolean equals(Object right, Scope scope, boolean shallow) {
+		return right == null || right instanceof Special;
 	}
 
 	@Override
