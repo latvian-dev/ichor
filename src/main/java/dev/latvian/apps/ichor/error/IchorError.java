@@ -2,7 +2,7 @@ package dev.latvian.apps.ichor.error;
 
 import dev.latvian.apps.ichor.token.TokenPos;
 import dev.latvian.apps.ichor.token.TokenPosSupplier;
-import dev.latvian.apps.ichor.util.PrintStreamOrWriter;
+import dev.latvian.apps.ichor.util.PrintWrapper;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -42,7 +42,7 @@ public abstract class IchorError extends RuntimeException {
 		return m;
 	}
 
-	public void printPrettyError(PrintStreamOrWriter print) {
+	public void printPrettyError(PrintWrapper print) {
 		synchronized (print.lock()) {
 			var c = getCode();
 
@@ -56,13 +56,13 @@ public abstract class IchorError extends RuntimeException {
 
 	@Override
 	public void printStackTrace(PrintStream s) {
-		printPrettyError(new PrintStreamOrWriter.WrappedPrintStream(s));
+		printPrettyError(PrintWrapper.of(s));
 		super.printStackTrace(s);
 	}
 
 	@Override
 	public void printStackTrace(PrintWriter s) {
-		printPrettyError(new PrintStreamOrWriter.WrappedPrintWriter(s));
+		printPrettyError(PrintWrapper.of(s));
 		super.printStackTrace(s);
 	}
 }

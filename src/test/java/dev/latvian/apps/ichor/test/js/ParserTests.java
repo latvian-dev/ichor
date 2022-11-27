@@ -11,18 +11,25 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class ParserTests {
-	private static void testParserAst(String input, String match) {
+	public static void testParserAst(String filename, String input, String match) {
 		System.out.println("--- Parser Test ---");
 		System.out.println("Input: " + input);
 		System.out.println("Expected: " + match);
 		var cx = new ContextJS();
-		var tokenStream = new TokenStreamJS(new NamedTokenSource("<parser test>"), input);
+		var tokenStream = new TokenStreamJS(new NamedTokenSource(filename), input);
 		var tokens = tokenStream.getTokens();
 		var parser = new ParserJS(cx, tokens);
 		var ast = parser.parse();
 		var astStr = ast.toString();
 		System.out.println("Parsed:   " + astStr);
-		Assertions.assertEquals(match, astStr);
+
+		if (!match.equals("*")) {
+			Assertions.assertEquals(match, astStr);
+		}
+	}
+
+	public static void testParserAst(String input, String match) {
+		testParserAst("<parser test>", input, match);
 	}
 
 	@Test

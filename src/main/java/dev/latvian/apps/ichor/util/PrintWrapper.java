@@ -3,7 +3,15 @@ package dev.latvian.apps.ichor.util;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 
-public interface PrintStreamOrWriter {
+public interface PrintWrapper {
+	static PrintWrapper of(PrintStream s) {
+		return new WrappedPrintStream(s);
+	}
+
+	static PrintWrapper of(PrintWriter w) {
+		return new WrappedPrintWriter(w);
+	}
+
 	/**
 	 * Returns the object to be locked when using this StreamOrWriter
 	 */
@@ -14,7 +22,7 @@ public interface PrintStreamOrWriter {
 	 */
 	void println(Object o);
 
-	record WrappedPrintStream(PrintStream printStream) implements PrintStreamOrWriter {
+	record WrappedPrintStream(PrintStream printStream) implements PrintWrapper {
 		@Override
 		public Object lock() {
 			return printStream;
@@ -26,7 +34,7 @@ public interface PrintStreamOrWriter {
 		}
 	}
 
-	record WrappedPrintWriter(PrintWriter printWriter) implements PrintStreamOrWriter {
+	record WrappedPrintWriter(PrintWriter printWriter) implements PrintWrapper {
 		@Override
 		public Object lock() {
 			return printWriter;

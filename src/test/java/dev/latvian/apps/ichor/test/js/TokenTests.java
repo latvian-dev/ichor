@@ -11,7 +11,7 @@ import dev.latvian.apps.ichor.token.StringToken;
 import dev.latvian.apps.ichor.token.SymbolToken;
 import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.util.NamedTokenSource;
-import dev.latvian.apps.ichor.util.PrintStreamOrWriter;
+import dev.latvian.apps.ichor.util.PrintWrapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ public class TokenTests {
 			try {
 				test.execute();
 			} catch (TokenStreamError e) {
-				e.printPrettyError(new PrintStreamOrWriter.WrappedPrintStream(System.err));
+				e.printPrettyError(PrintWrapper.of(System.err));
 				throw e;
 			}
 		});

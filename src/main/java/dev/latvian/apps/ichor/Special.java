@@ -4,6 +4,7 @@ import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
 import dev.latvian.apps.ichor.token.Token;
+import dev.latvian.apps.ichor.token.TokenPos;
 import org.jetbrains.annotations.Nullable;
 
 public class Special implements PrototypeSupplier, Token {
@@ -50,5 +51,10 @@ public class Special implements PrototypeSupplier, Token {
 	@Override
 	public boolean equals(Evaluable right, Scope scope, boolean shallow) {
 		return right instanceof Special || isInvalid(right.eval(scope));
+	}
+
+	@Override
+	public Evaluable toEvaluable(Parser parser, TokenPos pos) {
+		return this;
 	}
 }

@@ -711,7 +711,7 @@ public class ParserJS implements Parser {
 
 				var body = block(true);
 				return new AstFunction(Empty.AST_PARAMS, body, AstFunction.MOD_ARROW).pos(previous());
-			} else if (peekToken() instanceof NameToken && (peekToken(1) == SymbolToken.RP || peekToken(1) == SymbolToken.COMMA)) {
+			} else if (peekToken() instanceof NameToken && (peekToken(1) == SymbolToken.RP && peekToken(2) == SymbolToken.ARROW || peekToken(1) == SymbolToken.COMMA)) {
 				var list = new ArrayList<AstParam>(1);
 
 				do {

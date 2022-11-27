@@ -13,6 +13,7 @@ import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.token.TokenPos;
 import dev.latvian.apps.ichor.token.TokenSource;
 import dev.latvian.apps.ichor.token.TokenStream;
+import dev.latvian.apps.ichor.util.PrintWrapper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -165,24 +166,28 @@ public class TokenStreamJS implements TokenStream {
 
 		if (t == '/') {
 			if (peek(1) == '/') {
+				read();
 				while (true) {
-					t = read();
+					t = peek(1);
 
-					if (t == '\n') {
-						t = readSkippingWhitespace();
-						break;
+					if (t == 0 || t == '\n') {
+						return readToken();
+					} else {
+						read();
 					}
 				}
 			} else if (peek(1) == '*') {
 				read();
 
 				while (true) {
-					t = read();
+					t = peek(1);
 
-					if (t == '*' && peek(1) == '/') {
+					if (t == '*' && peek(2) == '/') {
 						read();
-						t = readSkippingWhitespace();
-						break;
+						read();
+						return readToken();
+					} else {
+						read();
 					}
 				}
 			} else if (!tokens.isEmpty() && LITERAL_PRE.contains(tokens.get(tokens.size() - 1).token())) {
@@ -259,9 +264,10 @@ public class TokenStreamJS implements TokenStream {
 
 		if (s != null) {
 			if (s == SymbolToken.TEMPLATE_LITERAL_VAR || s == SymbolToken.LC || s == SymbolToken.LP || s == SymbolToken.LS) {
-				if (currentDepth == null && s == SymbolToken.RC) {
+				if (currentDepth == null && s == SymbolToken.LC) {
+					System.out.println(s);
 					// System.out.println(prevRow + ":" + prevCol + ": " + lines[prevRow - 1]);
-					System.out.println(error("").getMessage());
+					error("").printPrettyError(PrintWrapper.of(System.err));
 				}
 
 				depth.push(s);
@@ -280,7 +286,8 @@ public class TokenStreamJS implements TokenStream {
 				currentDepth = depth.isEmpty() ? null : depth.peek();
 
 				if (currentDepth == null && s == SymbolToken.RC) {
-					System.out.println(error("").getMessage());
+					System.out.println(s);
+					error("").printPrettyError(PrintWrapper.of(System.err));
 				}
 			} else if (s == SymbolToken.TEMPLATE_LITERAL) {
 				if (currentDepth == SymbolToken.TEMPLATE_LITERAL) {
