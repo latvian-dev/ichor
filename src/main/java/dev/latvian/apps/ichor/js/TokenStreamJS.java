@@ -350,7 +350,7 @@ public class TokenStreamJS implements TokenStream {
 					len++;
 					read();
 				}
-			} else if (isDigit(c) || len >= 1 && (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z')) {
+			} else if (isDigit(c) || len >= 1 && (len == 2 && c == '-' && Character.toLowerCase(input[p + 1]) == 'e' || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F')) {
 				len++;
 				read();
 			} else {

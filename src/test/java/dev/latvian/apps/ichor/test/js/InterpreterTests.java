@@ -575,4 +575,22 @@ public class InterpreterTests {
 				hi
 				""");
 	}
+
+	@Test
+	public void expNumPos() {
+		testInterpreter("""
+				print(1e3)
+				""", """
+				1000.0
+				""");
+	}
+
+	@Test
+	public void expNumNeg() {
+		testInterpreter("""
+				print(1e-3)
+				""", """
+				0.001
+				""");
+	}
 }
