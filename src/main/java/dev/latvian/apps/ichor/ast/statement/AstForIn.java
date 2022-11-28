@@ -9,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 
 public class AstForIn extends AstForOf {
-	public AstForIn(String name, Evaluable from, @Nullable Interpretable body) {
-		super(name, from, body);
+	public AstForIn(String name, Evaluable from, @Nullable Interpretable body, String label) {
+		super(name, from, body, label);
 	}
 
 	@Override

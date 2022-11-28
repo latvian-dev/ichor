@@ -13,12 +13,14 @@ public class AstFor extends AstStatement {
 	public final Evaluable condition;
 	public final Interpretable increment;
 	public final Interpretable body;
+	public final String label;
 
-	public AstFor(@Nullable Interpretable initializer, @Nullable Evaluable condition, @Nullable Interpretable increment, @Nullable Interpretable body) {
+	public AstFor(@Nullable Interpretable initializer, @Nullable Evaluable condition, @Nullable Interpretable increment, @Nullable Interpretable body, String label) {
 		this.initializer = initializer;
 		this.condition = condition;
 		this.increment = increment;
 		this.body = body;
+		this.label = label;
 	}
 
 	@Override

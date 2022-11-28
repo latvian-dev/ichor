@@ -11,10 +11,12 @@ import org.jetbrains.annotations.Nullable;
 public class AstWhile extends AstStatement {
 	public final Evaluable condition;
 	public final Interpretable body;
+	public final String label;
 
-	public AstWhile(Evaluable condition, @Nullable Interpretable body) {
+	public AstWhile(Evaluable condition, @Nullable Interpretable body, String label) {
 		this.condition = condition;
 		this.body = body;
+		this.label = label;
 	}
 
 	@Override

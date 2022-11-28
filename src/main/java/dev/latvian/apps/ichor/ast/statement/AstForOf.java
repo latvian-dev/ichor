@@ -14,11 +14,13 @@ public class AstForOf extends AstStatement {
 	public final String name;
 	public final Evaluable from;
 	public final Interpretable body;
+	public final String label;
 
-	public AstForOf(String name, Evaluable from, @Nullable Interpretable body) {
+	public AstForOf(String name, Evaluable from, @Nullable Interpretable body, String label) {
 		this.name = name;
 		this.from = from;
 		this.body = body;
+		this.label = label;
 	}
 
 	protected String appendKeyword() {

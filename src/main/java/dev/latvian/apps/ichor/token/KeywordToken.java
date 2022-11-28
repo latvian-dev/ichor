@@ -57,7 +57,7 @@ public enum KeywordToken implements StaticToken, BinaryOpToken {
 	SUPER("super"), // TODO
 	SWITCH("switch"),
 	THIS("this"), // TODO
-	THROW("throw"), // TODO
+	THROW("throw"),
 	TRUE("true"),
 	TRY("try"),
 	TYPEOF("typeof"),
@@ -92,6 +92,7 @@ public enum KeywordToken implements StaticToken, BinaryOpToken {
 	public Token toLiteralOrSelf() {
 		return switch (this) {
 			case NULL -> Special.NULL;
+			case UNDEFINED -> Special.UNDEFINED;
 			case TRUE -> BooleanToken.TRUE;
 			case FALSE -> BooleanToken.FALSE;
 			default -> this;
