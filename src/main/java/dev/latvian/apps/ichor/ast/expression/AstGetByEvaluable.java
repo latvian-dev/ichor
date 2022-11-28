@@ -80,4 +80,29 @@ public class AstGetByEvaluable extends AstGetFrom {
 			cx.debugger.set(scope, this, value);
 		}
 	}
+
+	@Override
+	public boolean delete(Scope scope) {
+		var cx = scope.getContext();
+		var self = from.eval(scope);
+		var p = cx.getPrototype(self);
+
+		if (cx.debugger != null) {
+			cx.debugger.pushSelf(scope, self);
+		}
+
+		var k = key.eval(scope);
+
+		if (k instanceof Number) {
+			p.delete(scope, self, ((Number) k).intValue());
+		} else {
+			p.delete(scope, self, scope.getContext().asString(scope, k));
+		}
+
+		if (cx.debugger != null) {
+			cx.debugger.delete(scope, this);
+		}
+
+		return true;
+	}
 }

@@ -6,7 +6,6 @@ import dev.latvian.apps.ichor.token.BooleanToken;
 import dev.latvian.apps.ichor.token.KeywordToken;
 import dev.latvian.apps.ichor.token.NameToken;
 import dev.latvian.apps.ichor.token.NumberToken;
-import dev.latvian.apps.ichor.token.PositionedToken;
 import dev.latvian.apps.ichor.token.StringToken;
 import dev.latvian.apps.ichor.token.SymbolToken;
 import dev.latvian.apps.ichor.token.Token;
@@ -27,8 +26,21 @@ public class TokenTests {
 	private static void testTokenStream(String input, Token... match) {
 		System.out.println("--- Token Test ---");
 		System.out.println("Input: " + input);
-		var tokenStream = new TokenStreamJS(new NamedTokenSource("<token test>"), input);
-		var tokens = tokenStream.getTokens().stream().map(PositionedToken::token).toArray(Token[]::new);
+		var tokenStream = new TokenStreamJS(new NamedTokenSource(""), input);
+		var current = tokenStream.getRootToken();
+
+		if (!current.exists()) {
+			throw new IllegalStateException("No tokens!");
+		}
+
+		var tokens = new Token[tokenStream.getTokenCount()];
+		int i = 0;
+
+		while (current.exists()) {
+			tokens[i++] = current.token;
+			current = current.next;
+		}
+
 		System.out.println("Expected: " + Arrays.toString(match));
 		System.out.println("Parsed:   " + Arrays.toString(tokens));
 		Assertions.assertArrayEquals(match, tokens);

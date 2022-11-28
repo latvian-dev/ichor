@@ -50,6 +50,21 @@ public class AstGetScopeMember extends AstGetBase {
 	}
 
 	@Override
+	public boolean delete(Scope scope) {
+		var cx = scope.getContext();
+
+		if (cx.debugger != null) {
+			cx.debugger.delete(scope, this);
+		}
+
+		if (scope.deleteDeclaredMember(name) == Special.NOT_FOUND) {
+			throw new ScriptError("Member " + name + " not found");
+		}
+
+		return true;
+	}
+
+	@Override
 	public Evaluable createCall(Evaluable[] arguments, boolean isNew) {
 		return new AstScopeMemberCall(name, arguments, isNew);
 	}

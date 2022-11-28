@@ -1,5 +1,7 @@
 package dev.latvian.apps.ichor.test.js;
 
+import dev.latvian.apps.ichor.ast.AstAppendable;
+import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.js.ContextJS;
 import dev.latvian.apps.ichor.js.ParserJS;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
@@ -17,10 +19,13 @@ public class ParserTests {
 		System.out.println("Expected: " + match);
 		var cx = new ContextJS();
 		var tokenStream = new TokenStreamJS(new NamedTokenSource(filename), input);
-		var tokens = tokenStream.getTokens();
-		var parser = new ParserJS(cx, tokens);
+		var rootToken = tokenStream.getRootToken();
+		var parser = new ParserJS(cx, rootToken);
 		var ast = parser.parse();
-		var astStr = ast.toString();
+
+		var sb = new AstStringBuilder();
+		((AstAppendable) ast).append(sb);
+		var astStr = sb.toString();
 		System.out.println("Parsed:   " + astStr);
 
 		if (!match.equals("*")) {
@@ -29,11 +34,22 @@ public class ParserTests {
 	}
 
 	public static void testParserAst(String input, String match) {
-		testParserAst("<parser test>", input, match);
+		testParserAst("", input, match);
 	}
 
 	@Test
 	public void number() {
 		testParserAst("const x = 4.0;", "const x=4.0");
+	}
+
+	@Test
+	public void confusingArg() {
+		testParserAst("""
+				let a = {b: 1, c: true}
+				let d = true
+				print(a.b = (a.c) ? d : false)
+				""", """
+				err
+				""");
 	}
 }

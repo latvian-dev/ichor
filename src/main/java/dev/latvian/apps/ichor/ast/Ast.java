@@ -10,6 +10,12 @@ public abstract class Ast implements AstAppendable, TokenPosSupplier {
 	public String toString() {
 		var sb = new AstStringBuilder();
 		append(sb);
+
+		if (pos != TokenPos.UNKNOWN) {
+			sb.append(" @ ");
+			sb.append(pos);
+		}
+
 		return sb.toString();
 	}
 

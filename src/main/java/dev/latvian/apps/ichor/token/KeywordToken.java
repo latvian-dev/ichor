@@ -20,7 +20,7 @@ public enum KeywordToken implements StaticToken, BinaryOpToken {
 	BREAK("break"),
 	CASE("case"),
 	CATCH("catch"),
-	CLASS("class"),
+	CLASS("class", true),
 	CONST("const"),
 	CONTINUE("continue"),
 	DEBUGGER("debugger"), // TODO
@@ -28,32 +28,32 @@ public enum KeywordToken implements StaticToken, BinaryOpToken {
 	DELETE("delete"),
 	DO("do"), // TODO
 	ELSE("else"),
-	ENUM("enum"), // TODO
+	ENUM("enum", true), // TODO
 	EVAL("eval"), // TODO
-	EXPORT("export"), // TODO
+	EXPORT("export", true), // TODO
 	EXTENDS("extends"),
 	FALSE("false"),
 	FINALLY("finally"),
 	FOR("for"),
-	FROM("from"), // TODO
+	FROM("from", true), // TODO
 	FUNCTION("function"),
-	GET("get"), // TODO
+	GET("get", true), // TODO
 	IF("if"),
-	IMPORT("import"), // TODO
-	IN("in"),
+	IMPORT("import", true), // TODO
+	IN("in", true),
 	INSTANCEOF("instanceof"),
-	INTERFACE("interface"),
+	INTERFACE("interface", true),
 	LET("let"),
 	NEW("new"),
 	NULL("null"),
-	OF("of"),
-	PACKAGE("package"), // TODO
-	PRIVATE("private"), // TODO
-	PROTECTED("protected"), // TODO
-	PUBLIC("public"), // TODO
+	OF("of", true),
+	PACKAGE("package", true), // TODO
+	PRIVATE("private", true), // TODO
+	PROTECTED("protected", true), // TODO
+	PUBLIC("public", true), // TODO
 	RETURN("return"),
-	SET("set"), // TODO
-	STATIC("static"), // TODO
+	SET("set", true), // TODO
+	STATIC("static", true), // TODO
 	SUPER("super"), // TODO
 	SWITCH("switch"),
 	THIS("this"), // TODO
@@ -63,19 +63,25 @@ public enum KeywordToken implements StaticToken, BinaryOpToken {
 	TYPEOF("typeof"),
 	UNDEFINED("undefined"),
 	VAR("var"),
-	VOID("void"), // TODO
+	VOID("void", true), // TODO
 	WHILE("while"),
-	WITH("with"), // TODO
-	YIELD("yield"), // TODO
+	WITH("with", true), // TODO
+	YIELD("yield", true), // TODO
 
 	;
 
 	public static final Map<String, KeywordToken> MAP = Arrays.stream(values()).collect(Collectors.toMap(KeywordToken::toString, Function.identity()));
 
 	public final String name;
+	public final boolean canBeName;
+
+	KeywordToken(String n, boolean cn) {
+		name = n;
+		canBeName = cn;
+	}
 
 	KeywordToken(String n) {
-		name = n;
+		this(n, false);
 	}
 
 	@Override

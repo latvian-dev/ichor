@@ -66,4 +66,23 @@ public class AstGetByIndex extends AstGetFrom {
 			cx.debugger.set(scope, this, value);
 		}
 	}
+
+	@Override
+	public boolean delete(Scope scope) {
+		var cx = scope.getContext();
+		var self = from.eval(scope);
+		var p = cx.getPrototype(self);
+
+		if (cx.debugger != null) {
+			cx.debugger.pushSelf(scope, self);
+		}
+
+		p.delete(scope, self, index);
+
+		if (cx.debugger != null) {
+			cx.debugger.delete(scope, this);
+		}
+
+		return true;
+	}
 }

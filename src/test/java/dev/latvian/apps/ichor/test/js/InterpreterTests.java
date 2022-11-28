@@ -53,9 +53,9 @@ public class InterpreterTests {
 		cx.debugger = new ConsoleDebugger();
 
 		var tokenStream = new TokenStreamJS(new NamedTokenSource(filename), input);
-		tokenStream.timeout(filename.equals("<interpreter test>") ? 1500L : 0L);
-		var tokens = tokenStream.getTokens();
-		var parser = new ParserJS(cx, tokens);
+		tokenStream.timeout(filename.isEmpty() ? 1500L : 0L);
+		var rootToken = tokenStream.getRootToken();
+		var parser = new ParserJS(cx, rootToken);
 		var ast = parser.parse();
 		var astStr = ast.toString();
 
@@ -78,7 +78,7 @@ public class InterpreterTests {
 	}
 
 	public static void testInterpreter(String input, Consumer<RootScope> rootScopeCallback, String match) {
-		testInterpreter("<interpreter test>", input, rootScopeCallback, match);
+		testInterpreter("", input, rootScopeCallback, match);
 	}
 
 	public static void testInterpreter(String input, String match) {
@@ -433,6 +433,7 @@ public class InterpreterTests {
 		testInterpreter("""
 				const arr = ['a', 'b', 'c']
 				let i;
+				i = 50;
 								
 				for (i = 0; i < arr.length; i++) {
 				  print(`${i}: ${arr[i]}`)

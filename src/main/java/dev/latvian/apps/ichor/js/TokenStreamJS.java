@@ -14,9 +14,7 @@ import dev.latvian.apps.ichor.token.TokenPos;
 import dev.latvian.apps.ichor.token.TokenSource;
 import dev.latvian.apps.ichor.token.TokenStream;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -42,7 +40,9 @@ public class TokenStreamJS implements TokenStream {
 	private int prevPos;
 	private int prevRow;
 	private int prevCol;
-	private List<PositionedToken> tokens;
+	private int tokenCount;
+	private PositionedToken rootToken;
+	private PositionedToken currentToken;
 	private final Map<String, NumberToken> numberTokenCache;
 	private final Map<String, StringToken> stringTokenCache;
 	private final Map<String, NameToken> nameTokenCache;
@@ -193,7 +193,7 @@ public class TokenStreamJS implements TokenStream {
 						read();
 					}
 				}
-			} else if (!tokens.isEmpty() && LITERAL_PRE.contains(tokens.get(tokens.size() - 1).token())) {
+			} else if (currentToken != null && LITERAL_PRE.contains(currentToken.token)) {
 				var sbP = new StringBuilder();
 				var sbF = new StringBuilder();
 
@@ -342,19 +342,15 @@ public class TokenStreamJS implements TokenStream {
 		while (true) {
 			char c = peek(1);
 
-			if (c == '.') {
-				if (isDigit(peek(2))) {
-					if (hasDec) {
-						throw error("Number can't contain decimal point twice!");
-					} else {
-						hasDec = true;
-						len++;
-						read();
-					}
+			if (c == '.' && isDigit(peek(2))) {
+				if (hasDec) {
+					throw error("Number can't contain decimal point twice!");
 				} else {
-					break;
+					hasDec = true;
+					len++;
+					read();
 				}
-			} else if (isDigit(c)) {
+			} else if (isDigit(c) || len >= 1 && (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z')) {
 				len++;
 				read();
 			} else {
@@ -412,11 +408,9 @@ public class TokenStreamJS implements TokenStream {
 		};
 	}
 
-	public List<PositionedToken> getTokens() {
-		if (tokens == null) {
-			tokens = new ArrayList<>();
-		} else {
-			return tokens;
+	public PositionedToken getRootToken() {
+		if (rootToken != null) {
+			return rootToken;
 		}
 
 		timeoutTime = timeout <= 0L ? 0L : (System.currentTimeMillis() + timeout);
@@ -427,19 +421,40 @@ public class TokenStreamJS implements TokenStream {
 			prevCol = col;
 
 			try {
-				tokens.add(new PositionedToken(readToken(), new TokenPos(tokenSource, prevRow, prevCol)));
+				var newCurrent = new PositionedToken(readToken(), new TokenPos(tokenSource, prevRow, prevCol));
+
+				if (rootToken == null) {
+					tokenCount = 1;
+					rootToken = newCurrent;
+					currentToken = newCurrent;
+					newCurrent.prev = PositionedToken.NONE;
+					newCurrent.next = PositionedToken.NONE;
+				} else {
+					tokenCount++;
+					var prev = currentToken;
+					prev.next = newCurrent;
+
+					currentToken = newCurrent;
+					currentToken.prev = prev;
+					currentToken.next = PositionedToken.NONE;
+				}
 			} catch (EndOfFileExit exit) {
 				if (currentDepth != null) {
 					throw error("Expected '" + currentDepth + "' to be closed!");
 				}
 
-				return tokens;
+				return rootToken;
 			}
 		}
 	}
 
+	public int getTokenCount() {
+		getRootToken();
+		return tokenCount;
+	}
+
 	@Override
 	public String toString() {
-		return getTokens().toString();
+		return rootToken.toRecursiveString();
 	}
 }

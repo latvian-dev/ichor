@@ -78,6 +78,25 @@ public class AstGetByName extends AstGetFrom {
 	}
 
 	@Override
+	public boolean delete(Scope scope) {
+		var cx = scope.getContext();
+		var self = from.eval(scope);
+		var p = cx.getPrototype(self);
+
+		if (cx.debugger != null) {
+			cx.debugger.pushSelf(scope, self);
+		}
+
+		p.delete(scope, self, name);
+
+		if (cx.debugger != null) {
+			cx.debugger.delete(scope, this);
+		}
+
+		return true;
+	}
+
+	@Override
 	public Evaluable createCall(Evaluable[] arguments, boolean isNew) {
 		if (arguments.length == 0 && name.equals("toString")) {
 			return new ToStringEvaluable(this);

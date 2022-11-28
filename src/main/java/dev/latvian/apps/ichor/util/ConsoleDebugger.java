@@ -28,6 +28,11 @@ public class ConsoleDebugger implements Debugger {
 	}
 
 	@Override
+	public void delete(Scope scope, Object object) {
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Delete @ " + object);
+	}
+
+	@Override
 	public void call(Scope scope, Object callee, Evaluable[] args, Object returnValue) {
 		var sb = new AstStringBuilder();
 		sb.append("[DEBUG] ");

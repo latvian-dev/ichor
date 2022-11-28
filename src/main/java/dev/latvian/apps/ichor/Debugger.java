@@ -13,6 +13,9 @@ public interface Debugger {
 	default void set(Scope scope, Object object, Object value) {
 	}
 
+	default void delete(Scope scope, Object object) {
+	}
+
 	default void call(Scope scope, Object callee, Evaluable[] args, Object returnValue) {
 	}
 
