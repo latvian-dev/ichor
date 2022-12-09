@@ -4,15 +4,14 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.ast.expression.AstParam;
-import dev.latvian.apps.ichor.token.KeywordToken;
-import dev.latvian.apps.ichor.token.StaticToken;
+import dev.latvian.apps.ichor.token.DeclaringToken;
 import dev.latvian.apps.ichor.util.AssignType;
 
 public class AstSingleDeclareStatement extends AstStatement {
-	public final StaticToken assignToken;
+	public final DeclaringToken assignToken;
 	public final AstParam variable;
 
-	public AstSingleDeclareStatement(StaticToken assignToken, AstParam variable) {
+	public AstSingleDeclareStatement(DeclaringToken assignToken, AstParam variable) {
 		this.assignToken = assignToken;
 		this.variable = variable;
 	}
@@ -32,6 +31,6 @@ public class AstSingleDeclareStatement extends AstStatement {
 
 	@Override
 	public void interpret(Scope scope) {
-		scope.declareParam(variable, assignToken == KeywordToken.CONST ? AssignType.IMMUTABLE : AssignType.MUTABLE);
+		scope.declareParam(variable, assignToken.isConst() ? AssignType.IMMUTABLE : AssignType.MUTABLE);
 	}
 }

@@ -23,14 +23,12 @@ public class PositionedToken implements TokenPosSupplier {
 	}
 
 	public boolean isName() {
-		return token instanceof NameToken || token instanceof KeywordToken k && k.canBeName;
+		return token instanceof NameToken n && n.canBeName();
 	}
 
 	public String name(ParseErrorMessage error) {
-		if (token instanceof NameToken n) {
-			return n.name();
-		} else if (token instanceof KeywordToken k && k.canBeName) {
-			return k.name;
+		if (token instanceof NameToken n && n.canBeName()) {
+			return n.name;
 		} else {
 			throw new ParseError(pos, error);
 		}
@@ -50,12 +48,12 @@ public class PositionedToken implements TokenPosSupplier {
 		return token != Special.NOT_FOUND;
 	}
 
-	public boolean is(StaticToken t) {
+	public boolean is(Token t) {
 		return token == t;
 	}
 
-	public boolean is(StaticToken[] tokens) {
-		for (StaticToken t : tokens) {
+	public boolean is(Token[] tokens) {
+		for (var t : tokens) {
 			if (token == t) {
 				return true;
 			}

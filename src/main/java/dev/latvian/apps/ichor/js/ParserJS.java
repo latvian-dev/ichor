@@ -34,7 +34,9 @@ import dev.latvian.apps.ichor.ast.statement.AstBlock;
 import dev.latvian.apps.ichor.ast.statement.AstBreak;
 import dev.latvian.apps.ichor.ast.statement.AstClass;
 import dev.latvian.apps.ichor.ast.statement.AstContinue;
+import dev.latvian.apps.ichor.ast.statement.AstDebugger;
 import dev.latvian.apps.ichor.ast.statement.AstDelete;
+import dev.latvian.apps.ichor.ast.statement.AstDoWhile;
 import dev.latvian.apps.ichor.ast.statement.AstExpressionStatement;
 import dev.latvian.apps.ichor.ast.statement.AstFor;
 import dev.latvian.apps.ichor.ast.statement.AstForIn;
@@ -54,10 +56,10 @@ import dev.latvian.apps.ichor.error.ParseError;
 import dev.latvian.apps.ichor.error.ParseErrorMessage;
 import dev.latvian.apps.ichor.error.ParseErrorType;
 import dev.latvian.apps.ichor.token.BinaryOpToken;
-import dev.latvian.apps.ichor.token.KeywordToken;
+import dev.latvian.apps.ichor.token.DeclaringToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
-import dev.latvian.apps.ichor.token.StaticToken;
 import dev.latvian.apps.ichor.token.SymbolToken;
+import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.token.TokenPosSupplier;
 import dev.latvian.apps.ichor.util.Empty;
 import org.jetbrains.annotations.Nullable;
@@ -68,12 +70,12 @@ import java.util.function.Function;
 
 @SuppressWarnings({"UnusedReturnValue"})
 public class ParserJS implements Parser {
-	private record BinaryOp(Function<ParserJS, Evaluable> next, StaticToken... tokens) {
+	private record BinaryOp(Function<ParserJS, Evaluable> next, Token... tokens) {
 	}
 
-	private static final StaticToken[] VAR_TOKENS = {KeywordToken.VAR, KeywordToken.LET, KeywordToken.CONST};
-	private static final StaticToken[] UNARY_TOKENS = {SymbolToken.NOT, SymbolToken.ADD, SymbolToken.SUB, SymbolToken.BNOT, SymbolToken.ADD1, SymbolToken.SUB1};
-	private static final StaticToken[] CLASS_TOKENS = {KeywordToken.CLASS, KeywordToken.INTERFACE};
+	private static final Token[] VAR_TOKENS = {KeywordTokenJS.VAR, KeywordTokenJS.LET, KeywordTokenJS.CONST};
+	private static final Token[] UNARY_TOKENS = {SymbolToken.NOT, SymbolToken.ADD, SymbolToken.SUB, SymbolToken.BNOT, SymbolToken.ADD1, SymbolToken.SUB1};
+	private static final Token[] CLASS_TOKENS = {KeywordTokenJS.CLASS, KeywordTokenJS.INTERFACE};
 	private static final BinaryOp BIN_NC = new BinaryOp(ParserJS::or, SymbolToken.NC);
 	private static final BinaryOp BIN_OR = new BinaryOp(ParserJS::and, SymbolToken.OR);
 	private static final BinaryOp BIN_AND = new BinaryOp(ParserJS::bitwiseOr, SymbolToken.AND);
@@ -81,13 +83,13 @@ public class ParserJS implements Parser {
 	private static final BinaryOp BIN_BITWISE_XOR = new BinaryOp(ParserJS::bitwiseAnd, SymbolToken.XOR);
 	private static final BinaryOp BIN_BITWISE_AND = new BinaryOp(ParserJS::equality, SymbolToken.BAND);
 	private static final BinaryOp BIN_EQUALITY = new BinaryOp(ParserJS::comparison, SymbolToken.EQ, SymbolToken.NEQ, SymbolToken.SEQ, SymbolToken.SNEQ);
-	private static final BinaryOp BIN_COMPARISON = new BinaryOp(ParserJS::shift, SymbolToken.LT, SymbolToken.GT, SymbolToken.LTE, SymbolToken.GTE, KeywordToken.IN, KeywordToken.INSTANCEOF);
+	private static final BinaryOp BIN_COMPARISON = new BinaryOp(ParserJS::shift, SymbolToken.LT, SymbolToken.GT, SymbolToken.LTE, SymbolToken.GTE, KeywordTokenJS.IN, KeywordTokenJS.INSTANCEOF);
 	private static final BinaryOp BIN_SHIFT = new BinaryOp(ParserJS::additive, SymbolToken.LSH, SymbolToken.RSH, SymbolToken.URSH);
 	private static final BinaryOp BIN_ADDITIVE = new BinaryOp(ParserJS::multiplicative, SymbolToken.ADD, SymbolToken.SUB);
 	private static final BinaryOp BIN_MULTIPLICATIVE = new BinaryOp(ParserJS::exponential, SymbolToken.MUL, SymbolToken.DIV, SymbolToken.MOD);
 	private static final BinaryOp BIN_EXPONENTIAL = new BinaryOp(ParserJS::unary, SymbolToken.POW);
 
-	private static final StaticToken[] SET_OP_TOKENS = {
+	private static final Token[] SET_OP_TOKENS = {
 			SymbolToken.ADD_SET,
 			SymbolToken.SUB_SET,
 			SymbolToken.MUL_SET,
@@ -102,7 +104,7 @@ public class ParserJS implements Parser {
 			SymbolToken.NC_SET,
 	};
 
-	private static final StaticToken[] FOR_OF_IN_TOKENS = {KeywordToken.OF, KeywordToken.IN};
+	private static final Token[] FOR_OF_IN_TOKENS = {KeywordTokenJS.OF, KeywordTokenJS.IN};
 
 	private final ContextJS context;
 	private PositionedToken current;
@@ -132,12 +134,12 @@ public class ParserJS implements Parser {
 
 		if (advanceIf(CLASS_TOKENS)) {
 			return classDeclaration(pos);
-		} else if (advanceIf(KeywordToken.FUNCTION)) {
+		} else if (advanceIf(KeywordTokenJS.FUNCTION)) {
 			var param = new AstParam(name(ParseErrorType.EXP_FUNC_NAME));
 			param.defaultValue = function(null, null, 0);
 			((AstFunction) param.defaultValue).functionName = param.name;
 			ignoreSemi();
-			return new AstSingleDeclareStatement(KeywordToken.CONST, param).pos(pos);
+			return new AstSingleDeclareStatement(KeywordTokenJS.CONST, param).pos(pos);
 		} else if (advanceIf(VAR_TOKENS)) {
 			var v = varDeclaration(pos);
 			ignoreSemi();
@@ -168,7 +170,7 @@ public class ParserJS implements Parser {
 		var astClass = new AstClass(name(ParseErrorType.EXP_CLASS_NAME));
 		astClass.pos(pos);
 
-		if (advanceIf(KeywordToken.EXTENDS)) {
+		if (advanceIf(KeywordTokenJS.EXTENDS)) {
 			astClass.parent = new AstGetScopeMember(name(ParseErrorType.EXP_CLASS_NAME));
 		}
 
@@ -180,16 +182,16 @@ public class ParserJS implements Parser {
 			int modifiers = AstFunction.MOD_CLASS;
 			var type = AstClassFunction.Type.METHOD;
 
-			if (advanceIf(KeywordToken.STATIC)) {
+			if (advanceIf(KeywordTokenJS.STATIC)) {
 				modifiers |= AstFunction.MOD_STATIC;
 			}
 
-			if (advanceIf(KeywordToken.GET)) {
+			if (advanceIf(KeywordTokenJS.GET)) {
 				modifiers |= AstFunction.MOD_GET;
 				type = AstClassFunction.Type.GETTER;
 			}
 
-			if (advanceIf(KeywordToken.SET)) {
+			if (advanceIf(KeywordTokenJS.SET)) {
 				modifiers |= AstFunction.MOD_SET;
 				type = AstClassFunction.Type.SETTER;
 			}
@@ -246,35 +248,40 @@ public class ParserJS implements Parser {
 
 		String label = "";
 
-		if (current.isName() && current.next.is(SymbolToken.COL) && (current.next.next.is(KeywordToken.WHILE) || current.next.next.is(KeywordToken.FOR))) {
+		if (current.isName() && current.next.is(SymbolToken.COL) && (current.next.next.is(KeywordTokenJS.WHILE) || current.next.next.is(KeywordTokenJS.FOR))) {
 			label = name(ParseErrorType.EXP_VAR_NAME);
 			advance();
 		}
 
-		if (advanceIf(KeywordToken.FOR)) {
+		if (advanceIf(KeywordTokenJS.FOR)) {
 			return forStatement(pos, label);
-		} else if (advanceIf(KeywordToken.IF)) {
+		} else if (advanceIf(KeywordTokenJS.IF)) {
 			return ifStatement(pos);
-		} else if (advanceIf(KeywordToken.RETURN)) {
+		} else if (advanceIf(KeywordTokenJS.RETURN)) {
 			return returnStatement(pos);
-		} else if (advanceIf(KeywordToken.BREAK)) {
+		} else if (advanceIf(KeywordTokenJS.BREAK)) {
 			return breakStatement(pos);
-		} else if (advanceIf(KeywordToken.CONTINUE)) {
+		} else if (advanceIf(KeywordTokenJS.CONTINUE)) {
 			return continueStatement(pos);
-		} else if (advanceIf(KeywordToken.WHILE)) {
+		} else if (advanceIf(KeywordTokenJS.WHILE)) {
 			return whileStatement(pos, label);
-		} else if (advanceIf(KeywordToken.TRY)) {
+		} else if (advanceIf(KeywordTokenJS.DO)) {
+			return doWhileStatement(pos, label);
+		} else if (advanceIf(KeywordTokenJS.TRY)) {
 			return tryStatement(pos);
-		} else if (advanceIf(KeywordToken.SWITCH)) {
+		} else if (advanceIf(KeywordTokenJS.SWITCH)) {
 			return switchStatement(pos);
-		} else if (advanceIf(KeywordToken.THROW)) {
+		} else if (advanceIf(KeywordTokenJS.THROW)) {
 			return throwStatement(pos);
 		} else if (current.is(SymbolToken.LC)) {
 			return block(false);
-		} else if ((current.is(KeywordToken.THIS) || current.is(KeywordToken.SUPER)) && current.next.is(SymbolToken.LP)) {
+		} else if ((current.is(KeywordTokenJS.THIS) || current.is(KeywordTokenJS.SUPER)) && current.next.is(SymbolToken.LP)) {
 			advance();
 			var arguments = arguments();
-			return (pos.is(KeywordToken.THIS) ? new AstThisStatement(arguments) : new AstSuperStatement(arguments)).pos(pos);
+			return (pos.is(KeywordTokenJS.THIS) ? new AstThisStatement(arguments) : new AstSuperStatement(arguments)).pos(pos);
+		} else if (advanceIf(KeywordTokenJS.DEBUGGER)) {
+			ignoreSemi();
+			return new AstDebugger().pos(pos);
 		}
 
 		return expressionStatement(true);
@@ -290,7 +297,7 @@ public class ParserJS implements Parser {
 			initializer = varDeclaration(current.prev);
 		} else if (current.isName() && current.next.is(FOR_OF_IN_TOKENS)) {
 			var n = name(ParseErrorType.EXP_VAR_NAME);
-			initializer = new AstSingleDeclareStatement(KeywordToken.LET, new AstParam(n));
+			initializer = new AstSingleDeclareStatement(KeywordTokenJS.LET, new AstParam(n));
 		} else {
 			initializer = expressionStatement(false);
 		}
@@ -310,7 +317,7 @@ public class ParserJS implements Parser {
 				throw new ParseError(pos, ParseErrorType.EXP_INIT);
 			}
 
-			boolean of = current.prev.is(KeywordToken.OF);
+			boolean of = current.prev.is(KeywordTokenJS.OF);
 
 			var from = expression();
 
@@ -349,7 +356,7 @@ public class ParserJS implements Parser {
 		var ifTrue = statementBody();
 		Interpretable ifFalse = null;
 
-		if (advanceIf(KeywordToken.ELSE)) {
+		if (advanceIf(KeywordTokenJS.ELSE)) {
 			ifFalse = statementBody();
 		}
 
@@ -392,10 +399,10 @@ public class ParserJS implements Parser {
 	}
 
 	private Interpretable varDeclaration(PositionedToken c) {
-		return varDeclaration((StaticToken) c.token, c);
+		return varDeclaration((DeclaringToken) c.token, c);
 	}
 
-	private Interpretable varDeclaration(StaticToken type, TokenPosSupplier pos) {
+	private Interpretable varDeclaration(DeclaringToken type, TokenPosSupplier pos) {
 		var list = new ArrayList<AstParam>(1);
 
 		do {
@@ -426,19 +433,29 @@ public class ParserJS implements Parser {
 		return new AstWhile(condition, body, label).pos(pos);
 	}
 
+	private Interpretable doWhileStatement(PositionedToken pos, String label) {
+		var body = block(false);
+		consume(KeywordTokenJS.WHILE, ParseErrorType.EXP_TOKEN.format("while"));
+		consume(SymbolToken.LP, ParseErrorType.EXP_LP_WHILE_COND);
+		var condition = expression();
+		consume(SymbolToken.RP, ParseErrorType.EXP_RP_WHILE_COND);
+		ignoreSemi();
+		return new AstDoWhile(condition, body, label).pos(pos);
+	}
+
 	private Interpretable tryStatement(PositionedToken pos) {
 		var tryBlock = block(false);
 		AstTry.AstCatch catchBlock = null;
 		Interpretable finallyBlock = null;
 
-		if (advanceIf(KeywordToken.CATCH)) {
+		if (advanceIf(KeywordTokenJS.CATCH)) {
 			consume(SymbolToken.LP, ParseErrorType.EXP_LP_ARGS);
 			var name = name(ParseErrorType.EXP_ARG_NAME);
 			consume(SymbolToken.RP, ParseErrorType.EXP_RP_ARGS);
 			catchBlock = new AstTry.AstCatch(name, block(false));
 		}
 
-		if (advanceIf(KeywordToken.FINALLY)) {
+		if (advanceIf(KeywordTokenJS.FINALLY)) {
 			finallyBlock = block(false);
 		}
 
@@ -457,18 +474,18 @@ public class ParserJS implements Parser {
 		while (!current.is(SymbolToken.RC)) {
 			var cpos = current;
 
-			if (cpos.is(KeywordToken.CASE) || cpos.is(KeywordToken.DEFAULT)) {
+			if (cpos.is(KeywordTokenJS.CASE) || cpos.is(KeywordTokenJS.DEFAULT)) {
 				advance();
-				var value = cpos.is(KeywordToken.CASE) ? expression() : null;
+				var value = cpos.is(KeywordTokenJS.CASE) ? expression() : null;
 				consume(SymbolToken.COL, ParseErrorType.EXP_COL_CASE);
 
 				var stmts = new ArrayList<Interpretable>();
 
-				while (!current.is(SymbolToken.RC) && !current.is(KeywordToken.CASE) && !current.is(KeywordToken.DEFAULT)) {
+				while (!current.is(SymbolToken.RC) && !current.is(KeywordTokenJS.CASE) && !current.is(KeywordTokenJS.DEFAULT)) {
 					stmts.add(declaration());
 				}
 
-				if (cpos.is(KeywordToken.CASE)) {
+				if (cpos.is(KeywordTokenJS.CASE)) {
 					cases.add(new AstSwitch.AstCase(value, AstInterpretableGroup.optimized(stmts)));
 				} else {
 					defaultCase = new AstSwitch.AstCase(value, AstInterpretableGroup.optimized(stmts));
@@ -677,9 +694,9 @@ public class ParserJS implements Parser {
 			ast.node = right;
 			ast.pos(operator);
 			return ast;
-		} else if (advanceIf(KeywordToken.TYPEOF)) {
+		} else if (advanceIf(KeywordTokenJS.TYPEOF)) {
 			return new AstTypeOf(unary());
-		} else if (advanceIf(KeywordToken.DELETE)) {
+		} else if (advanceIf(KeywordTokenJS.DELETE)) {
 			var pos = current.prev;
 			var expr = unary();
 
@@ -709,7 +726,7 @@ public class ParserJS implements Parser {
 	}
 
 	private Evaluable call() {
-		var newToken = current.is(KeywordToken.NEW) ? advance() : null;
+		var newToken = current.is(KeywordTokenJS.NEW) ? advance() : null;
 
 		var expr = primary();
 
@@ -778,11 +795,11 @@ public class ParserJS implements Parser {
 			}
 
 			return literal;
-		} else if (advanceIf(KeywordToken.SUPER)) {
+		} else if (advanceIf(KeywordTokenJS.SUPER)) {
 			return new AstSuperExpression().pos(pos);
-		} else if (advanceIf(KeywordToken.THIS)) {
+		} else if (advanceIf(KeywordTokenJS.THIS)) {
 			return new AstThisExpression().pos(pos);
-		} else if (advanceIf(KeywordToken.FUNCTION)) {
+		} else if (advanceIf(KeywordTokenJS.FUNCTION)) {
 			return functionExpression();
 		} else if (current.isName()) { // handle all keywords before this
 			var name = name(ParseErrorType.EXP_VAR_NAME);
@@ -841,10 +858,10 @@ public class ParserJS implements Parser {
 			while (!current.is(SymbolToken.RC)) {
 				int flags = 0;
 
-				if ((current.is(KeywordToken.GET) || current.is(KeywordToken.SET) && current.next.isName() && current.next.next.is(SymbolToken.LP))) {
-					if (advanceIf(KeywordToken.GET)) {
+				if ((current.is(KeywordTokenJS.GET) || current.is(KeywordTokenJS.SET) && current.next.isName() && current.next.next.is(SymbolToken.LP))) {
+					if (advanceIf(KeywordTokenJS.GET)) {
 						flags |= AstFunction.MOD_GET;
-					} else if (advanceIf(KeywordToken.SET)) {
+					} else if (advanceIf(KeywordTokenJS.SET)) {
 						flags |= AstFunction.MOD_SET;
 					}
 				}
@@ -930,9 +947,9 @@ public class ParserJS implements Parser {
 	private Evaluable functionExpression() {
 		int flags = 0;
 
-		if (advanceIf(KeywordToken.GET)) {
+		if (advanceIf(KeywordTokenJS.GET)) {
 			flags |= AstFunction.MOD_GET;
-		} else if (advanceIf(KeywordToken.SET)) {
+		} else if (advanceIf(KeywordTokenJS.SET)) {
 			flags |= AstFunction.MOD_SET;
 		}
 
@@ -953,7 +970,7 @@ public class ParserJS implements Parser {
 		return c;
 	}
 
-	private boolean advanceIf(StaticToken token) {
+	private boolean advanceIf(Token token) {
 		if (current.is(token)) {
 			advance();
 			return true;
@@ -962,7 +979,7 @@ public class ParserJS implements Parser {
 		return false;
 	}
 
-	private boolean advanceIf(StaticToken[] token) {
+	private boolean advanceIf(Token[] token) {
 		if (current.is(token)) {
 			advance();
 			return true;
@@ -977,7 +994,7 @@ public class ParserJS implements Parser {
 		return s;
 	}
 
-	private void consume(StaticToken token, ParseErrorMessage error) {
+	private void consume(Token token, ParseErrorMessage error) {
 		if (current.is(token)) {
 			advance();
 		} else {

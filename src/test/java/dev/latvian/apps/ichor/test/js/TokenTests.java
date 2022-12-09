@@ -1,9 +1,9 @@
 package dev.latvian.apps.ichor.test.js;
 
 import dev.latvian.apps.ichor.error.TokenStreamError;
+import dev.latvian.apps.ichor.js.KeywordTokenJS;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
 import dev.latvian.apps.ichor.token.BooleanToken;
-import dev.latvian.apps.ichor.token.KeywordToken;
 import dev.latvian.apps.ichor.token.NameToken;
 import dev.latvian.apps.ichor.token.NumberToken;
 import dev.latvian.apps.ichor.token.StringToken;
@@ -99,7 +99,7 @@ public class TokenTests {
 
 	@Test
 	public void var() {
-		testTokenStream("let x = 20;", KeywordToken.LET, new NameToken("x"), SymbolToken.SET, NumberToken.of(20), SymbolToken.SEMI);
+		testTokenStream("let x = 20;", KeywordTokenJS.LET, new NameToken("x"), SymbolToken.SET, NumberToken.of(20), SymbolToken.SEMI);
 	}
 
 	@Test
@@ -115,10 +115,10 @@ public class TokenTests {
 						      console.print("X: " + x)
 						    }
 						""",
-				KeywordToken.LET, new NameToken("x"), SymbolToken.SET, NumberToken.of(4.444), SymbolToken.SEMI,
-				KeywordToken.WHILE, SymbolToken.LP, BooleanToken.TRUE, SymbolToken.RP, SymbolToken.LC,
-				KeywordToken.IF, SymbolToken.LP, SymbolToken.ADD1, new NameToken("x"), SymbolToken.GTE, NumberToken.of(10), SymbolToken.RP, SymbolToken.LC,
-				KeywordToken.BREAK, SymbolToken.SEMI,
+				KeywordTokenJS.LET, new NameToken("x"), SymbolToken.SET, NumberToken.of(4.444), SymbolToken.SEMI,
+				KeywordTokenJS.WHILE, SymbolToken.LP, BooleanToken.TRUE, SymbolToken.RP, SymbolToken.LC,
+				KeywordTokenJS.IF, SymbolToken.LP, SymbolToken.ADD1, new NameToken("x"), SymbolToken.GTE, NumberToken.of(10), SymbolToken.RP, SymbolToken.LC,
+				KeywordTokenJS.BREAK, SymbolToken.SEMI,
 				SymbolToken.RC,
 				new NameToken("console"), SymbolToken.DOT, new NameToken("print"), SymbolToken.LP, StringToken.of("X: "), SymbolToken.ADD, new NameToken("x"), SymbolToken.RP,
 				SymbolToken.RC

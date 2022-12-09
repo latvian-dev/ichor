@@ -2,7 +2,6 @@ package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.error.TokenStreamError;
 import dev.latvian.apps.ichor.exit.EndOfFileExit;
-import dev.latvian.apps.ichor.token.KeywordToken;
 import dev.latvian.apps.ichor.token.NameToken;
 import dev.latvian.apps.ichor.token.NumberToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
@@ -25,10 +24,10 @@ public class TokenStreamJS implements TokenStream {
 			SymbolToken.LP,
 			SymbolToken.SET,
 			SymbolToken.ARROW,
-			KeywordToken.RETURN,
-			KeywordToken.TYPEOF,
-			KeywordToken.IN,
-			KeywordToken.OF
+			KeywordTokenJS.RETURN,
+			KeywordTokenJS.TYPEOF,
+			KeywordTokenJS.IN,
+			KeywordTokenJS.OF
 	);
 
 	private final TokenSource tokenSource;
@@ -45,7 +44,7 @@ public class TokenStreamJS implements TokenStream {
 	private PositionedToken currentToken;
 	private final Map<String, NumberToken> numberTokenCache;
 	private final Map<String, StringToken> stringTokenCache;
-	private final Map<String, NameToken> nameTokenCache;
+	private final Map<String, Token> nameTokenCache;
 	private final Stack<SymbolToken> depth;
 	private SymbolToken currentDepth;
 	private long timeoutTime;
@@ -76,7 +75,7 @@ public class TokenStreamJS implements TokenStream {
 		return stringTokenCache.computeIfAbsent(s, StringToken::of);
 	}
 
-	private NameToken makeName(String s) {
+	private Token makeName(String s) {
 		return nameTokenCache.computeIfAbsent(s, NameToken::new);
 	}
 
@@ -323,8 +322,8 @@ public class TokenStreamJS implements TokenStream {
 			}
 
 			var nameStr = new String(input, p, len);
-			var k = KeywordToken.MAP.get(nameStr);
-			return k != null ? k.toLiteralOrSelf() : makeName(nameStr);
+			var k = KeywordTokenJS.CACHE.get(nameStr);
+			return k != null ? k : makeName(nameStr);
 		} else {
 			throw error("Unexpected token: " + t);
 		}

@@ -16,19 +16,20 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 public abstract class Context {
-	public Debugger debugger = null;
+	public Debugger debugger;
+	public final List<Prototype> safePrototypes;
 	public Prototype stringPrototype;
 	public Prototype numberPrototype;
 	public Prototype booleanPrototype;
 	public Prototype listPrototype;
 	public Prototype mapPrototype;
-	public final List<Prototype> safePrototypes;
 	private Map<Class<?>, Prototype> classPrototypeCache;
 	private Map<String, Object> properties;
 	public Executor timeoutExecutor;
 	public Executor timeoutExecutorFinal;
 
 	public Context() {
+		debugger = Debugger.DEFAULT;
 		safePrototypes = new ArrayList<>();
 	}
 

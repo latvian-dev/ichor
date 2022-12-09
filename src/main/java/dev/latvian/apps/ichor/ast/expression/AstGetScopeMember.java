@@ -27,22 +27,13 @@ public class AstGetScopeMember extends AstGetBase {
 			throw new ScriptError("Member " + name + " not found");
 		}
 
-		var cx = scope.getContext();
-
-		if (cx.debugger != null) {
-			cx.debugger.get(scope, this, r);
-		}
-
+		scope.getContext().debugger.get(scope, this, r);
 		return r;
 	}
 
 	@Override
 	public void set(Scope scope, Object value) {
-		var cx = scope.getContext();
-
-		if (cx.debugger != null) {
-			cx.debugger.set(scope, this, value);
-		}
+		scope.getContext().debugger.set(scope, this, value);
 
 		if (!scope.setMember(name, value, AssignType.NONE)) {
 			throw new ScriptError("Member " + name + " not found");
@@ -51,11 +42,7 @@ public class AstGetScopeMember extends AstGetBase {
 
 	@Override
 	public boolean delete(Scope scope) {
-		var cx = scope.getContext();
-
-		if (cx.debugger != null) {
-			cx.debugger.delete(scope, this);
-		}
+		scope.getContext().debugger.delete(scope, this);
 
 		if (scope.deleteDeclaredMember(name) == Special.NOT_FOUND) {
 			throw new ScriptError("Member " + name + " not found");

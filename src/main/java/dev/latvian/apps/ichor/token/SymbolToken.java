@@ -34,7 +34,7 @@ import dev.latvian.apps.ichor.error.ParseErrorType;
 import dev.latvian.apps.ichor.util.EvaluableFactory;
 import org.jetbrains.annotations.Nullable;
 
-public enum SymbolToken implements StaticToken, BinaryOpToken {
+public enum SymbolToken implements Token, BinaryOpToken {
 	DOT("."), // dot
 	DDOT(".."), // double dot
 	TDOT("..."), // triple dot

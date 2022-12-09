@@ -22,25 +22,16 @@ public class AstGetByNameOptional extends AstGetByName {
 		var cx = scope.getContext();
 		var self = from.eval(scope);
 		var p = cx.getPrototype(self);
-
-		if (cx.debugger != null) {
-			cx.debugger.pushSelf(scope, self);
-		}
+		cx.debugger.pushSelf(scope, self);
 
 		var r = p.get(scope, self, name);
 
 		if (Special.isInvalid(r)) {
-			if (cx.debugger != null) {
-				cx.debugger.get(scope, this, "undefined");
-			}
-
+			cx.debugger.get(scope, this, "undefined");
 			return Special.UNDEFINED;
 		}
 
-		if (cx.debugger != null) {
-			cx.debugger.get(scope, this, r);
-		}
-
+		cx.debugger.get(scope, this, r);
 		return r;
 	}
 }

@@ -54,10 +54,7 @@ public abstract class AstCallBase extends AstExpression implements CallableAst {
 
 		var self = evalSelf(scope);
 		var cx = scope.getContext();
-
-		if (cx.debugger != null) {
-			cx.debugger.pushSelf(scope, self);
-		}
+		cx.debugger.pushSelf(scope, self);
 
 		Object r;
 
@@ -71,10 +68,7 @@ public abstract class AstCallBase extends AstExpression implements CallableAst {
 			throw new ScriptError("Cannot call " + calleeName());
 		}
 
-		if (cx.debugger != null) {
-			cx.debugger.call(scope, calleeName(), arguments, r);
-		}
-
+		cx.debugger.call(scope, this, r);
 		return r;
 	}
 

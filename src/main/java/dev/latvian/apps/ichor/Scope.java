@@ -60,10 +60,7 @@ public class Scope {
 			} else {
 				slot.value = value;
 				// slot.prototype = null;
-
-				if (root.context.debugger != null) {
-					root.context.debugger.assignSet(this, name, value);
-				}
+				root.context.debugger.assignSet(this, name, value);
 			}
 		} else {
 			if (slot == null) {
@@ -79,10 +76,7 @@ public class Scope {
 			slot.value = value;
 			slot.immutable = type == AssignType.IMMUTABLE;
 			// slot.prototype = null;
-
-			if (root.context.debugger != null) {
-				root.context.debugger.assignNew(this, name, value);
-			}
+			root.context.debugger.assignNew(this, name, value);
 		}
 	}
 
@@ -202,11 +196,7 @@ public class Scope {
 	public Scope push(Object owner) {
 		var p = new Scope(this);
 		p.owner = owner;
-
-		if (root.context.debugger != null) {
-			root.context.debugger.pushScope(this);
-		}
-
+		root.context.debugger.pushScope(this);
 		return p;
 	}
 

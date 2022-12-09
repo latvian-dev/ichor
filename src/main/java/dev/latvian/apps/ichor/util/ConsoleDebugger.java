@@ -1,9 +1,9 @@
 package dev.latvian.apps.ichor.util;
 
 import dev.latvian.apps.ichor.Debugger;
-import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
+import dev.latvian.apps.ichor.ast.expression.AstCallBase;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 
 public class ConsoleDebugger implements Debugger {
@@ -33,22 +33,22 @@ public class ConsoleDebugger implements Debugger {
 	}
 
 	@Override
-	public void call(Scope scope, Object callee, Evaluable[] args, Object returnValue) {
+	public void call(Scope scope, AstCallBase call, Object returnValue) {
 		var sb = new AstStringBuilder();
 		sb.append("[DEBUG] ");
 		sb.append("  ".repeat(scope.getDepth()));
 		sb.append("* Call => ");
-		sb.append(callee);
+		sb.append(call.calleeName());
 		sb.append('(');
 
-		for (int i = 0; i < args.length; i++) {
+		for (int i = 0; i < call.arguments.length; i++) {
 			if (i > 0) {
 				sb.append(',');
 			}
 
-			sb.append(args[i]);
+			sb.append(call.arguments[i]);
 			sb.append('=');
-			sb.append(args[i].evalString(scope));
+			sb.append(call.arguments[i].evalString(scope));
 		}
 
 		sb.append(") = ");

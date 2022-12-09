@@ -32,10 +32,7 @@ public class AstGetByIndex extends AstGetFrom {
 		var cx = scope.getContext();
 		var self = from.eval(scope);
 		var p = cx.getPrototype(self);
-
-		if (cx.debugger != null) {
-			cx.debugger.pushSelf(scope, self);
-		}
+		cx.debugger.pushSelf(scope, self);
 
 		var r = p.get(scope, self, index);
 
@@ -43,10 +40,7 @@ public class AstGetByIndex extends AstGetFrom {
 			throw new ScriptError("Cannot find " + this + " of " + p);
 		}
 
-		if (cx.debugger != null) {
-			cx.debugger.get(scope, this, r);
-		}
-
+		cx.debugger.get(scope, this, r);
 		return r;
 	}
 
@@ -55,16 +49,9 @@ public class AstGetByIndex extends AstGetFrom {
 		var cx = scope.getContext();
 		var self = from.eval(scope);
 		var p = cx.getPrototype(self);
-
-		if (cx.debugger != null) {
-			cx.debugger.pushSelf(scope, self);
-		}
-
+		cx.debugger.pushSelf(scope, self);
 		p.set(scope, self, index, value);
-
-		if (cx.debugger != null) {
-			cx.debugger.set(scope, this, value);
-		}
+		cx.debugger.set(scope, this, value);
 	}
 
 	@Override
@@ -72,17 +59,9 @@ public class AstGetByIndex extends AstGetFrom {
 		var cx = scope.getContext();
 		var self = from.eval(scope);
 		var p = cx.getPrototype(self);
-
-		if (cx.debugger != null) {
-			cx.debugger.pushSelf(scope, self);
-		}
-
+		cx.debugger.pushSelf(scope, self);
 		p.delete(scope, self, index);
-
-		if (cx.debugger != null) {
-			cx.debugger.delete(scope, this);
-		}
-
+		cx.debugger.delete(scope, this);
 		return true;
 	}
 }

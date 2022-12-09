@@ -3,6 +3,7 @@ package dev.latvian.apps.ichor.error;
 public enum ParseErrorType implements ParseErrorMessage {
 	INVALID_TARGET("Invalid assignment target"),
 	INVALID_BINARY("'%s' is not a binary operator"),
+	EXP_TOKEN("Expected '%s' token"),
 	EXP_EXPR("Expected expression, got '%s' instead"),
 	EXP_INIT("Expected initializer"),
 	EXP_FUNC_NAME("Expected function name"),

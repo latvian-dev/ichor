@@ -4,15 +4,14 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.ast.expression.AstParam;
-import dev.latvian.apps.ichor.token.KeywordToken;
-import dev.latvian.apps.ichor.token.StaticToken;
+import dev.latvian.apps.ichor.token.DeclaringToken;
 import dev.latvian.apps.ichor.util.AssignType;
 
 public class AstMultiDeclareStatement extends AstStatement {
-	public final StaticToken assignToken;
+	public final DeclaringToken assignToken;
 	public final AstParam[] variables;
 
-	public AstMultiDeclareStatement(StaticToken assignToken, AstParam[] variables) {
+	public AstMultiDeclareStatement(DeclaringToken assignToken, AstParam[] variables) {
 		this.assignToken = assignToken;
 		this.variables = variables;
 	}
@@ -39,7 +38,7 @@ public class AstMultiDeclareStatement extends AstStatement {
 	@Override
 	public void interpret(Scope scope) {
 		for (AstParam v : variables) {
-			scope.declareParam(v, assignToken == KeywordToken.CONST ? AssignType.IMMUTABLE : AssignType.MUTABLE);
+			scope.declareParam(v, assignToken.isConst() ? AssignType.IMMUTABLE : AssignType.MUTABLE);
 		}
 	}
 }

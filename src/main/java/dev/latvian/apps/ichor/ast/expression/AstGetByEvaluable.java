@@ -32,10 +32,7 @@ public class AstGetByEvaluable extends AstGetFrom {
 		var cx = scope.getContext();
 		var self = from.eval(scope);
 		var p = cx.getPrototype(self);
-
-		if (cx.debugger != null) {
-			cx.debugger.pushSelf(scope, self);
-		}
+		cx.debugger.pushSelf(scope, self);
 
 		var k = key.eval(scope);
 
@@ -51,10 +48,7 @@ public class AstGetByEvaluable extends AstGetFrom {
 			throw new ScriptError("Cannot find " + this + " of " + p);
 		}
 
-		if (cx.debugger != null) {
-			cx.debugger.get(scope, this, r);
-		}
-
+		cx.debugger.get(scope, this, r);
 		return r;
 	}
 
@@ -63,10 +57,7 @@ public class AstGetByEvaluable extends AstGetFrom {
 		var cx = scope.getContext();
 		var self = from.eval(scope);
 		var p = cx.getPrototype(self);
-
-		if (cx.debugger != null) {
-			cx.debugger.pushSelf(scope, self);
-		}
+		cx.debugger.pushSelf(scope, self);
 
 		var k = key.eval(scope);
 
@@ -76,9 +67,7 @@ public class AstGetByEvaluable extends AstGetFrom {
 			p.set(scope, self, scope.getContext().asString(scope, k), value);
 		}
 
-		if (cx.debugger != null) {
-			cx.debugger.set(scope, this, value);
-		}
+		cx.debugger.set(scope, this, value);
 	}
 
 	@Override
@@ -86,10 +75,7 @@ public class AstGetByEvaluable extends AstGetFrom {
 		var cx = scope.getContext();
 		var self = from.eval(scope);
 		var p = cx.getPrototype(self);
-
-		if (cx.debugger != null) {
-			cx.debugger.pushSelf(scope, self);
-		}
+		cx.debugger.pushSelf(scope, self);
 
 		var k = key.eval(scope);
 
@@ -99,10 +85,7 @@ public class AstGetByEvaluable extends AstGetFrom {
 			p.delete(scope, self, scope.getContext().asString(scope, k));
 		}
 
-		if (cx.debugger != null) {
-			cx.debugger.delete(scope, this);
-		}
-
+		cx.debugger.delete(scope, this);
 		return true;
 	}
 }
