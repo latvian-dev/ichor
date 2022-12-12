@@ -5,6 +5,7 @@ import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.ast.Ast;
 import dev.latvian.apps.ichor.ast.CallableAst;
+import dev.latvian.apps.ichor.ast.expression.AstAwait;
 import dev.latvian.apps.ichor.ast.expression.AstBoolean;
 import dev.latvian.apps.ichor.ast.expression.AstClassFunction;
 import dev.latvian.apps.ichor.ast.expression.AstFunction;
@@ -132,11 +133,17 @@ public class ParserJS implements Parser {
 	private Interpretable declaration() {
 		var pos = current;
 
+		int funcFlags = 0;
+
+		if (advanceIf(KeywordTokenJS.ASYNC)) {
+			funcFlags |= AstFunction.MOD_ASYNC;
+		}
+
 		if (advanceIf(CLASS_TOKENS)) {
 			return classDeclaration(pos);
 		} else if (advanceIf(KeywordTokenJS.FUNCTION)) {
 			var param = new AstParam(name(ParseErrorType.EXP_FUNC_NAME));
-			param.defaultValue = function(null, null, 0);
+			param.defaultValue = function(null, null, funcFlags);
 			((AstFunction) param.defaultValue).functionName = param.name;
 			ignoreSemi();
 			return new AstSingleDeclareStatement(KeywordTokenJS.CONST, param).pos(pos);
@@ -705,6 +712,10 @@ public class ParserJS implements Parser {
 			} else {
 				return new AstBoolean(false).pos(pos);
 			}
+		} else if (advanceIf(KeywordTokenJS.AWAIT)) {
+			var pos = current.prev;
+			var expr = unary();
+			return new AstAwait(expr).pos(pos);
 		}
 
 		return call();
@@ -795,19 +806,28 @@ public class ParserJS implements Parser {
 			}
 
 			return literal;
-		} else if (advanceIf(KeywordTokenJS.SUPER)) {
+		}
+
+		int funcFlags = 0;
+
+		if (advanceIf(KeywordTokenJS.ASYNC)) {
+			funcFlags |= AstFunction.MOD_ASYNC;
+		}
+
+		if (advanceIf(KeywordTokenJS.SUPER)) {
 			return new AstSuperExpression().pos(pos);
 		} else if (advanceIf(KeywordTokenJS.THIS)) {
 			return new AstThisExpression().pos(pos);
 		} else if (advanceIf(KeywordTokenJS.FUNCTION)) {
-			return functionExpression();
+			return functionExpression(funcFlags);
 		} else if (current.isName()) { // handle all keywords before this
 			var name = name(ParseErrorType.EXP_VAR_NAME);
 
 			if (advanceIf(SymbolToken.ARROW)) {
+				funcFlags |= AstFunction.MOD_ARROW;
 				var apos = current.prev;
 				var body = block(true);
-				return new AstFunction(new AstParam[]{new AstParam(name)}, body, AstFunction.MOD_ARROW).pos(apos);
+				return new AstFunction(new AstParam[]{new AstParam(name)}, body, funcFlags).pos(apos);
 			} else {
 				//current = pos; // required to jump back because x = y statement and default param look the same
 				//advance();
@@ -815,12 +835,14 @@ public class ParserJS implements Parser {
 			}
 		} else if (advanceIf(SymbolToken.LP)) {
 			if (current.is(SymbolToken.RP)) {
+				funcFlags |= AstFunction.MOD_ARROW;
 				advance();
 				consume(SymbolToken.ARROW, ParseErrorType.EXP_ARROW);
 
 				var body = block(true);
-				return new AstFunction(Empty.AST_PARAMS, body, AstFunction.MOD_ARROW).pos(pos);
+				return new AstFunction(Empty.AST_PARAMS, body, funcFlags).pos(pos);
 			} else if (current.isName() && (current.next.is(SymbolToken.RP) && current.next.next.is(SymbolToken.ARROW) || current.next.is(SymbolToken.COMMA))) {
+				funcFlags |= AstFunction.MOD_ARROW;
 				var list = new ArrayList<AstParam>(1);
 
 				do {
@@ -830,7 +852,7 @@ public class ParserJS implements Parser {
 				consume(SymbolToken.ARROW, ParseErrorType.EXP_ARROW);
 
 				var body = block(true);
-				return new AstFunction(list.toArray(Empty.AST_PARAMS), body, AstFunction.MOD_ARROW).pos(pos);
+				return new AstFunction(list.toArray(Empty.AST_PARAMS), body, funcFlags).pos(pos);
 			}
 
 			// var lp = previous();
@@ -944,9 +966,7 @@ public class ParserJS implements Parser {
 		throw new ParseError(pos, ParseErrorType.EXP_EXPR.format(pos.token));
 	}
 
-	private Evaluable functionExpression() {
-		int flags = 0;
-
+	private Evaluable functionExpression(int flags) {
 		if (advanceIf(KeywordTokenJS.GET)) {
 			flags |= AstFunction.MOD_GET;
 		} else if (advanceIf(KeywordTokenJS.SET)) {

@@ -42,8 +42,8 @@ public interface KeywordTokenJS {
 	DeclaringToken VAR = (DeclaringToken) cache(new DeclaringToken("var", false, false));
 
 	Token AS = cache("as"); // TODO
-	Token ASYNC = cache("async"); // TODO
-	Token AWAIT = cache("await"); // TODO
+	Token ASYNC = cache("async");
+	Token AWAIT = cache("await");
 	Token BREAK = cache("break");
 	Token CASE = cache("case");
 	Token CATCH = cache("catch");

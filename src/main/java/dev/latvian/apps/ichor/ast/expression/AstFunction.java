@@ -19,6 +19,7 @@ public class AstFunction extends AstExpression implements PrototypeFunction, Com
 	public static final int MOD_SET = 8;
 	public static final int MOD_GET = 16;
 	public static final int MOD_CONSTRUCTOR = 32;
+	public static final int MOD_ASYNC = 64;
 
 	public final AstParam[] params;
 	public final Interpretable body;
