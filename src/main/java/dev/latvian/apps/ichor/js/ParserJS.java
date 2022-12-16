@@ -57,6 +57,7 @@ import dev.latvian.apps.ichor.error.ParseErrorMessage;
 import dev.latvian.apps.ichor.error.ParseErrorType;
 import dev.latvian.apps.ichor.token.DeclaringToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
+import dev.latvian.apps.ichor.token.StringToken;
 import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.token.TokenPosSupplier;
 import dev.latvian.apps.ichor.util.Empty;
@@ -885,12 +886,14 @@ public class ParserJS implements Parser {
 					}
 				}
 
-				var name = name(ParseErrorType.EXP_VAR_NAME);
+				var name = current.token instanceof StringToken str ? str.value() : name(ParseErrorType.EXP_VAR_NAME);
 
 				if (current.is(SymbolTokenJS.LP)) {
 					var func = function(null, null, flags);
 					func.functionName = name;
 					map.put(name, func);
+				} else if (current.is(SymbolTokenJS.COMMA)) {
+					map.put(name, new AstGetScopeMember(name).pos(current.prev));
 				} else {
 					consume(SymbolTokenJS.COL, ParseErrorType.EXP_COL_OBJECT);
 					map.put(name, expression());
