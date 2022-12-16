@@ -2,19 +2,19 @@ package dev.latvian.apps.ichor.token;
 
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Parser;
-import dev.latvian.apps.ichor.ast.expression.AstNumber;
+import dev.latvian.apps.ichor.ast.expression.AstDouble;
 
-public record NumberToken(double value) implements Token {
-	public static final NumberToken ZERO = new NumberToken(0.0);
-	public static final NumberToken ONE = new NumberToken(1.0);
+public record DoubleToken(double value) implements Token {
+	public static final DoubleToken ZERO = new DoubleToken(0.0);
+	public static final DoubleToken ONE = new DoubleToken(1.0);
 
-	public static NumberToken of(double num) {
+	public static DoubleToken of(double num) {
 		if (num == 0.0) {
 			return ZERO;
 		} else if (num == 1.0) {
 			return ONE;
 		} else {
-			return new NumberToken(num);
+			return new DoubleToken(num);
 		}
 	}
 
@@ -25,6 +25,6 @@ public record NumberToken(double value) implements Token {
 
 	@Override
 	public Evaluable toEvaluable(Parser parser, TokenPos pos) {
-		return new AstNumber(value).pos(pos);
+		return new AstDouble(value).pos(pos);
 	}
 }

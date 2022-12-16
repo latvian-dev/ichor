@@ -3,6 +3,7 @@ package dev.latvian.apps.ichor.error;
 public enum ParseErrorType implements ParseErrorMessage {
 	INVALID_TARGET("Invalid assignment target"),
 	INVALID_BINARY("'%s' is not a binary operator"),
+	INVALID_UNARY("'%s' is not a unary operator"),
 	EXP_TOKEN("Expected '%s' token"),
 	EXP_EXPR("Expected expression, got '%s' instead"),
 	EXP_INIT("Expected initializer"),
@@ -41,6 +42,7 @@ public enum ParseErrorType implements ParseErrorMessage {
 	METHOD_EXISTS("Method already defined"),
 	CONSTRUCTOR_EXISTS("Constructor already defined"),
 	EXPR_NOT_CALLABLE("Expression %s is not callable (%s)"),
+	MULTIPLE_VARARGS("Function can only have one vararg parameter"),
 
 	;
 

@@ -2,12 +2,11 @@ package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.error.TokenStreamError;
 import dev.latvian.apps.ichor.exit.EndOfFileExit;
+import dev.latvian.apps.ichor.token.DoubleToken;
 import dev.latvian.apps.ichor.token.NameToken;
-import dev.latvian.apps.ichor.token.NumberToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
 import dev.latvian.apps.ichor.token.RegExToken;
 import dev.latvian.apps.ichor.token.StringToken;
-import dev.latvian.apps.ichor.token.SymbolToken;
 import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.token.TokenPos;
 import dev.latvian.apps.ichor.token.TokenSource;
@@ -21,9 +20,9 @@ import java.util.regex.Pattern;
 
 public class TokenStreamJS implements TokenStream {
 	public static final Set<Token> LITERAL_PRE = Set.of(
-			SymbolToken.LP,
-			SymbolToken.SET,
-			SymbolToken.ARROW,
+			SymbolTokenJS.LP,
+			SymbolTokenJS.SET,
+			SymbolTokenJS.ARROW,
 			KeywordTokenJS.RETURN,
 			KeywordTokenJS.TYPEOF,
 			KeywordTokenJS.IN,
@@ -42,11 +41,11 @@ public class TokenStreamJS implements TokenStream {
 	private int tokenCount;
 	private PositionedToken rootToken;
 	private PositionedToken currentToken;
-	private final Map<String, NumberToken> numberTokenCache;
+	private final Map<String, DoubleToken> numberTokenCache;
 	private final Map<String, StringToken> stringTokenCache;
 	private final Map<String, Token> nameTokenCache;
-	private final Stack<SymbolToken> depth;
-	private SymbolToken currentDepth;
+	private final Stack<SymbolTokenJS> depth;
+	private SymbolTokenJS currentDepth;
 	private long timeoutTime;
 	private long timeout;
 
@@ -143,7 +142,7 @@ public class TokenStreamJS implements TokenStream {
 	}
 
 	private Token readToken() {
-		if (currentDepth == SymbolToken.TEMPLATE_LITERAL && peek(1) != '`' && !(peek(1) == '$' && peek(2) == '{')) {
+		if (currentDepth == SymbolTokenJS.TEMPLATE_LITERAL && peek(1) != '`' && !(peek(1) == '$' && peek(2) == '{')) {
 			var sb = new StringBuilder();
 
 			while (true) {
@@ -263,26 +262,26 @@ public class TokenStreamJS implements TokenStream {
 			return makeString(sb.toString());
 		}
 
-		var s = SymbolToken.read(this, t);
+		var s = SymbolTokenJS.read(this, t);
 
 		if (s != null) {
-			if (s == SymbolToken.TEMPLATE_LITERAL_VAR || s == SymbolToken.LC || s == SymbolToken.LP || s == SymbolToken.LS) {
+			if (s == SymbolTokenJS.TEMPLATE_LITERAL_VAR || s == SymbolTokenJS.LC || s == SymbolTokenJS.LP || s == SymbolTokenJS.LS) {
 				depth.push(s);
 				currentDepth = s;
-			} else if (s == SymbolToken.RC || s == SymbolToken.RP || s == SymbolToken.RS) {
+			} else if (s == SymbolTokenJS.RC || s == SymbolTokenJS.RP || s == SymbolTokenJS.RS) {
 				if (currentDepth == null || depth.isEmpty()) {
 					throw error("Unexpected closing bracket " + s);
 				}
 
-				test(SymbolToken.TEMPLATE_LITERAL_VAR, s, SymbolToken.RC);
-				test(SymbolToken.LC, s, SymbolToken.RC);
-				test(SymbolToken.LP, s, SymbolToken.RP);
-				test(SymbolToken.LS, s, SymbolToken.RS);
+				test(SymbolTokenJS.TEMPLATE_LITERAL_VAR, s, SymbolTokenJS.RC);
+				test(SymbolTokenJS.LC, s, SymbolTokenJS.RC);
+				test(SymbolTokenJS.LP, s, SymbolTokenJS.RP);
+				test(SymbolTokenJS.LS, s, SymbolTokenJS.RS);
 
 				depth.pop();
 				currentDepth = depth.isEmpty() ? null : depth.peek();
-			} else if (s == SymbolToken.TEMPLATE_LITERAL) {
-				if (currentDepth == SymbolToken.TEMPLATE_LITERAL) {
+			} else if (s == SymbolTokenJS.TEMPLATE_LITERAL) {
+				if (currentDepth == SymbolTokenJS.TEMPLATE_LITERAL) {
 					depth.pop();
 					currentDepth = depth.isEmpty() ? null : depth.peek();
 				} else {
@@ -297,7 +296,7 @@ public class TokenStreamJS implements TokenStream {
 		return readLiteral(t);
 	}
 
-	private void test(SymbolToken ifToken, SymbolToken symbol, SymbolToken expected) {
+	private void test(SymbolTokenJS ifToken, SymbolTokenJS symbol, SymbolTokenJS expected) {
 		if (currentDepth == ifToken && symbol != expected) {
 			throw error("Expected '" + ifToken + "' to be closed with '" + expected + "', got '" + symbol + "' instead");
 		}
@@ -366,7 +365,7 @@ public class TokenStreamJS implements TokenStream {
 		}
 
 		try {
-			num = new NumberToken(Double.parseDouble(numStr));
+			num = new DoubleToken(Double.parseDouble(numStr));
 			numberTokenCache.put(numStr, num);
 			return num;
 		} catch (Exception ex) {

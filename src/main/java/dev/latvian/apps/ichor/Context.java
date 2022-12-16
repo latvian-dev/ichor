@@ -171,7 +171,7 @@ public abstract class Context {
 		} else if (o instanceof Number) {
 			return ((Number) o).doubleValue() != 0D;
 		} else if (o instanceof CharSequence) {
-			return o.toString().equalsIgnoreCase("true");
+			return !o.toString().isEmpty();
 		} else if (o instanceof Evaluable) {
 			return ((Evaluable) o).evalBoolean(scope);
 		}
@@ -288,5 +288,19 @@ public abstract class Context {
 	@Override
 	public String toString() {
 		return "Context";
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T createInterface(Object object, Class<T> interfaceClass) {
+		if (object == null) {
+			return null;
+		} else if (interfaceClass.isInstance(object)) {
+			return (T) object;
+		} else if (object instanceof InterfaceFactory factory) {
+			// TODO: Try to use type wrapper before interface adapter
+			return factory.createInterface(this, interfaceClass);
+		}
+
+		throw new IllegalArgumentException(object + " is not an InterfaceFactory");
 	}
 }

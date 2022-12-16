@@ -1,7 +1,7 @@
 package dev.latvian.apps.ichor.java.info;
 
-import dev.latvian.apps.ichor.api.Hidden;
-import dev.latvian.apps.ichor.api.Remap;
+import dev.latvian.apps.ichor.Hidden;
+import dev.latvian.apps.ichor.Remap;
 import dev.latvian.apps.ichor.util.Signature;
 
 import java.lang.reflect.Method;

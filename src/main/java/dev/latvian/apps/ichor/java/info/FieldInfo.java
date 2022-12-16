@@ -1,6 +1,6 @@
 package dev.latvian.apps.ichor.java.info;
 
-import dev.latvian.apps.ichor.api.Remap;
+import dev.latvian.apps.ichor.Remap;
 
 import java.lang.reflect.Field;
 

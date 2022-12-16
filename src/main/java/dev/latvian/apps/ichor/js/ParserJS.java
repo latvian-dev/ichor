@@ -8,6 +8,7 @@ import dev.latvian.apps.ichor.ast.CallableAst;
 import dev.latvian.apps.ichor.ast.expression.AstAwait;
 import dev.latvian.apps.ichor.ast.expression.AstBoolean;
 import dev.latvian.apps.ichor.ast.expression.AstClassFunction;
+import dev.latvian.apps.ichor.ast.expression.AstDouble;
 import dev.latvian.apps.ichor.ast.expression.AstFunction;
 import dev.latvian.apps.ichor.ast.expression.AstGetBase;
 import dev.latvian.apps.ichor.ast.expression.AstGetByEvaluable;
@@ -18,7 +19,6 @@ import dev.latvian.apps.ichor.ast.expression.AstGetScopeMember;
 import dev.latvian.apps.ichor.ast.expression.AstList;
 import dev.latvian.apps.ichor.ast.expression.AstMap;
 import dev.latvian.apps.ichor.ast.expression.AstNew;
-import dev.latvian.apps.ichor.ast.expression.AstNumber;
 import dev.latvian.apps.ichor.ast.expression.AstParam;
 import dev.latvian.apps.ichor.ast.expression.AstSet;
 import dev.latvian.apps.ichor.ast.expression.AstSpread;
@@ -30,7 +30,6 @@ import dev.latvian.apps.ichor.ast.expression.AstThisExpression;
 import dev.latvian.apps.ichor.ast.expression.AstTypeOf;
 import dev.latvian.apps.ichor.ast.expression.unary.AstAdd1R;
 import dev.latvian.apps.ichor.ast.expression.unary.AstSub1R;
-import dev.latvian.apps.ichor.ast.expression.unary.AstUnary;
 import dev.latvian.apps.ichor.ast.statement.AstBlock;
 import dev.latvian.apps.ichor.ast.statement.AstBreak;
 import dev.latvian.apps.ichor.ast.statement.AstClass;
@@ -56,10 +55,8 @@ import dev.latvian.apps.ichor.ast.statement.AstWhile;
 import dev.latvian.apps.ichor.error.ParseError;
 import dev.latvian.apps.ichor.error.ParseErrorMessage;
 import dev.latvian.apps.ichor.error.ParseErrorType;
-import dev.latvian.apps.ichor.token.BinaryOpToken;
 import dev.latvian.apps.ichor.token.DeclaringToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
-import dev.latvian.apps.ichor.token.SymbolToken;
 import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.token.TokenPosSupplier;
 import dev.latvian.apps.ichor.util.Empty;
@@ -75,35 +72,20 @@ public class ParserJS implements Parser {
 	}
 
 	private static final Token[] VAR_TOKENS = {KeywordTokenJS.VAR, KeywordTokenJS.LET, KeywordTokenJS.CONST};
-	private static final Token[] UNARY_TOKENS = {SymbolToken.NOT, SymbolToken.ADD, SymbolToken.SUB, SymbolToken.BNOT, SymbolToken.ADD1, SymbolToken.SUB1};
+	private static final Token[] UNARY_TOKENS = {SymbolTokenJS.NOT, SymbolTokenJS.ADD, SymbolTokenJS.SUB, SymbolTokenJS.BNOT, SymbolTokenJS.ADD1, SymbolTokenJS.SUB1};
 	private static final Token[] CLASS_TOKENS = {KeywordTokenJS.CLASS, KeywordTokenJS.INTERFACE};
-	private static final BinaryOp BIN_NC = new BinaryOp(ParserJS::or, SymbolToken.NC);
-	private static final BinaryOp BIN_OR = new BinaryOp(ParserJS::and, SymbolToken.OR);
-	private static final BinaryOp BIN_AND = new BinaryOp(ParserJS::bitwiseOr, SymbolToken.AND);
-	private static final BinaryOp BIN_BITWISE_OR = new BinaryOp(ParserJS::bitwiseXor, SymbolToken.BOR);
-	private static final BinaryOp BIN_BITWISE_XOR = new BinaryOp(ParserJS::bitwiseAnd, SymbolToken.XOR);
-	private static final BinaryOp BIN_BITWISE_AND = new BinaryOp(ParserJS::equality, SymbolToken.BAND);
-	private static final BinaryOp BIN_EQUALITY = new BinaryOp(ParserJS::comparison, SymbolToken.EQ, SymbolToken.NEQ, SymbolToken.SEQ, SymbolToken.SNEQ);
-	private static final BinaryOp BIN_COMPARISON = new BinaryOp(ParserJS::shift, SymbolToken.LT, SymbolToken.GT, SymbolToken.LTE, SymbolToken.GTE, KeywordTokenJS.IN, KeywordTokenJS.INSTANCEOF);
-	private static final BinaryOp BIN_SHIFT = new BinaryOp(ParserJS::additive, SymbolToken.LSH, SymbolToken.RSH, SymbolToken.URSH);
-	private static final BinaryOp BIN_ADDITIVE = new BinaryOp(ParserJS::multiplicative, SymbolToken.ADD, SymbolToken.SUB);
-	private static final BinaryOp BIN_MULTIPLICATIVE = new BinaryOp(ParserJS::exponential, SymbolToken.MUL, SymbolToken.DIV, SymbolToken.MOD);
-	private static final BinaryOp BIN_EXPONENTIAL = new BinaryOp(ParserJS::unary, SymbolToken.POW);
-
-	private static final Token[] SET_OP_TOKENS = {
-			SymbolToken.ADD_SET,
-			SymbolToken.SUB_SET,
-			SymbolToken.MUL_SET,
-			SymbolToken.DIV_SET,
-			SymbolToken.MOD_SET,
-			SymbolToken.BOR_SET,
-			SymbolToken.BAND_SET,
-			SymbolToken.XOR_SET,
-			SymbolToken.LSH_SET,
-			SymbolToken.RSH_SET,
-			SymbolToken.URSH_SET,
-			SymbolToken.NC_SET,
-	};
+	private static final BinaryOp BIN_NC = new BinaryOp(ParserJS::or, SymbolTokenJS.NC);
+	private static final BinaryOp BIN_OR = new BinaryOp(ParserJS::and, SymbolTokenJS.OR);
+	private static final BinaryOp BIN_AND = new BinaryOp(ParserJS::bitwiseOr, SymbolTokenJS.AND);
+	private static final BinaryOp BIN_BITWISE_OR = new BinaryOp(ParserJS::bitwiseXor, SymbolTokenJS.BOR);
+	private static final BinaryOp BIN_BITWISE_XOR = new BinaryOp(ParserJS::bitwiseAnd, SymbolTokenJS.XOR);
+	private static final BinaryOp BIN_BITWISE_AND = new BinaryOp(ParserJS::equality, SymbolTokenJS.BAND);
+	private static final BinaryOp BIN_EQUALITY = new BinaryOp(ParserJS::comparison, SymbolTokenJS.EQ, SymbolTokenJS.NEQ, SymbolTokenJS.SEQ, SymbolTokenJS.SNEQ);
+	private static final BinaryOp BIN_COMPARISON = new BinaryOp(ParserJS::shift, SymbolTokenJS.LT, SymbolTokenJS.GT, SymbolTokenJS.LTE, SymbolTokenJS.GTE, KeywordTokenJS.IN, KeywordTokenJS.INSTANCEOF);
+	private static final BinaryOp BIN_SHIFT = new BinaryOp(ParserJS::additive, SymbolTokenJS.LSH, SymbolTokenJS.RSH, SymbolTokenJS.URSH);
+	private static final BinaryOp BIN_ADDITIVE = new BinaryOp(ParserJS::multiplicative, SymbolTokenJS.ADD, SymbolTokenJS.SUB);
+	private static final BinaryOp BIN_MULTIPLICATIVE = new BinaryOp(ParserJS::exponential, SymbolTokenJS.MUL, SymbolTokenJS.DIV, SymbolTokenJS.MOD);
+	private static final BinaryOp BIN_EXPONENTIAL = new BinaryOp(ParserJS::unary, SymbolTokenJS.POW);
 
 	private static final Token[] FOR_OF_IN_TOKENS = {KeywordTokenJS.OF, KeywordTokenJS.IN};
 
@@ -157,7 +139,7 @@ public class ParserJS implements Parser {
 	}
 
 	private void ignoreSemi() {
-		while (current.is(SymbolToken.SEMI)) {
+		while (current.is(SymbolTokenJS.SEMI)) {
 			advance();
 		}
 	}
@@ -165,7 +147,7 @@ public class ParserJS implements Parser {
 	private boolean ignoreComma() {
 		boolean found = false;
 
-		while (current.is(SymbolToken.COMMA)) {
+		while (current.is(SymbolTokenJS.COMMA)) {
 			advance();
 			found = true;
 		}
@@ -181,9 +163,9 @@ public class ParserJS implements Parser {
 			astClass.parent = new AstGetScopeMember(name(ParseErrorType.EXP_CLASS_NAME));
 		}
 
-		consume(SymbolToken.LC, ParseErrorType.EXP_LC_CLASS);
+		consume(SymbolTokenJS.LC, ParseErrorType.EXP_LC_CLASS);
 
-		while (!current.is(SymbolToken.RC)) {
+		while (!current.is(SymbolTokenJS.RC)) {
 			var fpos = current;
 
 			int modifiers = AstFunction.MOD_CLASS;
@@ -232,21 +214,21 @@ public class ParserJS implements Parser {
 			}
 		}
 
-		consume(SymbolToken.RC, ParseErrorType.EXP_RC_CLASS);
+		consume(SymbolTokenJS.RC, ParseErrorType.EXP_RC_CLASS);
 		return astClass;
 	}
 
 	private Evaluable[] arguments() {
-		consume(SymbolToken.LP, ParseErrorType.EXP_LP_ARGS);
+		consume(SymbolTokenJS.LP, ParseErrorType.EXP_LP_ARGS);
 
 		var list = new ArrayList<Evaluable>();
 
-		while (!current.is(SymbolToken.RP)) {
+		while (!current.is(SymbolTokenJS.RP)) {
 			list.add(expression());
 			ignoreComma();
 		}
 
-		consume(SymbolToken.RP, ParseErrorType.EXP_RP_ARGS);
+		consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_ARGS);
 		return list.toArray(Empty.EVALUABLES);
 	}
 
@@ -255,7 +237,7 @@ public class ParserJS implements Parser {
 
 		String label = "";
 
-		if (current.isName() && current.next.is(SymbolToken.COL) && (current.next.next.is(KeywordTokenJS.WHILE) || current.next.next.is(KeywordTokenJS.FOR))) {
+		if (current.isName() && current.next.is(SymbolTokenJS.COL) && (current.next.next.is(KeywordTokenJS.WHILE) || current.next.next.is(KeywordTokenJS.FOR))) {
 			label = name(ParseErrorType.EXP_VAR_NAME);
 			advance();
 		}
@@ -280,9 +262,9 @@ public class ParserJS implements Parser {
 			return switchStatement(pos);
 		} else if (advanceIf(KeywordTokenJS.THROW)) {
 			return throwStatement(pos);
-		} else if (current.is(SymbolToken.LC)) {
+		} else if (current.is(SymbolTokenJS.LC)) {
 			return block(false);
-		} else if ((current.is(KeywordTokenJS.THIS) || current.is(KeywordTokenJS.SUPER)) && current.next.is(SymbolToken.LP)) {
+		} else if ((current.is(KeywordTokenJS.THIS) || current.is(KeywordTokenJS.SUPER)) && current.next.is(SymbolTokenJS.LP)) {
 			advance();
 			var arguments = arguments();
 			return (pos.is(KeywordTokenJS.THIS) ? new AstThisStatement(arguments) : new AstSuperStatement(arguments)).pos(pos);
@@ -295,10 +277,10 @@ public class ParserJS implements Parser {
 	}
 
 	private Interpretable forStatement(PositionedToken pos, String label) {
-		consume(SymbolToken.LP, ParseErrorType.EXP_LP_FOR);
+		consume(SymbolTokenJS.LP, ParseErrorType.EXP_LP_FOR);
 
 		Interpretable initializer;
-		if (advanceIf(SymbolToken.SEMI)) {
+		if (advanceIf(SymbolTokenJS.SEMI)) {
 			initializer = null;
 		} else if (advanceIf(VAR_TOKENS)) {
 			initializer = varDeclaration(current.prev);
@@ -328,26 +310,26 @@ public class ParserJS implements Parser {
 
 			var from = expression();
 
-			consume(SymbolToken.RP, ParseErrorType.EXP_RP_FOR);
+			consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_FOR);
 			var body = statementBody();
 
 			return (of ? new AstForOf(name, from, body, label) : new AstForIn(name, from, body, label)).pos(pos);
 		} else {
-			consume(SymbolToken.SEMI, ParseErrorType.EXP_SEMI_FOR_INIT);
+			consume(SymbolTokenJS.SEMI, ParseErrorType.EXP_SEMI_FOR_INIT);
 		}
 
 		Evaluable condition = null;
-		if (!current.is(SymbolToken.SEMI)) {
+		if (!current.is(SymbolTokenJS.SEMI)) {
 			condition = expression();
 		}
-		consume(SymbolToken.SEMI, ParseErrorType.EXP_SEMI_FOR_COND);
+		consume(SymbolTokenJS.SEMI, ParseErrorType.EXP_SEMI_FOR_COND);
 
 		Interpretable increment = null;
-		if (!current.is(SymbolToken.RP)) {
+		if (!current.is(SymbolTokenJS.RP)) {
 			increment = expressionStatement(true);
 		}
 
-		consume(SymbolToken.RP, ParseErrorType.EXP_RP_FOR);
+		consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_FOR);
 		var body = statementBody();
 
 		ignoreSemi();
@@ -356,9 +338,9 @@ public class ParserJS implements Parser {
 	}
 
 	private Interpretable ifStatement(PositionedToken pos) {
-		consume(SymbolToken.LP, ParseErrorType.EXP_LP_IF_COND);
+		consume(SymbolTokenJS.LP, ParseErrorType.EXP_LP_IF_COND);
 		var condition = expression();
-		consume(SymbolToken.RP, ParseErrorType.EXP_RP_IF_COND);
+		consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_IF_COND);
 
 		var ifTrue = statementBody();
 		Interpretable ifFalse = null;
@@ -375,7 +357,7 @@ public class ParserJS implements Parser {
 	private Interpretable returnStatement(PositionedToken pos) {
 		Evaluable value = null;
 
-		if (!current.is(SymbolToken.SEMI) && !current.is(SymbolToken.RC)) {
+		if (!current.is(SymbolTokenJS.SEMI) && !current.is(SymbolTokenJS.RC)) {
 			value = expression();
 		}
 
@@ -416,7 +398,7 @@ public class ParserJS implements Parser {
 			var param = new AstParam(current.name(ParseErrorType.EXP_VAR_NAME));
 			advance();
 
-			if (advanceIf(SymbolToken.SET)) {
+			if (advanceIf(SymbolTokenJS.SET)) {
 				param.defaultValue = expression();
 			}
 
@@ -433,9 +415,9 @@ public class ParserJS implements Parser {
 	}
 
 	private Interpretable whileStatement(PositionedToken pos, String label) {
-		consume(SymbolToken.LP, ParseErrorType.EXP_LP_WHILE_COND);
+		consume(SymbolTokenJS.LP, ParseErrorType.EXP_LP_WHILE_COND);
 		var condition = expression();
-		consume(SymbolToken.RP, ParseErrorType.EXP_RP_WHILE_COND);
+		consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_WHILE_COND);
 		var body = statementBody();
 		return new AstWhile(condition, body, label).pos(pos);
 	}
@@ -443,9 +425,9 @@ public class ParserJS implements Parser {
 	private Interpretable doWhileStatement(PositionedToken pos, String label) {
 		var body = block(false);
 		consume(KeywordTokenJS.WHILE, ParseErrorType.EXP_TOKEN.format("while"));
-		consume(SymbolToken.LP, ParseErrorType.EXP_LP_WHILE_COND);
+		consume(SymbolTokenJS.LP, ParseErrorType.EXP_LP_WHILE_COND);
 		var condition = expression();
-		consume(SymbolToken.RP, ParseErrorType.EXP_RP_WHILE_COND);
+		consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_WHILE_COND);
 		ignoreSemi();
 		return new AstDoWhile(condition, body, label).pos(pos);
 	}
@@ -456,9 +438,9 @@ public class ParserJS implements Parser {
 		Interpretable finallyBlock = null;
 
 		if (advanceIf(KeywordTokenJS.CATCH)) {
-			consume(SymbolToken.LP, ParseErrorType.EXP_LP_ARGS);
+			consume(SymbolTokenJS.LP, ParseErrorType.EXP_LP_ARGS);
 			var name = name(ParseErrorType.EXP_ARG_NAME);
-			consume(SymbolToken.RP, ParseErrorType.EXP_RP_ARGS);
+			consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_ARGS);
 			catchBlock = new AstTry.AstCatch(name, block(false));
 		}
 
@@ -470,25 +452,25 @@ public class ParserJS implements Parser {
 	}
 
 	private Interpretable switchStatement(PositionedToken pos) {
-		consume(SymbolToken.LP, ParseErrorType.EXP_LP_ARGS);
+		consume(SymbolTokenJS.LP, ParseErrorType.EXP_LP_ARGS);
 		var condition = expression();
-		consume(SymbolToken.RP, ParseErrorType.EXP_RP_ARGS);
-		consume(SymbolToken.LC, ParseErrorType.EXP_LC_BLOCK);
+		consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_ARGS);
+		consume(SymbolTokenJS.LC, ParseErrorType.EXP_LC_BLOCK);
 
 		var cases = new ArrayList<AstSwitch.AstCase>(1);
 		AstSwitch.AstCase defaultCase = null;
 
-		while (!current.is(SymbolToken.RC)) {
+		while (!current.is(SymbolTokenJS.RC)) {
 			var cpos = current;
 
 			if (cpos.is(KeywordTokenJS.CASE) || cpos.is(KeywordTokenJS.DEFAULT)) {
 				advance();
 				var value = cpos.is(KeywordTokenJS.CASE) ? expression() : null;
-				consume(SymbolToken.COL, ParseErrorType.EXP_COL_CASE);
+				consume(SymbolTokenJS.COL, ParseErrorType.EXP_COL_CASE);
 
 				var stmts = new ArrayList<Interpretable>();
 
-				while (!current.is(SymbolToken.RC) && !current.is(KeywordTokenJS.CASE) && !current.is(KeywordTokenJS.DEFAULT)) {
+				while (!current.is(SymbolTokenJS.RC) && !current.is(KeywordTokenJS.CASE) && !current.is(KeywordTokenJS.DEFAULT)) {
 					stmts.add(declaration());
 				}
 
@@ -502,15 +484,15 @@ public class ParserJS implements Parser {
 			}
 		}
 
-		consume(SymbolToken.RC, ParseErrorType.EXP_RC_BLOCK);
+		consume(SymbolTokenJS.RC, ParseErrorType.EXP_RC_BLOCK);
 
 		return new AstSwitch(condition, cases.toArray(AstSwitch.AstCase.EMPTY), defaultCase).pos(pos);
 	}
 
 	private Interpretable throwStatement(PositionedToken pos) {
-		consume(SymbolToken.LP, ParseErrorType.EXP_LP_ARGS);
+		consume(SymbolTokenJS.LP, ParseErrorType.EXP_LP_ARGS);
 		var exception = expression();
-		consume(SymbolToken.RP, ParseErrorType.EXP_RP_ARGS);
+		consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_ARGS);
 		ignoreSemi();
 		return new AstThrow(exception).pos(pos);
 	}
@@ -527,15 +509,30 @@ public class ParserJS implements Parser {
 	}
 
 	private AstFunction function(@Nullable AstClass owner, @Nullable AstClassFunction.Type type, int modifiers) {
-		consume(SymbolToken.LP, ParseErrorType.EXP_LP_ARGS);
-		var parameters = new ArrayList<AstParam>();
-		if (!current.is(SymbolToken.RP)) {
+		boolean isArrow = (modifiers & AstFunction.MOD_ARROW) != 0;
+
+		consume(SymbolTokenJS.LP, ParseErrorType.EXP_LP_ARGS);
+		var parameters = new ArrayList<AstParam>(1);
+		if (!current.is(SymbolTokenJS.RP)) {
 			do {
+				if (advanceIf(SymbolTokenJS.TDOT)) {
+					if ((modifiers & AstFunction.MOD_VARARGS) == 0) {
+						modifiers |= AstFunction.MOD_VARARGS;
+					} else {
+						throw new ParseError(current.prev, ParseErrorType.MULTIPLE_VARARGS);
+					}
+				}
+
 				parameters.add(param());
 			} while (ignoreComma());
 		}
-		consume(SymbolToken.RP, ParseErrorType.EXP_RP_ARGS);
-		var body = block(false);
+		consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_ARGS);
+
+		if (isArrow) {
+			consume(SymbolTokenJS.ARROW, ParseErrorType.EXP_ARROW);
+		}
+
+		var body = block(isArrow);
 
 		if (owner != null) {
 			return new AstClassFunction(owner, parameters.toArray(Empty.AST_PARAMS), body, modifiers, type);
@@ -547,15 +544,15 @@ public class ParserJS implements Parser {
 	private Interpretable block(boolean forceReturn) {
 		var pos = current;
 
-		if (pos.is(SymbolToken.LC)) {
+		if (pos.is(SymbolTokenJS.LC)) {
 			advance();
 			var statements = new ArrayList<Interpretable>();
 
-			while (!current.is(SymbolToken.RC)) {
+			while (!current.is(SymbolTokenJS.RC)) {
 				statements.add(declaration());
 			}
 
-			consume(SymbolToken.RC, ParseErrorType.EXP_RC_BLOCK);
+			consume(SymbolTokenJS.RC, ParseErrorType.EXP_RC_BLOCK);
 			return new AstBlock(statements).pos(pos);
 		} else {
 			var statement = statement();
@@ -574,7 +571,7 @@ public class ParserJS implements Parser {
 
 	@Nullable
 	private Interpretable statementBody() {
-		if (advanceIf(SymbolToken.SEMI)) {
+		if (advanceIf(SymbolTokenJS.SEMI)) {
 			return null;
 		}
 
@@ -596,7 +593,7 @@ public class ParserJS implements Parser {
 		var expr = nc();
 		var pos = current;
 
-		if (advanceIf(SymbolToken.SET)) {
+		if (advanceIf(SymbolTokenJS.SET)) {
 			var value = expression();
 
 			if (expr instanceof AstGetBase get) {
@@ -604,11 +601,16 @@ public class ParserJS implements Parser {
 			}
 
 			throw new ParseError(pos, ParseErrorType.INVALID_TARGET);
-		} else if (advanceIf(SET_OP_TOKENS)) {
+		} else if (advanceIf(SymbolTokenJS.SET_OP_TOKENS)) {
 			var value = expression();
 
-			if (expr instanceof AstGetBase get && pos.token instanceof BinaryOpToken bin) {
-				var ast = bin.createBinaryAst(pos);
+			if (expr instanceof AstGetBase get) {
+				var ast = pos.token.createBinaryAst(pos);
+
+				if (ast == null) {
+					throw new ParseError(pos, ParseErrorType.INVALID_BINARY.format(pos.token));
+				}
+
 				ast.left = get;
 				ast.right = value;
 				ast.pos(pos);
@@ -616,9 +618,9 @@ public class ParserJS implements Parser {
 			}
 
 			throw new ParseError(pos, ParseErrorType.INVALID_TARGET);
-		} else if (advanceIf(SymbolToken.HOOK)) {
+		} else if (advanceIf(SymbolTokenJS.HOOK)) {
 			var ifTrue = expression();
-			consume(SymbolToken.COL, ParseErrorType.EXP_TERNARY_COL);
+			consume(SymbolTokenJS.COL, ParseErrorType.EXP_TERNARY_COL);
 			var ifFalse = expression();
 			return new AstTernary(expr, ifTrue, ifFalse).pos(pos);
 		}
@@ -632,14 +634,16 @@ public class ParserJS implements Parser {
 		while (advanceIf(binaryOp.tokens)) {
 			var operator = current.prev;
 			var right = binaryOp.next.apply(this);
+			var ast = operator.token.createBinaryAst(operator);
 
-			if (operator.token instanceof BinaryOpToken binaryOpToken) {
-				var ast = binaryOpToken.createBinaryAst(operator);
-				ast.left = expr;
-				ast.right = right;
-				ast.pos(operator);
-				expr = ast;
+			if (ast == null) {
+				throw new ParseError(operator, ParseErrorType.INVALID_BINARY.format(operator.token));
 			}
+
+			ast.left = expr;
+			ast.right = right;
+			ast.pos(operator);
+			expr = ast;
 		}
 
 		return expr;
@@ -697,7 +701,12 @@ public class ParserJS implements Parser {
 		if (advanceIf(UNARY_TOKENS)) {
 			var operator = current.prev;
 			var right = unary();
-			var ast = (AstUnary) ((SymbolToken) operator.token).astUnary.create();
+			var ast = operator.token.createUnaryAst(operator);
+
+			if (ast == null) {
+				throw new ParseError(operator, ParseErrorType.INVALID_UNARY.format(operator.token));
+			}
+
 			ast.node = right;
 			ast.pos(operator);
 			return ast;
@@ -724,12 +733,12 @@ public class ParserJS implements Parser {
 	private AstParam param() {
 		var param = new AstParam(name(ParseErrorType.EXP_ARG_NAME));
 
-		if (advanceIf(SymbolToken.COL)) {
+		if (advanceIf(SymbolTokenJS.COL)) {
 			name(ParseErrorType.EXP_TYPE_NAME);
 			// param type for TS
 		}
 
-		if (advanceIf(SymbolToken.SET)) {
+		if (advanceIf(SymbolTokenJS.SET)) {
 			param.defaultValue = expression();
 		}
 
@@ -744,7 +753,7 @@ public class ParserJS implements Parser {
 		while (true) {
 			var pos = current;
 
-			if (current.is(SymbolToken.LP)) {
+			if (current.is(SymbolTokenJS.LP)) {
 				var arguments = arguments();
 
 				if (newToken != null) {
@@ -758,34 +767,34 @@ public class ParserJS implements Parser {
 				} else {
 					throw new ParseError(pos, ParseErrorType.EXPR_NOT_CALLABLE.format(expr, expr.getClass().toString()));
 				}
-			} else if (advanceIf(SymbolToken.DOT)) {
+			} else if (advanceIf(SymbolTokenJS.DOT)) {
 				var name = name(ParseErrorType.EXP_NAME_DOT.format(current));
 				expr = new AstGetByName(expr, name).pos(pos);
-			} else if (advanceIf(SymbolToken.OC)) {
+			} else if (advanceIf(SymbolTokenJS.OC)) {
 				var name = name(ParseErrorType.EXP_NAME_OC);
 				expr = new AstGetByNameOptional(expr, name).pos(pos);
-			} else if (advanceIf(SymbolToken.ADD1)) {
+			} else if (advanceIf(SymbolTokenJS.ADD1)) {
 				var ast = new AstAdd1R();
 				ast.node = expr;
 				ast.pos(pos);
 				expr = ast;
-			} else if (advanceIf(SymbolToken.SUB1)) {
+			} else if (advanceIf(SymbolTokenJS.SUB1)) {
 				var ast = new AstSub1R();
 				ast.node = expr;
 				ast.pos(pos);
 				expr = ast;
-			} else if (advanceIf(SymbolToken.LS)) {
+			} else if (advanceIf(SymbolTokenJS.LS)) {
 				var keyo = expression();
 
 				if (keyo instanceof AstString str) {
 					expr = new AstGetByName(expr, str.value).pos(pos);
-				} else if (keyo instanceof AstNumber n) {
+				} else if (keyo instanceof AstDouble n) {
 					expr = new AstGetByIndex(expr, (int) n.value).pos(pos);
 				} else {
 					expr = new AstGetByEvaluable(expr, keyo).pos(pos);
 				}
 
-				consume(SymbolToken.RS, ParseErrorType.EXP_RS_KEY);
+				consume(SymbolTokenJS.RS, ParseErrorType.EXP_RS_KEY);
 			} else {
 				break;
 			}
@@ -823,7 +832,7 @@ public class ParserJS implements Parser {
 		} else if (current.isName()) { // handle all keywords before this
 			var name = name(ParseErrorType.EXP_VAR_NAME);
 
-			if (advanceIf(SymbolToken.ARROW)) {
+			if (advanceIf(SymbolTokenJS.ARROW)) {
 				funcFlags |= AstFunction.MOD_ARROW;
 				var apos = current.prev;
 				var body = block(true);
@@ -833,54 +842,42 @@ public class ParserJS implements Parser {
 				//advance();
 				return new AstGetScopeMember(name).pos(pos);
 			}
-		} else if (advanceIf(SymbolToken.LP)) {
-			if (current.is(SymbolToken.RP)) {
+		} else if (current.is(SymbolTokenJS.LP)) {
+			if (current.next.is(SymbolTokenJS.RP)) {
 				funcFlags |= AstFunction.MOD_ARROW;
+				return function(null, null, funcFlags).pos(pos);
+			} else if (current.next.isName() && (current.next.next.is(SymbolTokenJS.RP) && current.next.next.next.is(SymbolTokenJS.ARROW) || current.next.next.is(SymbolTokenJS.COMMA))) {
+				funcFlags |= AstFunction.MOD_ARROW;
+				return function(null, null, funcFlags).pos(pos);
+			} else {
 				advance();
-				consume(SymbolToken.ARROW, ParseErrorType.EXP_ARROW);
-
-				var body = block(true);
-				return new AstFunction(Empty.AST_PARAMS, body, funcFlags).pos(pos);
-			} else if (current.isName() && (current.next.is(SymbolToken.RP) && current.next.next.is(SymbolToken.ARROW) || current.next.is(SymbolToken.COMMA))) {
-				funcFlags |= AstFunction.MOD_ARROW;
-				var list = new ArrayList<AstParam>(1);
-
-				do {
-					list.add(param());
-				} while (ignoreComma());
-				consume(SymbolToken.RP, ParseErrorType.EXP_RP_ARGS);
-				consume(SymbolToken.ARROW, ParseErrorType.EXP_ARROW);
-
-				var body = block(true);
-				return new AstFunction(list.toArray(Empty.AST_PARAMS), body, funcFlags).pos(pos);
+				// var lp = previous();
+				var expr = expression();
+				consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_EXPR);
+				// return new AstGrouping(expr).pos(lp);
+				return expr;
 			}
-
-			// var lp = previous();
-			var expr = expression();
-			consume(SymbolToken.RP, ParseErrorType.EXP_RP_EXPR);
-			// return new AstGrouping(expr).pos(lp);
-			return expr;
-		} else if (advanceIf(SymbolToken.LS)) {
+		} else if (advanceIf(SymbolTokenJS.LS)) {
 			var list = new ArrayList<Evaluable>();
 
 			ignoreComma();
 
-			while (!current.is(SymbolToken.RS)) {
+			while (!current.is(SymbolTokenJS.RS)) {
 				list.add(expression());
 				ignoreComma();
 			}
 
-			consume(SymbolToken.RS, ParseErrorType.EXP_RS_ARRAY);
+			consume(SymbolTokenJS.RS, ParseErrorType.EXP_RS_ARRAY);
 			return new AstList(list).pos(pos);
-		} else if (advanceIf(SymbolToken.LC)) {
+		} else if (advanceIf(SymbolTokenJS.LC)) {
 			var map = new LinkedHashMap<String, Evaluable>();
 
 			ignoreComma();
 
-			while (!current.is(SymbolToken.RC)) {
+			while (!current.is(SymbolTokenJS.RC)) {
 				int flags = 0;
 
-				if ((current.is(KeywordTokenJS.GET) || current.is(KeywordTokenJS.SET) && current.next.isName() && current.next.next.is(SymbolToken.LP))) {
+				if ((current.is(KeywordTokenJS.GET) || current.is(KeywordTokenJS.SET) && current.next.isName() && current.next.next.is(SymbolTokenJS.LP))) {
 					if (advanceIf(KeywordTokenJS.GET)) {
 						flags |= AstFunction.MOD_GET;
 					} else if (advanceIf(KeywordTokenJS.SET)) {
@@ -890,24 +887,24 @@ public class ParserJS implements Parser {
 
 				var name = name(ParseErrorType.EXP_VAR_NAME);
 
-				if (current.is(SymbolToken.LP)) {
+				if (current.is(SymbolTokenJS.LP)) {
 					var func = function(null, null, flags);
 					func.functionName = name;
 					map.put(name, func);
 				} else {
-					consume(SymbolToken.COL, ParseErrorType.EXP_COL_OBJECT);
+					consume(SymbolTokenJS.COL, ParseErrorType.EXP_COL_OBJECT);
 					map.put(name, expression());
 				}
 
 				ignoreComma();
 			}
 
-			consume(SymbolToken.RC, ParseErrorType.EXP_RC_OBJECT);
+			consume(SymbolTokenJS.RC, ParseErrorType.EXP_RC_OBJECT);
 			return new AstMap(map).pos(pos);
-		} else if (advanceIf(SymbolToken.TDOT)) {
+		} else if (advanceIf(SymbolTokenJS.TDOT)) {
 			return new AstSpread(expression()).pos(pos);
-		} else if (advanceIf(SymbolToken.TEMPLATE_LITERAL)) {
-			if (advanceIf(SymbolToken.TEMPLATE_LITERAL)) {
+		} else if (advanceIf(SymbolTokenJS.TEMPLATE_LITERAL)) {
+			if (advanceIf(SymbolTokenJS.TEMPLATE_LITERAL)) {
 				return new AstString("").pos(pos);
 			}
 
@@ -918,9 +915,9 @@ public class ParserJS implements Parser {
 			// `_${_i_}_: _${_arr[i]_}_`
 
 			while (true) {
-				if (advanceIf(SymbolToken.TEMPLATE_LITERAL)) {
+				if (advanceIf(SymbolTokenJS.TEMPLATE_LITERAL)) {
 					break;
-				} else if (advanceIf(SymbolToken.TEMPLATE_LITERAL_VAR)) {
+				} else if (advanceIf(SymbolTokenJS.TEMPLATE_LITERAL_VAR)) {
 					var expr = expression();
 
 					if (!(expr instanceof AstString)) {
@@ -928,7 +925,7 @@ public class ParserJS implements Parser {
 					}
 
 					parts.add(expr);
-					consume(SymbolToken.RC, ParseErrorType.EXP_RC_TEMPLATE_LITERAL);
+					consume(SymbolTokenJS.RC, ParseErrorType.EXP_RC_TEMPLATE_LITERAL);
 				} else {
 					var nextEval = current.token.toEvaluable(this, current.pos);
 

@@ -3,8 +3,8 @@ package dev.latvian.apps.ichor.ast.expression.binary;
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.ast.expression.AstBoolean;
+import dev.latvian.apps.ichor.ast.expression.AstDouble;
 import dev.latvian.apps.ichor.ast.expression.AstExpression;
-import dev.latvian.apps.ichor.ast.expression.AstNumber;
 
 public abstract class AstBinary extends AstExpression {
 	public Evaluable left;
@@ -26,8 +26,8 @@ public abstract class AstBinary extends AstExpression {
 		left = left.optimize();
 		right = right.optimize();
 
-		if (left instanceof AstNumber && right instanceof AstNumber) {
-			return new AstNumber(evalDouble(null)).pos(((AstNumber) left).pos);
+		if (left instanceof AstDouble && right instanceof AstDouble) {
+			return new AstDouble(evalDouble(null)).pos(((AstDouble) left).pos);
 		} else if (left instanceof AstBoolean && right instanceof AstBoolean) {
 			return new AstBoolean(evalBoolean(null)).pos(((AstBoolean) left).pos);
 		}

@@ -2,6 +2,7 @@ package dev.latvian.apps.ichor.ast.expression;
 
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
+import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
 
@@ -24,7 +25,9 @@ public class AstAwait extends AstExpression {
 	public Object eval(Scope scope) {
 		var e = future.eval(scope);
 
-		if (e instanceof Future<?> f) {
+		if (Special.isInvalid(e)) {
+			return e;
+		} else if (e instanceof Future<?> f) {
 			try {
 				return f.get();
 			} catch (Exception ex) {

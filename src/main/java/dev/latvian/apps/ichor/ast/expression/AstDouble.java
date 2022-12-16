@@ -3,11 +3,11 @@ package dev.latvian.apps.ichor.ast.expression;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
-public class AstNumber extends AstExpression {
+public class AstDouble extends AstExpression {
 	public final double value;
 	public final Double valueObj;
 
-	public AstNumber(double v) {
+	public AstDouble(double v) {
 		value = v;
 		valueObj = v;
 	}

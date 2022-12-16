@@ -1,6 +1,8 @@
 package dev.latvian.apps.ichor.ast.expression;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.InterfaceFactory;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
@@ -12,7 +14,12 @@ import dev.latvian.apps.ichor.exit.ScopeExit;
 import dev.latvian.apps.ichor.prototype.PrototypeFunction;
 import dev.latvian.apps.ichor.util.AssignType;
 
-public class AstFunction extends AstExpression implements PrototypeFunction, Comparable<AstFunction>, CallableAst {
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.concurrent.CompletableFuture;
+
+public class AstFunction extends AstExpression implements PrototypeFunction, Comparable<AstFunction>, CallableAst, InterfaceFactory {
 	public static final int MOD_ARROW = 1;
 	public static final int MOD_CLASS = 2;
 	public static final int MOD_STATIC = 4;
@@ -20,6 +27,22 @@ public class AstFunction extends AstExpression implements PrototypeFunction, Com
 	public static final int MOD_GET = 16;
 	public static final int MOD_CONSTRUCTOR = 32;
 	public static final int MOD_ASYNC = 64;
+	public static final int MOD_VARARGS = 128;
+
+	private record FunctionInvocationHandler(Context cx, AstFunction func) implements InvocationHandler {
+		@Override
+		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+			System.out.println("Invoking " + method + " of " + func);
+
+			return switch (method.getName()) {
+				case "toString" -> func.toString();
+				case "hashCode" -> func.hashCode();
+				case "equals" -> func.equals(args[0]);
+				// default -> func.call(cx, args);
+				default -> null;
+			};
+		}
+	}
 
 	public final AstParam[] params;
 	public final Interpretable body;
@@ -59,7 +82,25 @@ public class AstFunction extends AstExpression implements PrototypeFunction, Com
 	}
 
 	@Override
+	public Object eval(Scope scope) {
+		return this;
+	}
+
+	@Override
 	public void append(AstStringBuilder builder) {
+		if (hasMod(MOD_ASYNC)) {
+			builder.append("async ");
+		}
+
+		if (!hasMod(MOD_ARROW)) {
+			builder.append("function");
+
+			if (functionName != null) {
+				builder.append(' ');
+				builder.append(functionName);
+			}
+		}
+
 		builder.append('(');
 
 		for (int i = 0; i < params.length; i++) {
@@ -67,10 +108,19 @@ public class AstFunction extends AstExpression implements PrototypeFunction, Com
 				builder.append(',');
 			}
 
+			if (i == params.length - 1 && hasMod(MOD_VARARGS)) {
+				builder.append("...");
+			}
+
 			params[i].append(builder);
 		}
 
-		builder.append(")=>");
+		builder.append(")");
+
+		if (hasMod(MOD_ARROW)) {
+			builder.append("=>");
+		}
+
 		builder.append(body);
 	}
 
@@ -89,6 +139,10 @@ public class AstFunction extends AstExpression implements PrototypeFunction, Com
 
 			body.interpret(s);
 		} catch (ReturnExit exit) {
+			if (hasMod(MOD_ASYNC)) {
+				return CompletableFuture.completedFuture(exit.value);
+			}
+
 			return exit.value;
 		} catch (ScopeExit exit) {
 			throw new ScriptError(exit);
@@ -124,5 +178,11 @@ public class AstFunction extends AstExpression implements PrototypeFunction, Com
 		public Object evalFunc(Scope scope) {
 			return function;
 		}
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> T createInterface(Context cx, Class<T> type) {
+		return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, new FunctionInvocationHandler(cx, this));
 	}
 }

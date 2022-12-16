@@ -1,4 +1,4 @@
-package dev.latvian.apps.ichor.api;
+package dev.latvian.apps.ichor;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

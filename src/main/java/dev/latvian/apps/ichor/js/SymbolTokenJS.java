@@ -1,4 +1,4 @@
-package dev.latvian.apps.ichor.token;
+package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.ast.expression.binary.AstAdd;
 import dev.latvian.apps.ichor.ast.expression.binary.AstAnd;
@@ -27,14 +27,16 @@ import dev.latvian.apps.ichor.ast.expression.binary.AstXor;
 import dev.latvian.apps.ichor.ast.expression.unary.AstAdd1L;
 import dev.latvian.apps.ichor.ast.expression.unary.AstBitwiseNot;
 import dev.latvian.apps.ichor.ast.expression.unary.AstNegate;
+import dev.latvian.apps.ichor.ast.expression.unary.AstNot;
 import dev.latvian.apps.ichor.ast.expression.unary.AstPositive;
 import dev.latvian.apps.ichor.ast.expression.unary.AstSub1L;
-import dev.latvian.apps.ichor.error.ParseError;
-import dev.latvian.apps.ichor.error.ParseErrorType;
-import dev.latvian.apps.ichor.util.EvaluableFactory;
+import dev.latvian.apps.ichor.ast.expression.unary.AstUnary;
+import dev.latvian.apps.ichor.token.PositionedToken;
+import dev.latvian.apps.ichor.token.Token;
+import dev.latvian.apps.ichor.token.TokenStream;
 import org.jetbrains.annotations.Nullable;
 
-public enum SymbolToken implements Token, BinaryOpToken {
+public enum SymbolTokenJS implements Token {
 	DOT("."), // dot
 	DDOT(".."), // double dot
 	TDOT("..."), // triple dot
@@ -46,83 +48,77 @@ public enum SymbolToken implements Token, BinaryOpToken {
 	LC("{"), // left curly bracket
 	RC("}"), // right curly bracket
 	SET("="), // set
-	ADD("+", AstAdd::new), // addition
-	ADD_SET("+=", AstAdd::new), // add and set
-	ADD1("++", AstAdd1L::new, false), // 1 addition
-	SUB("-", AstSub::new), // subtraction & negation
-	SUB_SET("-=", AstSub::new), // sub and set
-	SUB1("--", AstSub1L::new, false), // 1 subtraction
-	MUL("*", AstMul::new), // multiplication
-	MUL_SET("*=", AstMul::new), // multiply and set
-	DIV("/", AstDiv::new), // division
-	DIV_SET("/=", AstDiv::new), // divide and set
-	MOD("%", AstMod::new), // modulo
-	MOD_SET("%=", AstMod::new), // modulo and set
-	NOT("!", AstNegate::new, false), // not
-	BNOT("~", AstBitwiseNot::new, false), // bitwise not
-	EQ("==", AstEq::new), // equal
-	NEQ("!=", AstNeq::new), // not equal
-	SEQ("===", AstSeq::new), // shallow equal
-	SNEQ("!==", AstSneq::new), // shallow not equal
-	LT("<", AstLt::new), // less than
-	GT(">", AstGt::new), // greater than
-	LTE("<=", AstLte::new), // less than or equal
-	GTE(">=", AstGte::new), // greater than or equal
-	OR("||", AstOr::new), // or
-	AND("&&", AstAnd::new), // and
-	BOR("|", AstBitwiseOr::new), // bitwise or
-	BOR_SET("|=", AstBitwiseOr::new), // bitwise or and set
-	BAND("&", AstBitwiseAnd::new), // bitwise and
-	BAND_SET("&=", AstBitwiseAnd::new), // bitwise and and set
-	XOR("^", AstXor::new), // exclusive or & bitwise exclusive or
-	XOR_SET("^=", AstXor::new), // exclusive or & bitwise exclusive or
-	LSH("<<", AstLsh::new), // left shift
-	LSH_SET("<<=", AstLsh::new), // left shift
-	RSH(">>", AstRsh::new), // right shift
-	RSH_SET(">>=", AstRsh::new), // right shift
-	URSH(">>>", AstUrsh::new), // unsigned right shift
-	URSH_SET(">>>=", AstUrsh::new), // unsigned right shift
-	POW("**", AstPow::new), // power
+	ADD("+"), // addition
+	ADD_SET("+="), // add and set
+	ADD1("++"), // 1 addition
+	SUB("-"), // subtraction & negation
+	SUB_SET("-="), // sub and set
+	SUB1("--"), // 1 subtraction
+	MUL("*"), // multiplication
+	MUL_SET("*="), // multiply, set
+	DIV("/"), // division
+	DIV_SET("/="), // divide, set
+	MOD("%"), // modulo
+	MOD_SET("%="), // modulo, set
+	NOT("!"), // not
+	BNOT("~"), // bitwise not
+	EQ("=="), // equal
+	NEQ("!="), // not equal
+	SEQ("==="), // shallow equal
+	SNEQ("!=="), // shallow not equal
+	LT("<"), // less than
+	GT(">"), // greater than
+	LTE("<="), // less than or equal
+	GTE(">="), // greater than or equal
+	OR("||"), // or
+	AND("&&"), // and
+	BOR("|"), // bitwise or
+	BOR_SET("|="), // bitwise or, set
+	BAND("&"), // bitwise and
+	BAND_SET("&="), // bitwise and, set
+	XOR("^"), // exclusive or & bitwise exclusive or
+	XOR_SET("^="), // exclusive or & bitwise exclusive or, set
+	LSH("<<"), // left shift
+	LSH_SET("<<="), // left shift, set
+	RSH(">>"), // right shift
+	RSH_SET(">>="), // right shift, set
+	URSH(">>>"), // unsigned right shift
+	URSH_SET(">>>="), // unsigned right shift, set
+	POW("**"), // power
+	POW_SET("**="), // power, set
 	HOOK("?"), // hook
 	COL(":"), // colon
 	DCOL("::"), // double colon
 	SEMI(";"), // semicolon
 	OC("?."), // optional chaining
-	NC("??", AstNc::new), // nullish coalescing
-	NC_SET("??=", AstNc::new), // nullish coalescing
+	NC("??"), // nullish coalescing
+	NC_SET("??="), // nullish coalescing
 	ARROW("=>"), // arrow
 	TEMPLATE_LITERAL("`"), // template literal
 	TEMPLATE_LITERAL_VAR("${"), // template literal variable
 
 	;
 
-	static {
-		ADD.astUnary = AstPositive::new;
-		SUB.astUnary = AstNegate::new;
-	}
-
+	public static final Token[] SET_OP_TOKENS = {
+			ADD_SET,
+			SUB_SET,
+			MUL_SET,
+			DIV_SET,
+			MOD_SET,
+			BOR_SET,
+			BAND_SET,
+			XOR_SET,
+			LSH_SET,
+			RSH_SET,
+			URSH_SET,
+			POW_SET,
+			NC_SET,
+	};
 
 	public final String name;
-	public EvaluableFactory astUnary;
-	public EvaluableFactory astBinary;
 
-	SymbolToken(String name) {
+	SymbolTokenJS(String name) {
 		this.name = name;
-	}
-
-	SymbolToken(String name, EvaluableFactory factory, boolean binary) {
-		this(name);
-
-		if (binary) {
-			this.astBinary = factory;
-		} else {
-			this.astUnary = factory;
-		}
-	}
-
-	SymbolToken(String name, EvaluableFactory astBinary) {
-		this(name);
-		this.astBinary = astBinary;
 	}
 
 	@Override
@@ -130,17 +126,8 @@ public enum SymbolToken implements Token, BinaryOpToken {
 		return name;
 	}
 
-	@Override
-	public AstBinary createBinaryAst(PositionedToken pos) {
-		if (astBinary != null && astBinary.create() instanceof AstBinary bin) {
-			return bin;
-		}
-
-		throw new ParseError(pos, ParseErrorType.INVALID_BINARY.format(name));
-	}
-
 	@Nullable
-	public static SymbolToken read(TokenStream s, char t) {
+	public static SymbolTokenJS read(TokenStream s, char t) {
 		return switch (t) {
 			case '.' -> s.readIf('.') ? s.readIf('.') ? TDOT : DDOT : DOT;
 			case ',' -> COMMA;
@@ -153,7 +140,7 @@ public enum SymbolToken implements Token, BinaryOpToken {
 			case '=' -> s.readIf('>') ? ARROW : s.readIf('=') ? s.readIf('=') ? SEQ : EQ : SET;
 			case '+' -> s.readIf('=') ? ADD_SET : s.readIf('+') ? ADD1 : ADD;
 			case '-' -> s.readIf('=') ? SUB_SET : s.readIf('-') ? SUB1 : SUB;
-			case '*' -> s.readIf('=') ? MUL_SET : s.readIf('*') ? POW : MUL;
+			case '*' -> s.readIf('=') ? MUL_SET : s.readIf('*') ? s.readIf('=') ? POW_SET : POW : MUL;
 			case '/' -> s.readIf('=') ? DIV_SET : DIV;
 			case '%' -> s.readIf('=') ? MOD_SET : MOD;
 			case '!' -> s.readIf('=') ? s.readIf('=') ? SNEQ : NEQ : NOT;
@@ -168,6 +155,51 @@ public enum SymbolToken implements Token, BinaryOpToken {
 			case ';' -> SEMI;
 			case '`' -> TEMPLATE_LITERAL;
 			case '$' -> s.readIf('{') ? TEMPLATE_LITERAL_VAR : null;
+			default -> null;
+		};
+	}
+
+	@Override
+	@Nullable
+	public AstUnary createUnaryAst(PositionedToken pos) {
+		return switch (this) {
+			case ADD -> new AstPositive();
+			case SUB -> new AstNegate();
+			case ADD1 -> new AstAdd1L();
+			case SUB1 -> new AstSub1L();
+			case NOT -> new AstNot();
+			case BNOT -> new AstBitwiseNot();
+			default -> null;
+		};
+	}
+
+	@Override
+	@Nullable
+	public AstBinary createBinaryAst(PositionedToken pos) {
+		return switch (this) {
+			case ADD, ADD_SET -> new AstAdd();
+			case SUB, SUB_SET -> new AstSub();
+			case MUL, MUL_SET -> new AstMul();
+			case DIV, DIV_SET -> new AstDiv();
+			case MOD, MOD_SET -> new AstMod();
+			case EQ -> new AstEq();
+			case NEQ -> new AstNeq();
+			case SEQ -> new AstSeq();
+			case SNEQ -> new AstSneq();
+			case LT -> new AstLt();
+			case GT -> new AstGt();
+			case LTE -> new AstLte();
+			case GTE -> new AstGte();
+			case OR -> new AstOr();
+			case AND -> new AstAnd();
+			case BOR, BOR_SET -> new AstBitwiseOr();
+			case BAND, BAND_SET -> new AstBitwiseAnd();
+			case XOR, XOR_SET -> new AstXor();
+			case LSH, LSH_SET -> new AstLsh();
+			case RSH, RSH_SET -> new AstRsh();
+			case URSH, URSH_SET -> new AstUrsh();
+			case POW, POW_SET -> new AstPow();
+			case NC, NC_SET -> new AstNc();
 			default -> null;
 		};
 	}

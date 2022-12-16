@@ -2,12 +2,12 @@ package dev.latvian.apps.ichor.test.js;
 
 import dev.latvian.apps.ichor.error.TokenStreamError;
 import dev.latvian.apps.ichor.js.KeywordTokenJS;
+import dev.latvian.apps.ichor.js.SymbolTokenJS;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
 import dev.latvian.apps.ichor.token.BooleanToken;
+import dev.latvian.apps.ichor.token.DoubleToken;
 import dev.latvian.apps.ichor.token.NameToken;
-import dev.latvian.apps.ichor.token.NumberToken;
 import dev.latvian.apps.ichor.token.StringToken;
-import dev.latvian.apps.ichor.token.SymbolToken;
 import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.util.NamedTokenSource;
 import dev.latvian.apps.ichor.util.PrintWrapper;
@@ -59,12 +59,12 @@ public class TokenTests {
 
 	@Test
 	public void numberInt() {
-		testTokenStream("4", NumberToken.of(4));
+		testTokenStream("4", DoubleToken.of(4));
 	}
 
 	@Test
 	public void numberDec() {
-		testTokenStream("4.0", NumberToken.of(4));
+		testTokenStream("4.0", DoubleToken.of(4));
 	}
 
 	@Test
@@ -79,27 +79,27 @@ public class TokenTests {
 
 	@Test
 	public void symbols() {
-		testTokenStream("+ - * /", SymbolToken.ADD, SymbolToken.SUB, SymbolToken.MUL, SymbolToken.DIV);
+		testTokenStream("+ - * /", SymbolTokenJS.ADD, SymbolTokenJS.SUB, SymbolTokenJS.MUL, SymbolTokenJS.DIV);
 	}
 
 	@Test
 	public void complexSymbols() {
-		testTokenStream("+ ++ >>> ??", SymbolToken.ADD, SymbolToken.ADD1, SymbolToken.URSH, SymbolToken.NC);
+		testTokenStream("+ ++ >>> ??", SymbolTokenJS.ADD, SymbolTokenJS.ADD1, SymbolTokenJS.URSH, SymbolTokenJS.NC);
 	}
 
 	@Test
 	public void equation() {
-		testTokenStream("-3 +   4.0 * 3.0", SymbolToken.SUB, NumberToken.of(3), SymbolToken.ADD, NumberToken.of(4), SymbolToken.MUL, NumberToken.of(3));
+		testTokenStream("-3 +   4.0 * 3.0", SymbolTokenJS.SUB, DoubleToken.of(3), SymbolTokenJS.ADD, DoubleToken.of(4), SymbolTokenJS.MUL, DoubleToken.of(3));
 	}
 
 	@Test
 	public void dot() {
-		testTokenStream(". .. ... .3", SymbolToken.DOT, SymbolToken.DDOT, SymbolToken.TDOT, NumberToken.of(0.3));
+		testTokenStream(". .. ... .3", SymbolTokenJS.DOT, SymbolTokenJS.DDOT, SymbolTokenJS.TDOT, DoubleToken.of(0.3));
 	}
 
 	@Test
 	public void var() {
-		testTokenStream("let x = 20;", KeywordTokenJS.LET, new NameToken("x"), SymbolToken.SET, NumberToken.of(20), SymbolToken.SEMI);
+		testTokenStream("let x = 20;", KeywordTokenJS.LET, new NameToken("x"), SymbolTokenJS.SET, DoubleToken.of(20), SymbolTokenJS.SEMI);
 	}
 
 	@Test
@@ -115,66 +115,66 @@ public class TokenTests {
 						      console.print("X: " + x)
 						    }
 						""",
-				KeywordTokenJS.LET, new NameToken("x"), SymbolToken.SET, NumberToken.of(4.444), SymbolToken.SEMI,
-				KeywordTokenJS.WHILE, SymbolToken.LP, BooleanToken.TRUE, SymbolToken.RP, SymbolToken.LC,
-				KeywordTokenJS.IF, SymbolToken.LP, SymbolToken.ADD1, new NameToken("x"), SymbolToken.GTE, NumberToken.of(10), SymbolToken.RP, SymbolToken.LC,
-				KeywordTokenJS.BREAK, SymbolToken.SEMI,
-				SymbolToken.RC,
-				new NameToken("console"), SymbolToken.DOT, new NameToken("print"), SymbolToken.LP, StringToken.of("X: "), SymbolToken.ADD, new NameToken("x"), SymbolToken.RP,
-				SymbolToken.RC
+				KeywordTokenJS.LET, new NameToken("x"), SymbolTokenJS.SET, DoubleToken.of(4.444), SymbolTokenJS.SEMI,
+				KeywordTokenJS.WHILE, SymbolTokenJS.LP, BooleanToken.TRUE, SymbolTokenJS.RP, SymbolTokenJS.LC,
+				KeywordTokenJS.IF, SymbolTokenJS.LP, SymbolTokenJS.ADD1, new NameToken("x"), SymbolTokenJS.GTE, DoubleToken.of(10), SymbolTokenJS.RP, SymbolTokenJS.LC,
+				KeywordTokenJS.BREAK, SymbolTokenJS.SEMI,
+				SymbolTokenJS.RC,
+				new NameToken("console"), SymbolTokenJS.DOT, new NameToken("print"), SymbolTokenJS.LP, StringToken.of("X: "), SymbolTokenJS.ADD, new NameToken("x"), SymbolTokenJS.RP,
+				SymbolTokenJS.RC
 		);
 	}
 
 	@Test
 	public void brackets() {
-		testTokenStream("{}", SymbolToken.LC, SymbolToken.RC);
+		testTokenStream("{}", SymbolTokenJS.LC, SymbolTokenJS.RC);
 	}
 
 	@Test
 	public void bracketsOpen() {
-		testError(() -> testTokenStream("{", SymbolToken.LC));
+		testError(() -> testTokenStream("{", SymbolTokenJS.LC));
 	}
 
 	@Test
 	public void bracketsClosed() {
-		testError(() -> testTokenStream("}", SymbolToken.RC));
+		testError(() -> testTokenStream("}", SymbolTokenJS.RC));
 	}
 
 	@Test
 	public void bracketsMismatch() {
-		testError(() -> testTokenStream("{]", SymbolToken.LC, SymbolToken.RS));
+		testError(() -> testTokenStream("{]", SymbolTokenJS.LC, SymbolTokenJS.RS));
 	}
 
 	@Test
 	public void templateLiteralString() {
 		testTokenStream("`Entity has spawned`",
-				SymbolToken.TEMPLATE_LITERAL,
+				SymbolTokenJS.TEMPLATE_LITERAL,
 				StringToken.of("Entity has spawned"),
-				SymbolToken.TEMPLATE_LITERAL
+				SymbolTokenJS.TEMPLATE_LITERAL
 		);
 	}
 
 	@Test
 	public void templateLiteralExpression() {
 		testTokenStream("`Entity has spawned at X: ${location.pos.x}, Y: ${location.pos.y}`",
-				SymbolToken.TEMPLATE_LITERAL,
+				SymbolTokenJS.TEMPLATE_LITERAL,
 				StringToken.of("Entity has spawned at X: "),
-				SymbolToken.TEMPLATE_LITERAL_VAR,
+				SymbolTokenJS.TEMPLATE_LITERAL_VAR,
 				new NameToken("location"),
-				SymbolToken.DOT,
+				SymbolTokenJS.DOT,
 				new NameToken("pos"),
-				SymbolToken.DOT,
+				SymbolTokenJS.DOT,
 				new NameToken("x"),
-				SymbolToken.RC,
+				SymbolTokenJS.RC,
 				StringToken.of(", Y: "),
-				SymbolToken.TEMPLATE_LITERAL_VAR,
+				SymbolTokenJS.TEMPLATE_LITERAL_VAR,
 				new NameToken("location"),
-				SymbolToken.DOT,
+				SymbolTokenJS.DOT,
 				new NameToken("pos"),
-				SymbolToken.DOT,
+				SymbolTokenJS.DOT,
 				new NameToken("y"),
-				SymbolToken.RC,
-				SymbolToken.TEMPLATE_LITERAL
+				SymbolTokenJS.RC,
+				SymbolTokenJS.TEMPLATE_LITERAL
 		);
 	}
 }

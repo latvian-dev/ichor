@@ -3,7 +3,7 @@ package dev.latvian.apps.ichor.ast.expression.unary;
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.ast.expression.AstNumber;
+import dev.latvian.apps.ichor.ast.expression.AstDouble;
 import dev.latvian.apps.ichor.error.ScriptError;
 
 public class AstNegate extends AstUnary {
@@ -42,8 +42,8 @@ public class AstNegate extends AstUnary {
 	public Evaluable optimize() {
 		node = node.optimize();
 
-		if (node instanceof AstNumber n) {
-			return new AstNumber(-n.value).pos(pos);
+		if (node instanceof AstDouble n) {
+			return new AstDouble(-n.value).pos(pos);
 		}
 
 		return this;

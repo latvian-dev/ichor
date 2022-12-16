@@ -1,6 +1,6 @@
 package dev.latvian.apps.ichor.java.info;
 
-import dev.latvian.apps.ichor.api.Hidden;
+import dev.latvian.apps.ichor.Hidden;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;

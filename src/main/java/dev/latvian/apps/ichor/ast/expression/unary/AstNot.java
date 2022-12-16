@@ -3,23 +3,28 @@ package dev.latvian.apps.ichor.ast.expression.unary;
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.ast.expression.AstDouble;
+import dev.latvian.apps.ichor.ast.expression.AstBoolean;
 
-public class AstBitwiseNot extends AstUnary {
+public class AstNot extends AstUnary {
 	@Override
 	public void append(AstStringBuilder builder) {
-		builder.append('~');
+		builder.append('!');
 		builder.appendValue(node);
 	}
 
 	@Override
 	public Object eval(Scope scope) {
-		return evalInt(scope);
+		return evalBoolean(scope);
+	}
+
+	@Override
+	public boolean evalBoolean(Scope scope) {
+		return !node.evalBoolean(scope);
 	}
 
 	@Override
 	public int evalInt(Scope scope) {
-		return ~node.evalInt(scope);
+		return node.evalBoolean(scope) ? 0 : 1;
 	}
 
 	@Override
@@ -31,8 +36,8 @@ public class AstBitwiseNot extends AstUnary {
 	public Evaluable optimize() {
 		node = node.optimize();
 
-		if (node instanceof AstDouble n) {
-			return new AstDouble(~((int) n.value)).pos(pos);
+		if (node instanceof AstBoolean n) {
+			return new AstBoolean(!n.value).pos(pos);
 		}
 
 		return this;
