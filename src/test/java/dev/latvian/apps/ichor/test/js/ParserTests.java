@@ -15,7 +15,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 public class ParserTests {
 	public static void testParserAst(String filename, String input, String match) {
 		System.out.println("--- Parser Test ---");
-		System.out.println("Input: " + input);
+		System.out.println("Input: " + (match.equals("*") ? "<skipped>" : input));
 		System.out.println("Expected: " + match);
 		var cx = new ContextJS();
 		var tokenStream = new TokenStreamJS(new NamedTokenSource(filename), input);
@@ -25,11 +25,13 @@ public class ParserTests {
 
 		var sb = new AstStringBuilder();
 		((AstAppendable) ast).append(sb);
-		var astStr = sb.toString();
-		System.out.println("Parsed:   " + astStr);
 
 		if (!match.equals("*")) {
+			var astStr = sb.toString();
+			System.out.println("Parsed:   " + astStr);
 			Assertions.assertEquals(match, astStr);
+		} else {
+			System.out.println("Parsed:   <skipped>");
 		}
 	}
 
