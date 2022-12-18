@@ -1,7 +1,6 @@
 package dev.latvian.apps.ichor.java;
 
 import dev.latvian.apps.ichor.Context;
-import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.error.ScriptError;
@@ -18,7 +17,7 @@ import java.lang.reflect.Modifier;
 public class JavaTypePrototype extends PrototypeBuilder {
 	private record FieldProperty(Field field) implements PrototypeProperty {
 		@Override
-		public Object get(Scope scope, @Nullable Object self) {
+		public Object get(Scope scope, Object self) {
 			try {
 				return field.get(self);
 			} catch (Exception ex) {
@@ -27,7 +26,7 @@ public class JavaTypePrototype extends PrototypeBuilder {
 		}
 
 		@Override
-		public boolean set(Scope scope, @Nullable Object self, @Nullable Object value) {
+		public boolean set(Scope scope, Object self, @Nullable Object value) {
 			try {
 				field.set(self, scope.getContext().as(scope, value, field.getType()));
 				return true;
@@ -44,7 +43,7 @@ public class JavaTypePrototype extends PrototypeBuilder {
 
 	private record MethodFunction(Method method, Class<?>[] methodParams) implements PrototypeFunction {
 		@Override
-		public Object call(Scope scope, Object self, Evaluable[] args) {
+		public Object call(Scope scope, Object self, Object[] args) {
 			try {
 				if (methodParams.length > 0) {
 					var args1 = new Object[methodParams.length];

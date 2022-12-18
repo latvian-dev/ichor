@@ -1,10 +1,10 @@
 package dev.latvian.apps.ichor;
 
 import dev.latvian.apps.ichor.ast.expression.AstParam;
-import dev.latvian.apps.ichor.ast.statement.AstClass;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.AssignType;
+import dev.latvian.apps.ichor.util.ClassPrototype;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -206,7 +206,7 @@ public class Scope {
 
 	@Override
 	public String toString() {
-		if (owner instanceof AstClass.Instance c) {
+		if (owner instanceof ClassPrototype c) {
 			return "Scope[" + getDepth() + ']' + getDeclaredMemberNames() + ":" + c.getPrototypeName();
 		}
 
@@ -218,12 +218,12 @@ public class Scope {
 	}
 
 	@Nullable
-	public AstClass.Instance findOwnerClass() {
+	public ClassPrototype findOwnerClass() {
 		var s = this;
 
 		do {
-			if (s.owner instanceof AstClass.Instance instance) {
-				return instance;
+			if (s.owner instanceof ClassPrototype prototype) {
+				return prototype;
 			}
 
 			s = s.parent;

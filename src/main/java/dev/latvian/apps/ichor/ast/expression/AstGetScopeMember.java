@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -49,35 +48,5 @@ public class AstGetScopeMember extends AstGetBase {
 		}
 
 		return true;
-	}
-
-	@Override
-	public Evaluable createCall(Evaluable[] arguments, boolean isNew) {
-		return new AstScopeMemberCall(name, arguments, isNew);
-	}
-
-	public static class AstScopeMemberCall extends AstCallBase {
-		public final String name;
-
-		public AstScopeMemberCall(String name, Evaluable[] arguments, boolean isNew) {
-			super(arguments, isNew);
-			this.name = name;
-		}
-
-		@Override
-		public void append(AstStringBuilder builder) {
-			builder.append(name);
-			super.append(builder);
-		}
-
-		@Override
-		public String calleeName() {
-			return name;
-		}
-
-		@Override
-		public Object evalFunc(Scope scope) {
-			return scope.getMember(name);
-		}
 	}
 }

@@ -1,15 +1,10 @@
 package dev.latvian.apps.ichor.prototype;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Scope;
 
 @FunctionalInterface
-public interface PrototypeFunction extends Prototype {
+public interface PrototypeFunction extends Callable {
 	@Override
-	default String getPrototypeName() {
-		return "<prototype function>";
-	}
-
-	@Override
-	Object call(Scope scope, Object self, Evaluable[] args);
+	Object call(Scope scope, Object self, Object[] args);
 }

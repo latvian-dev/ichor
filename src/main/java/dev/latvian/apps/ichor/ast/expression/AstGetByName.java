@@ -74,20 +74,4 @@ public class AstGetByName extends AstGetFrom {
 		cx.debugger.delete(scope, this);
 		return true;
 	}
-
-	@Override
-	public Evaluable createCall(Evaluable[] arguments, boolean isNew) {
-		if (arguments.length == 0 && name.equals("toString")) {
-			return new ToStringEvaluable(this);
-		}
-
-		return super.createCall(arguments, isNew);
-	}
-
-	private record ToStringEvaluable(Evaluable obj) implements Evaluable {
-		@Override
-		public Object eval(Scope scope) {
-			return obj.evalString(scope);
-		}
-	}
 }

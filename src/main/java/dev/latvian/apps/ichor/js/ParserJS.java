@@ -4,9 +4,9 @@ import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.ast.Ast;
-import dev.latvian.apps.ichor.ast.CallableAst;
 import dev.latvian.apps.ichor.ast.expression.AstAwait;
 import dev.latvian.apps.ichor.ast.expression.AstBoolean;
+import dev.latvian.apps.ichor.ast.expression.AstCall;
 import dev.latvian.apps.ichor.ast.expression.AstClassFunction;
 import dev.latvian.apps.ichor.ast.expression.AstDouble;
 import dev.latvian.apps.ichor.ast.expression.AstFunction;
@@ -18,7 +18,6 @@ import dev.latvian.apps.ichor.ast.expression.AstGetByNameOptional;
 import dev.latvian.apps.ichor.ast.expression.AstGetScopeMember;
 import dev.latvian.apps.ichor.ast.expression.AstList;
 import dev.latvian.apps.ichor.ast.expression.AstMap;
-import dev.latvian.apps.ichor.ast.expression.AstNew;
 import dev.latvian.apps.ichor.ast.expression.AstParam;
 import dev.latvian.apps.ichor.ast.expression.AstSet;
 import dev.latvian.apps.ichor.ast.expression.AstSpread;
@@ -756,18 +755,7 @@ public class ParserJS implements Parser {
 
 			if (current.is(SymbolTokenJS.LP)) {
 				var arguments = arguments();
-
-				if (newToken != null) {
-					expr = new AstNew(expr, arguments).pos(newToken);
-				} else if (expr instanceof CallableAst c) {
-					expr = c.createCall(arguments, false);
-
-					if (expr instanceof Ast ast) {
-						ast.pos(pos);
-					}
-				} else {
-					throw new ParseError(pos, ParseErrorType.EXPR_NOT_CALLABLE.format(expr, expr.getClass().toString()));
-				}
+				expr = new AstCall(expr, arguments, newToken != null).pos(newToken == null ? pos : newToken);
 			} else if (advanceIf(SymbolTokenJS.DOT)) {
 				var name = name(ParseErrorType.EXP_NAME_DOT.format(current));
 				expr = new AstGetByName(expr, name).pos(pos);

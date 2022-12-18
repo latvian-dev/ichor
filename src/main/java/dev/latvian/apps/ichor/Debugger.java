@@ -1,6 +1,6 @@
 package dev.latvian.apps.ichor;
 
-import dev.latvian.apps.ichor.ast.expression.AstCallBase;
+import dev.latvian.apps.ichor.ast.expression.AstCall;
 
 public interface Debugger {
 	Debugger DEFAULT = new Debugger() {
@@ -21,7 +21,7 @@ public interface Debugger {
 	default void delete(Scope scope, Object object) {
 	}
 
-	default void call(Scope scope, AstCallBase call, Object returnValue) {
+	default void call(Scope scope, AstCall call, Object returnValue) {
 	}
 
 	default void assignNew(Scope scope, Object object, Object value) {

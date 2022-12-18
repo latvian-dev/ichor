@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.js;
 
+import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.java.ListValueHandler;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
@@ -29,7 +30,7 @@ public class ArrayJS {
 
 				builder.append(']');
 			})
-			.property("length", (scope, self) -> collection(self).size())
+			.property("length", ArrayJS::length)
 			.indexedValueHandler(ListValueHandler.INSTANCE);
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
@@ -40,5 +41,9 @@ public class ArrayJS {
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static List<Object> list(Object self) {
 		return (List) self;
+	}
+
+	private static Object length(Scope scope, Object self) {
+		return collection(self).size();
 	}
 }

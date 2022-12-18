@@ -593,4 +593,18 @@ public class InterpreterTests {
 				0.001
 				""");
 	}
+
+	@Test
+	public void redeclarationFuncScope() {
+		testInterpreter("""
+				let x = 10;
+				let func = (a) => { print(`${a} / ${x}`); }
+				func(5);
+				x = 20;
+				func(5);
+				""", """
+				5.0 / 10.0
+				5.0 / 20.0
+				""");
+	}
 }

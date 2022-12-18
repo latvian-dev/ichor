@@ -60,11 +60,19 @@ public class PrototypeBuilder implements Prototype {
 		return member(name, value);
 	}
 
+	public PrototypeBuilder staticProperty(String name, PrototypeStaticProperty value) {
+		return member(name, value);
+	}
+
 	public PrototypeBuilder constant(String name, Object value) {
 		return member(name, value);
 	}
 
 	public PrototypeBuilder function(String name, PrototypeFunction value) {
+		return member(name, value);
+	}
+
+	public PrototypeBuilder staticFunction(String name, PrototypeStaticFunction value) {
 		return member(name, value);
 	}
 
@@ -300,18 +308,7 @@ public class PrototypeBuilder implements Prototype {
 	}
 
 	@Override
-	public Object construct(Scope scope, Evaluable[] args) {
-		initLazy();
-
-		if (constructor != null) {
-			return constructor.construct(scope, args, true);
-		}
-
-		return Special.NOT_FOUND;
-	}
-
-	@Override
-	public Object call(Scope scope, Object self, Evaluable[] args) {
+	public Object call(Scope scope, Object self, Object[] args) {
 		initLazy();
 
 		if (constructor != null) {
@@ -326,7 +323,7 @@ public class PrototypeBuilder implements Prototype {
 		if (toString != null) {
 			toString.toString(scope, self, builder);
 		} else {
-			builder.append(scope.getContext().asString(scope, self));
+			builder.append(scope.getContext().asString(scope, self)); // toString?
 		}
 	}
 

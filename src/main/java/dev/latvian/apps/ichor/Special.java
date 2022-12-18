@@ -12,6 +12,7 @@ public class Special implements PrototypeSupplier, Token {
 	public static final Special NULL = new Special("null");
 	public static final Special UNDEFINED = new Special("undefined");
 	public static final Special IMMUTABLE = new Special("<immutable>");
+	public static final Special NEW = new Special("<new>");
 
 	public static boolean isInvalid(@Nullable Object o) {
 		return o == null || o instanceof Special;

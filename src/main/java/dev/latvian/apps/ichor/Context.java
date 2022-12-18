@@ -291,16 +291,16 @@ public abstract class Context {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> T createInterface(Object object, Class<T> interfaceClass) {
+	public <T> T adapt(Object object, Class<T> interfaceClass) {
 		if (object == null) {
 			return null;
 		} else if (interfaceClass.isInstance(object)) {
 			return (T) object;
-		} else if (object instanceof InterfaceFactory factory) {
+		} else if (object instanceof Adaptable adaptable) {
 			// TODO: Try to use type wrapper before interface adapter
-			return factory.createInterface(this, interfaceClass);
+			return adaptable.adapt(this, interfaceClass);
 		}
 
-		throw new IllegalArgumentException(object + " is not an InterfaceFactory");
+		throw new IllegalArgumentException(object + " is not Adaptable");
 	}
 }

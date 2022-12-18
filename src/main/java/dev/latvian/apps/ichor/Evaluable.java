@@ -1,9 +1,16 @@
 package dev.latvian.apps.ichor;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Objects;
 
 public interface Evaluable {
 	Object eval(Scope scope);
+
+	@Nullable
+	default Object evalSelf(Scope scope) {
+		return null;
+	}
 
 	default String evalString(Scope scope) {
 		return String.valueOf(eval(scope));
