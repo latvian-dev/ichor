@@ -4,23 +4,23 @@ import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
+import dev.latvian.apps.ichor.exit.BreakExit;
+import dev.latvian.apps.ichor.exit.ContinueExit;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.AssignType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
-public class AstForOf extends AstStatement {
+public class AstForOf extends AstLabelledStatement {
 	public final String name;
 	public final Evaluable from;
 	public final Interpretable body;
-	public final String label;
 
-	public AstForOf(String name, Evaluable from, @Nullable Interpretable body, String label) {
+	public AstForOf(String name, Evaluable from, @Nullable Interpretable body) {
 		this.name = name;
 		this.from = from;
 		this.body = body;
-		this.label = label;
 	}
 
 	protected String appendKeyword() {
@@ -54,9 +54,13 @@ public class AstForOf extends AstStatement {
 		}
 
 		for (var it : itr) {
-			var s = scope.push();
-			s.declareMember(name, it, AssignType.MUTABLE);
-			body.interpret(s);
+			try {
+				var s = scope.push();
+				s.declareMember(name, it, AssignType.MUTABLE);
+				body.interpretSafe(s);
+			} catch (ContinueExit exit) {
+			} catch (BreakExit exit) {
+			}
 		}
 	}
 

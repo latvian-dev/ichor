@@ -22,7 +22,7 @@ public abstract class AstBinaryBoolean extends AstBinary {
 	}
 
 	@Override
-	public String evalString(Scope scope) {
-		return evalBoolean(scope) ? "true" : "false";
+	public void evalString(Scope scope, StringBuilder builder) {
+		builder.append(evalBoolean(scope));
 	}
 }

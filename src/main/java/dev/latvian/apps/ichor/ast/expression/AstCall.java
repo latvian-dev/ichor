@@ -60,7 +60,7 @@ public class AstCall extends AstExpression {
 		if (Special.isInvalid(func)) {
 			throw new ScriptError("Cannot find " + function);
 		} else if (!(func instanceof Callable)) {
-			throw new ScriptError("Cannot call " + function + ", " + scope.getContext().toString(scope, func) + " (" + scope.getContext().getPrototype(func) + ")" + " is not a function");
+			throw new ScriptError("Cannot call " + function + ", " + scope.getContext().asString(scope, func) + " (" + scope.getContext().getPrototype(func) + ")" + " is not a function");
 		}
 
 		var self = isNew ? Special.NEW : function.evalSelf(scope);

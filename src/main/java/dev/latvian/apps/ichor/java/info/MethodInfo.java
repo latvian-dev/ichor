@@ -22,4 +22,9 @@ public class MethodInfo {
 		this.isHidden = wrapped.isAnnotationPresent(Hidden.class);
 		this.remapOverride = wrapped.isAnnotationPresent(Remap.class) ? wrapped.getAnnotation(Remap.class).value() : null;
 	}
+
+	@Override
+	public String toString() {
+		return wrapped.toString();
+	}
 }

@@ -3,7 +3,7 @@ package dev.latvian.apps.ichor.util;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unchecked")
-public record Possible<T>(@Nullable Object value) {
+public record Possible<T>(@Nullable T value) {
 	public static final Possible<?> EMPTY = new Possible<>(null);
 	public static final Possible<?> NULL = new Possible<>(null);
 

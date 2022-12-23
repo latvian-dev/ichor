@@ -14,17 +14,17 @@ public class ConsoleDebugger implements Debugger {
 
 	@Override
 	public void pushSelf(Scope scope, Object self) {
-		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Self -> " + scope.getContext().toString(scope, self));
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Self -> " + scope.getContext().asString(scope, self));
 	}
 
 	@Override
 	public void get(Scope scope, Object object, Object returnValue) {
-		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Get @ " + object + " = " + scope.getContext().toString(scope, returnValue));
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Get @ " + object + " = " + scope.getContext().asString(scope, returnValue));
 	}
 
 	@Override
 	public void set(Scope scope, Object object, Object value) {
-		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Get @ " + object + " = " + scope.getContext().toString(scope, value));
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Get @ " + object + " = " + scope.getContext().asString(scope, value));
 	}
 
 	@Override
@@ -48,11 +48,11 @@ public class ConsoleDebugger implements Debugger {
 
 			sb.append(call.arguments[i]);
 			sb.append('=');
-			sb.append(call.arguments[i].evalString(scope));
+			sb.append(scope.getContext().asString(scope, call.arguments[i]));
 		}
 
 		sb.append(") = ");
-		sb.append(scope.getContext().toString(scope, returnValue));
+		sb.append(scope.getContext().asString(scope, returnValue));
 
 		System.out.println(sb);
 	}
@@ -63,16 +63,16 @@ public class ConsoleDebugger implements Debugger {
 			return;
 		}
 
-		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Assign New @ " + object + " = " + scope.getContext().toString(scope, value));
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Assign New @ " + object + " = " + scope.getContext().asString(scope, value));
 	}
 
 	@Override
 	public void assignSet(Scope scope, Object object, Object value) {
-		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Assign Set @ " + object + " = " + scope.getContext().toString(scope, value));
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Assign Set @ " + object + " = " + scope.getContext().asString(scope, value));
 	}
 
 	@Override
 	public void exit(Scope scope, Object value) {
-		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Exit = " + scope.getContext().toString(scope, value));
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Exit = " + scope.getContext().asString(scope, value));
 	}
 }

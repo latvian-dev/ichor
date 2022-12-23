@@ -19,10 +19,12 @@ public class AstContinue extends AstStatement {
 			builder.append(" ");
 			builder.append(label);
 		}
+
+		builder.append(';');
 	}
 
 	@Override
 	public void interpret(Scope scope) {
-		throw new ContinueExit(label);
+		throw label.isEmpty() ? ContinueExit.DEFAULT_CONTINUE : new ContinueExit(label);
 	}
 }

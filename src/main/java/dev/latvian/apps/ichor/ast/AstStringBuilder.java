@@ -32,6 +32,25 @@ public class AstStringBuilder {
 		}
 	}
 
+	public static void wrapNumber(Object number, StringBuilder builder) {
+		if (number instanceof Double || number instanceof Float) {
+			var s = number.toString();
+
+			if (s.length() > 2) {
+				int i = s.lastIndexOf('.');
+
+				if (i == s.length() - 2 && s.charAt(i + 1) == '0') {
+					builder.append(s, 0, i);
+					return;
+				}
+			}
+
+			builder.append(s);
+		} else {
+			builder.append(number);
+		}
+	}
+
 	public static boolean isKey(String key) {
 		char[] c = key.toCharArray();
 

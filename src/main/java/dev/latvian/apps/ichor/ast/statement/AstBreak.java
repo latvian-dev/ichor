@@ -19,10 +19,12 @@ public class AstBreak extends AstStatement {
 			builder.append(" ");
 			builder.append(label);
 		}
+
+		builder.append(';');
 	}
 
 	@Override
 	public void interpret(Scope scope) {
-		throw new BreakExit(label);
+		throw label.isEmpty() ? BreakExit.DEFAULT_BREAK : new BreakExit(label);
 	}
 }

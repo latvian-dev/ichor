@@ -64,10 +64,10 @@ public class InterpreterTests {
 		System.out.println();
 
 		try {
-			ast.interpret(rootScope);
+			ast.interpretSafe(rootScope);
 		} catch (ScopeExit ex) {
 			throw new ScriptError(ex);
-		} catch (Exception ex) {
+		} catch (Throwable ex) {
 			ex.printStackTrace();
 		}
 
@@ -87,20 +87,20 @@ public class InterpreterTests {
 
 	@Test
 	public void numberOps() {
-		testInterpreter("let x = 4.0; x++; ++x; const y = x; print(y);", "6.0");
+		testInterpreter("let x = 4.0; x++; ++x; const y = x; print(y);", "6");
 	}
 
 	@Test
 	public void whileLoop() {
 		testInterpreter("""
-				let x = 2.0, i = 0
+				let x = 2, i = 0
 				 
 				while(++i < 8) {
 				  x *= 2
 				}
 								
 				print(x)
-				""", "256.0");
+				""", "256");
 	}
 
 	@Test
@@ -136,7 +136,7 @@ public class InterpreterTests {
 				}
 								
 				printPower(2, 3)
-				""", "8.0");
+				""", "8");
 	}
 
 	@Test
@@ -168,7 +168,7 @@ public class InterpreterTests {
 								
 				let z = fib(10)
 				print(z);
-				""", "55.0");
+				""", "55");
 	}
 
 	@Test
@@ -206,10 +206,10 @@ public class InterpreterTests {
 								
 				print(x)
 				""", """
-				10.0
-				10.0
-				20.0
-				10.0
+				10
+				10
+				20
+				10
 				""");
 	}
 
@@ -309,7 +309,7 @@ public class InterpreterTests {
 				""", """
 				5
 				H
-				4.0
+				4
 				true
 				""");
 	}
@@ -331,7 +331,7 @@ public class InterpreterTests {
 				print(a[2])
 				""", """
 				3
-				1.0
+				1
 				Hi
 				""");
 	}
@@ -401,7 +401,7 @@ public class InterpreterTests {
 				let x = 10
 				let y = 20
 				print(`Hello ${x} + ${y} = ${x + y}`)
-				""", "Hello 10.0 + 20.0 = 30.0");
+				""", "Hello 10 + 20 = 30");
 	}
 
 	@Test
@@ -410,7 +410,7 @@ public class InterpreterTests {
 				let x = 10
 				let y = 20
 				print(`Hello ${x} + ${y} = ${true ? `${x + y}` : 'impossible'}`)
-				""", "Hello 10.0 + 20.0 = 30.0");
+				""", "Hello 10 + 20 = 30");
 	}
 
 	@Test
@@ -422,9 +422,9 @@ public class InterpreterTests {
 				  print(`${i}: ${arr[i]}`)
 				}
 				""", """
-				0.0: a
-				1.0: b
-				2.0: c
+				0: a
+				1: b
+				2: c
 				""");
 	}
 
@@ -439,9 +439,9 @@ public class InterpreterTests {
 				  print(`${i}: ${arr[i]}`)
 				}
 				""", """
-				0.0: a
-				1.0: b
-				2.0: c
+				0: a
+				1: b
+				2: c
 				""");
 	}
 
@@ -513,7 +513,7 @@ public class InterpreterTests {
 				if((x = y/2) > 10)
 				  print(x)
 				""", """
-				14.0
+				14
 				""");
 	}
 
@@ -561,7 +561,7 @@ public class InterpreterTests {
 		testInterpreter("""
 				print((5.0))
 				""", """
-				5.0
+				5
 				""");
 	}
 
@@ -581,7 +581,7 @@ public class InterpreterTests {
 		testInterpreter("""
 				print(1e3)
 				""", """
-				1000.0
+				1000
 				""");
 	}
 
@@ -603,8 +603,46 @@ public class InterpreterTests {
 				x = 20;
 				func(5);
 				""", """
-				5.0 / 10.0
-				5.0 / 20.0
+				5 / 10
+				5 / 20
+				""");
+	}
+
+	@Test
+	public void labelledForBreak() {
+		testInterpreter("""
+				let i, j;
+								
+				loop1:
+				for (i = 0; i < 3; i++) {
+				  loop2:
+				  for (j = 0; j < 3; j++) {
+				    if (i === 1 && j === 1) {
+				      break loop1;
+				    }
+				    print(`i = ${i}, j = ${j}`);
+				  }
+				}
+				""", """
+				i = 0, j = 0
+				i = 0, j = 1
+				i = 0, j = 2
+				i = 1, j = 0
+				""");
+	}
+
+	@Test
+	public void labelledBlock() {
+		testInterpreter("""
+				foo: {
+				  print('face');
+				  break foo;
+				  print('this will not be executed');
+				}
+				print('swap');
+				""", """
+				face
+				swap
 				""");
 	}
 }

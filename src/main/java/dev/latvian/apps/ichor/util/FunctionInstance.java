@@ -27,7 +27,7 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 	@Override
 	public Object call(Scope callScope, Object self, Object[] args) {
 		if (args.length < function.requiredParams) {
-			throw new ScriptError("Invalid number of arguments: " + args.length + " < " + function.requiredParams);
+			throw new ScriptError("Invalid number of arguments: " + args.length + " < " + function.requiredParams).pos(function.pos);
 		}
 
 		var s = evalScope.push(this);
@@ -49,7 +49,7 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 				s.declareMember(function.params[i].name, value, AssignType.MUTABLE);
 			}
 
-			function.body.interpret(s);
+			function.body.interpretSafe(s);
 		} catch (ReturnExit exit) {
 			if (function.hasMod(AstFunction.MOD_ASYNC)) {
 				return CompletableFuture.completedFuture(exit.value);

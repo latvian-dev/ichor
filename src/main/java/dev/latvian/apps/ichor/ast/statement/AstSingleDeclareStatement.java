@@ -27,6 +27,8 @@ public class AstSingleDeclareStatement extends AstStatement {
 			builder.append('=');
 			builder.append(variable.defaultValue);
 		}
+
+		builder.append(';');
 	}
 
 	@Override

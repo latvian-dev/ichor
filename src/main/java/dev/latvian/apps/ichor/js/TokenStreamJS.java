@@ -41,8 +41,8 @@ public class TokenStreamJS implements TokenStream {
 	private int tokenCount;
 	private PositionedToken rootToken;
 	private PositionedToken currentToken;
-	private final Map<String, DoubleToken> numberTokenCache;
 	private final Map<String, StringToken> stringTokenCache;
+	private final Map<String, DoubleToken> doubleTokenCache;
 	private final Map<String, Token> nameTokenCache;
 	private final Stack<SymbolTokenJS> depth;
 	private SymbolTokenJS currentDepth;
@@ -56,8 +56,8 @@ public class TokenStreamJS implements TokenStream {
 		pos = 0;
 		row = 1;
 		col = 1;
-		numberTokenCache = new HashMap<>();
 		stringTokenCache = new HashMap<>();
+		doubleTokenCache = new HashMap<>();
 		nameTokenCache = new HashMap<>();
 		depth = new Stack<>();
 		currentDepth = null;
@@ -70,8 +70,8 @@ public class TokenStreamJS implements TokenStream {
 		return this;
 	}
 
-	private StringToken makeString(String s) {
-		return stringTokenCache.computeIfAbsent(s, StringToken::of);
+	public StringToken makeString(String value) {
+		return stringTokenCache.computeIfAbsent(value, StringToken::of);
 	}
 
 	private Token makeName(String s) {
@@ -358,15 +358,15 @@ public class TokenStreamJS implements TokenStream {
 
 		var numStr = new String(input, p, len);
 
-		var num = numberTokenCache.get(numStr);
+		var num = doubleTokenCache.get(numStr);
 
 		if (num != null) {
 			return num;
 		}
 
 		try {
-			num = new DoubleToken(Double.parseDouble(numStr));
-			numberTokenCache.put(numStr, num);
+			num = DoubleToken.of(Double.parseDouble(numStr));
+			doubleTokenCache.put(numStr, num);
 			return num;
 		} catch (Exception ex) {
 			throw error("Invalid number: " + numStr);

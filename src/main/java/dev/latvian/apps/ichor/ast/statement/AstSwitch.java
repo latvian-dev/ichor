@@ -49,7 +49,7 @@ public class AstSwitch extends AstStatement {
 		for (AstCase c : cases) {
 			if (c.value.equals(value, scope, true)) {
 				try {
-					c.body.interpret(scope);
+					c.body.interpretSafe(scope);
 				} catch (BreakExit ignored) {
 					return;
 				}
@@ -58,7 +58,7 @@ public class AstSwitch extends AstStatement {
 
 		if (defaultCase != null) {
 			try {
-				defaultCase.body.interpret(scope);
+				defaultCase.body.interpretSafe(scope);
 			} catch (BreakExit ignored) {
 			}
 		}

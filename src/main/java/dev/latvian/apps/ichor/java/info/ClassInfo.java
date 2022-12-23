@@ -1,6 +1,8 @@
 package dev.latvian.apps.ichor.java.info;
 
 import dev.latvian.apps.ichor.Hidden;
+import dev.latvian.apps.ichor.util.Possible;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -26,6 +28,7 @@ public class ClassInfo {
 	private FieldInfo[] fields;
 	private MethodInfo[] methods;
 	private String[] remapPrefixes;
+	private Possible<MethodInfo> singleMethodInterface = Possible.absent();
 
 	public ClassInfo(Class<?> wrapped) {
 		this.wrapped = wrapped;
@@ -85,5 +88,34 @@ public class ClassInfo {
 		}
 
 		return methods;
+	}
+
+	@Nullable
+	public MethodInfo getSingleMethodInterface() {
+		if (singleMethodInterface.isEmpty()) {
+			if (!wrapped.isInterface()) {
+				singleMethodInterface = Possible.of(null);
+				return null;
+			}
+
+			MethodInfo method = null;
+
+			for (MethodInfo m : getMethods()) {
+				if (m.isHidden || !Modifier.isAbstract(m.wrapped.getModifiers()) || Modifier.isStatic(m.wrapped.getModifiers())) {
+					continue;
+				}
+
+				if (method == null) {
+					method = m;
+				} else {
+					method = null;
+					break;
+				}
+			}
+
+			singleMethodInterface = Possible.of(method);
+		}
+
+		return singleMethodInterface.value();
 	}
 }

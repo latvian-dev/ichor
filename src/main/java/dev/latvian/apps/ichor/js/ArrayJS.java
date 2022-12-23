@@ -13,7 +13,7 @@ import java.util.List;
 public class ArrayJS {
 	public static final Prototype PROTOTYPE = new PrototypeBuilder("Array")
 			.constructor((cx, args, hasNew) -> args.length == 0 ? new ArrayList<>() : Arrays.asList(args))
-			.toString((scope, self, builder) -> {
+			.asString((scope, self, builder) -> {
 				builder.append('[');
 
 				boolean first = true;
@@ -25,7 +25,7 @@ public class ArrayJS {
 						builder.append(',');
 					}
 
-					scope.getContext().toString(scope, o, builder);
+					scope.getContext().asString(scope, o, builder);
 				}
 
 				builder.append(']');

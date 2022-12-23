@@ -16,6 +16,7 @@ public class AstDelete extends AstExpression {
 	public void append(AstStringBuilder builder) {
 		builder.append("delete ");
 		get.append(builder);
+		builder.append(';');
 	}
 
 	@Override

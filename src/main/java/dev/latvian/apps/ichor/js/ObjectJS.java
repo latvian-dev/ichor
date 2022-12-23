@@ -11,7 +11,7 @@ import java.util.Map;
 public class ObjectJS {
 	public static final Prototype PROTOTYPE = new PrototypeBuilder("Object")
 			.constructor((cx, args, hasNew) -> new LinkedHashMap<>())
-			.toString((scope, self, builder) -> {
+			.asString((scope, self, builder) -> {
 				builder.append('{');
 
 				boolean first = true;
@@ -25,7 +25,7 @@ public class ObjectJS {
 
 					AstStringBuilder.wrapKey(entry.getKey(), builder);
 					builder.append(':');
-					scope.getContext().toString(scope, entry.getValue(), builder);
+					scope.getContext().asString(scope, entry.getValue(), builder);
 				}
 
 				builder.append('}');

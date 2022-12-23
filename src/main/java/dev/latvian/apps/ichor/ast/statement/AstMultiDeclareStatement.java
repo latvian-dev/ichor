@@ -33,6 +33,8 @@ public class AstMultiDeclareStatement extends AstStatement {
 				builder.append(variables[i].defaultValue);
 			}
 		}
+
+		builder.append(';');
 	}
 
 	@Override

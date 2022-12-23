@@ -50,6 +50,21 @@ public class Special implements PrototypeSupplier, Token {
 	}
 
 	@Override
+	public boolean evalBoolean(Scope scope) {
+		return false;
+	}
+
+	@Override
+	public double evalDouble(Scope scope) {
+		return Double.NaN;
+	}
+
+	@Override
+	public int evalInt(Scope scope) {
+		return 0;
+	}
+
+	@Override
 	public boolean equals(Object right, Scope scope, boolean shallow) {
 		return right == null || right instanceof Special;
 	}

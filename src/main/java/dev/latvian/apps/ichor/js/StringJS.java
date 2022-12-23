@@ -1,7 +1,6 @@
 package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
@@ -13,7 +12,6 @@ public class StringJS {
 
 	public static final Prototype PROTOTYPE = new PrototypeBuilder("String")
 			.constructor((scope, args, hasNew) -> args.length == 0 ? "" : scope.getContext().asString(scope, args[0]))
-			.toString((scope, self, builder) -> AstStringBuilder.wrapString(self, builder))
 			.asNumber((scope, self) -> scope.toString().isEmpty() ? NumberJS.ZERO : NumberJS.ONE)
 			.asBoolean((scope, self) -> !scope.toString().isEmpty())
 			.staticFunction("fromCharCode", StringJS::fromCharCode)
@@ -88,7 +86,7 @@ public class StringJS {
 			int codePoint = scope.getContext().asInt(scope, args[i]);
 
 			if (!Character.isValidCodePoint(codePoint)) {
-				throw new ScriptError("Invalid code point " + scope.getContext().toString(scope, args[i]));
+				throw new ScriptError("Invalid code point " + scope.getContext().asString(scope, args[i]));
 			}
 
 			codePoints[i] = codePoint;

@@ -41,7 +41,7 @@ public class ParserTests {
 
 	@Test
 	public void number() {
-		testParserAst("const x = 4.0;", "const x=4.0");
+		testParserAst("const x = 4.0;", "const x=4.0;");
 	}
 
 	@Test

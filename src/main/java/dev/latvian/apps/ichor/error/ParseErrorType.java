@@ -43,6 +43,7 @@ public enum ParseErrorType implements ParseErrorMessage {
 	CONSTRUCTOR_EXISTS("Constructor already defined"),
 	EXPR_NOT_CALLABLE("Expression %s is not callable (%s)"),
 	MULTIPLE_VARARGS("Function can only have one vararg parameter"),
+	EXP_LABELLED_STATEMENT("Expected statement that supports labels"),
 
 	;
 

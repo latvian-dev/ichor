@@ -1,10 +1,12 @@
 package dev.latvian.apps.ichor.ast.expression;
 
 import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.EvaluableStringBase;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
+import dev.latvian.apps.ichor.token.StringToken;
 
-public class AstTemplateLiteral extends AstStringBase {
+public class AstTemplateLiteral extends AstExpression implements EvaluableStringBase {
 	public final Evaluable[] parts;
 
 	public AstTemplateLiteral(Evaluable[] parts) {
@@ -12,14 +14,10 @@ public class AstTemplateLiteral extends AstStringBase {
 	}
 
 	@Override
-	public String evalString(Scope scope) {
-		var sb = new StringBuilder();
-
+	public void evalString(Scope scope, StringBuilder builder) {
 		for (Evaluable part : parts) {
-			sb.append(part.evalString(scope));
+			part.evalString(scope, builder);
 		}
-
-		return sb.toString();
 	}
 
 	@Override
@@ -27,7 +25,7 @@ public class AstTemplateLiteral extends AstStringBase {
 		builder.append('`');
 
 		for (var part : parts) {
-			if (part instanceof AstString token) {
+			if (part instanceof StringToken token) {
 				builder.append(token.value);
 			} else {
 				builder.append("${");

@@ -16,7 +16,6 @@ public class PrototypeBuilder implements Prototype {
 	protected Prototype parent;
 	private PrototypeConstructor constructor;
 	private Map<String, Object> members;
-	private PrototypeToString toString;
 	private PrototypeAsString asString;
 	private PrototypeAsNumber asNumber;
 	private PrototypeAsBoolean asBoolean;
@@ -74,11 +73,6 @@ public class PrototypeBuilder implements Prototype {
 
 	public PrototypeBuilder staticFunction(String name, PrototypeStaticFunction value) {
 		return member(name, value);
-	}
-
-	public PrototypeBuilder toString(PrototypeToString value) {
-		toString = value;
-		return this;
 	}
 
 	public PrototypeBuilder asString(PrototypeAsString value) {
@@ -319,21 +313,12 @@ public class PrototypeBuilder implements Prototype {
 	}
 
 	@Override
-	public void toString(Scope scope, Object self, StringBuilder builder) {
-		if (toString != null) {
-			toString.toString(scope, self, builder);
-		} else {
-			builder.append(scope.getContext().asString(scope, self)); // toString?
-		}
-	}
-
-	@Override
-	public String asString(Scope scope, Object self) {
+	public void asString(Scope scope, Object self, StringBuilder builder) {
 		if (asString != null) {
-			return asString.asString(scope, self);
+			asString.asString(scope, self, builder);
+		} else {
+			builder.append(self);
 		}
-
-		return self.toString();
 	}
 
 	@Override

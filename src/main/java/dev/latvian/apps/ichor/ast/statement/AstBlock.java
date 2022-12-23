@@ -4,23 +4,30 @@ import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
-import java.util.Collection;
+public class AstBlock extends AstLabelledStatement {
+	public final Interpretable[] interpretable;
 
-public class AstBlock extends AstInterpretableGroup {
-
-	public AstBlock(Collection<Interpretable> statements) {
-		super(statements);
+	public AstBlock(Interpretable[] statements) {
+		this.interpretable = statements;
 	}
 
 	@Override
 	public void append(AstStringBuilder builder) {
 		builder.append('{');
-		super.append(builder);
+
+		for (Interpretable value : interpretable) {
+			builder.append(value);
+		}
+
 		builder.append('}');
 	}
 
 	@Override
 	public void interpret(Scope scope) {
-		super.interpret(scope.push());
+		var s = scope.push();
+
+		for (var statement : interpretable) {
+			statement.interpretSafe(s);
+		}
 	}
 }

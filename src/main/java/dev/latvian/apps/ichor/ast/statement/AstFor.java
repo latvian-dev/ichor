@@ -8,19 +8,17 @@ import dev.latvian.apps.ichor.exit.BreakExit;
 import dev.latvian.apps.ichor.exit.ContinueExit;
 import org.jetbrains.annotations.Nullable;
 
-public class AstFor extends AstStatement {
+public class AstFor extends AstLabelledStatement {
 	public final Interpretable initializer;
 	public final Evaluable condition;
 	public final Interpretable increment;
 	public final Interpretable body;
-	public final String label;
 
-	public AstFor(@Nullable Interpretable initializer, @Nullable Evaluable condition, @Nullable Interpretable increment, @Nullable Interpretable body, String label) {
+	public AstFor(@Nullable Interpretable initializer, @Nullable Evaluable condition, @Nullable Interpretable increment, @Nullable Interpretable body) {
 		this.initializer = initializer;
 		this.condition = condition;
 		this.increment = increment;
 		this.body = body;
-		this.label = label;
 	}
 
 	@Override
@@ -57,17 +55,17 @@ public class AstFor extends AstStatement {
 		var s = scope.push();
 
 		if (initializer != null) {
-			initializer.interpret(s);
+			initializer.interpretSafe(s);
 		}
 
 		while (condition == null || condition.evalBoolean(s)) {
 			try {
 				if (body != null) {
-					body.interpret(s);
+					body.interpretSafe(s);
 				}
 
 				if (increment != null) {
-					increment.interpret(s);
+					increment.interpretSafe(s);
 				}
 			} catch (BreakExit exit) {
 				break;

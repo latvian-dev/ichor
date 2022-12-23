@@ -4,5 +4,5 @@ import dev.latvian.apps.ichor.Scope;
 
 @FunctionalInterface
 public interface PrototypeAsString {
-	String asString(Scope scope, Object self);
+	void asString(Scope scope, Object self, StringBuilder builder);
 }

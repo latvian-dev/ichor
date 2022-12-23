@@ -6,7 +6,7 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import org.jetbrains.annotations.Nullable;
 
-public class AstIf extends AstStatement {
+public class AstIf extends AstLabelledStatement {
 	public final Evaluable condition;
 	public final Interpretable trueBody;
 	public final Interpretable falseBody;
@@ -39,10 +39,10 @@ public class AstIf extends AstStatement {
 	public void interpret(Scope scope) {
 		if (condition.evalBoolean(scope)) {
 			if (trueBody != null) {
-				trueBody.interpret(scope);
+				trueBody.interpretSafe(scope);
 			}
 		} else if (falseBody != null) {
-			falseBody.interpret(scope);
+			falseBody.interpretSafe(scope);
 		}
 	}
 }

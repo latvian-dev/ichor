@@ -26,14 +26,13 @@ public class AstInterpretableGroup extends AstStatement {
 	public void append(AstStringBuilder builder) {
 		for (Interpretable value : interpretable) {
 			builder.append(value);
-			builder.append(';');
 		}
 	}
 
 	@Override
 	public void interpret(Scope scope) {
 		for (var statement : interpretable) {
-			statement.interpret(scope);
+			statement.interpretSafe(scope);
 		}
 	}
 }

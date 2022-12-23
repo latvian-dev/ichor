@@ -14,7 +14,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-public class JavaTypePrototype extends PrototypeBuilder {
+public class JavaObjectPrototype extends PrototypeBuilder {
 	private record FieldProperty(Field field) implements PrototypeProperty {
 		@Override
 		public Object get(Scope scope, Object self) {
@@ -71,7 +71,7 @@ public class JavaTypePrototype extends PrototypeBuilder {
 	public final Class<?> type;
 	private boolean shouldInit;
 
-	public JavaTypePrototype(Context cx, Class<?> t) {
+	public JavaObjectPrototype(Context cx, Class<?> t) {
 		super(t.getName());
 		context = cx;
 		type = t;

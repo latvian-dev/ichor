@@ -14,7 +14,7 @@ public class InterpreterOperatorTests {
 
 	@Test
 	public void add() {
-		testOp("2 + 3", "5.0");
+		testOp("2 + 3", "5");
 	}
 
 	@Test
@@ -29,17 +29,17 @@ public class InterpreterOperatorTests {
 
 	@Test
 	public void addns() {
-		testOp("'11' + 1", "111.0");
+		testOp("'11' + 1", "111");
 	}
 
 	@Test
 	public void subns() {
-		testOp("'11' - 1", "10.0");
+		testOp("'11' - 1", "10");
 	}
 
 	@Test
 	public void mul() {
-		testOp("2 * 3", "6.0");
+		testOp("2 * 3", "6");
 	}
 
 	@Test
@@ -54,6 +54,6 @@ public class InterpreterOperatorTests {
 
 	@Test
 	public void divf() {
-		testOp("2 / 0.5", "4.0");
+		testOp("2 / 0.5", "4");
 	}
 }

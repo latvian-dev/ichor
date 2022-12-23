@@ -8,15 +8,13 @@ import dev.latvian.apps.ichor.exit.BreakExit;
 import dev.latvian.apps.ichor.exit.ContinueExit;
 import org.jetbrains.annotations.Nullable;
 
-public class AstDoWhile extends AstStatement {
+public class AstDoWhile extends AstLabelledStatement {
 	public final Evaluable condition;
 	public final Interpretable body;
-	public final String label;
 
-	public AstDoWhile(Evaluable condition, @Nullable Interpretable body, String label) {
+	public AstDoWhile(Evaluable condition, @Nullable Interpretable body) {
 		this.condition = condition;
 		this.body = body;
-		this.label = label;
 	}
 
 	@Override
@@ -39,7 +37,7 @@ public class AstDoWhile extends AstStatement {
 		do {
 			if (body != null) {
 				try {
-					body.interpret(scope);
+					body.interpretSafe(scope);
 				} catch (BreakExit exit) {
 					break;
 				} catch (ContinueExit ignored) {

@@ -12,23 +12,47 @@ public interface Evaluable {
 		return null;
 	}
 
-	default String evalString(Scope scope) {
-		return String.valueOf(eval(scope));
+	default void evalString(Scope scope, StringBuilder builder) {
+		var e = this.eval(scope);
+
+		if (e == this) {
+			builder.append(this);
+		} else {
+			scope.getContext().asString(scope, e, builder);
+		}
 	}
 
 	default double evalDouble(Scope scope) {
-		return eval(scope) instanceof Number n ? n.doubleValue() : Double.NaN;
+		var e = this.eval(scope);
+
+		if (e == this) {
+			return Double.NaN;
+		} else {
+			return scope.getContext().asDouble(scope, e);
+		}
 	}
 
 	default boolean evalBoolean(Scope scope) {
-		return eval(scope) instanceof Boolean b ? b : true;
+		var e = this.eval(scope);
+
+		if (e == this) {
+			return true;
+		} else {
+			return scope.getContext().asBoolean(scope, e);
+		}
 	}
 
 	default int evalInt(Scope scope) {
-		return eval(scope) instanceof Number n ? n.intValue() : -1;
+		var e = this.eval(scope);
+
+		if (e == this) {
+			return 1;
+		} else {
+			return scope.getContext().asInt(scope, e);
+		}
 	}
 
-	default Evaluable optimize() {
+	default Evaluable optimize(Parser parser) {
 		return this;
 	}
 

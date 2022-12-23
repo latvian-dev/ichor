@@ -41,16 +41,16 @@ public class AstTry extends AstStatement {
 	@Override
 	public void interpret(Scope scope) {
 		try {
-			tryBlock.interpret(scope);
+			tryBlock.interpretSafe(scope);
 		} catch (Exception ex) {
 			if (catchBlock != null) {
 				var s = scope.push();
 				s.declareMember(catchBlock.name, ex, AssignType.MUTABLE);
-				catchBlock.body.interpret(s);
+				catchBlock.body.interpretSafe(s);
 			}
 		} finally {
 			if (finallyBlock != null) {
-				finallyBlock.interpret(scope);
+				finallyBlock.interpretSafe(scope);
 			}
 		}
 	}

@@ -19,6 +19,7 @@ public class AstExpressionStatement extends AstStatement {
 	@Override
 	public void append(AstStringBuilder builder) {
 		builder.append(expression);
+		builder.append(';');
 	}
 
 	@Override

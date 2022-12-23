@@ -4,24 +4,24 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 
-public class JavaClassJS {
+public class JavaClassPrototype {
 	public static final Prototype PROTOTYPE = new PrototypeBuilder("JavaClass")
-			.asString((scope, self) -> c(self).getName())
-			.property("name", JavaClassJS::name)
+			.asString((scope, self, builder) -> builder.append(c(self).getName()))
+			.property("name", JavaClassPrototype::name)
 			.constant("class", Class.class)
-			.property("superclass", JavaClassJS::superclass)
-			.property("interface", JavaClassJS::isInterface)
-			.property("array", JavaClassJS::isArray)
-			.property("enum", JavaClassJS::isEnum)
-			.property("primitive", JavaClassJS::isPrimitive)
-			.property("annotation", JavaClassJS::isAnnotation)
-			.property("synthetic", JavaClassJS::isSynthetic)
-			.property("package", JavaClassJS::getPackage)
-			.property("descriptor", JavaClassJS::descriptor)
-			.property("simpleName", JavaClassJS::simpleName)
-			.property("componentType", JavaClassJS::componentType)
-			.function("isInstance", JavaClassJS::isInstance)
-			.function("isAssignableFrom", JavaClassJS::isAssignableFrom);
+			.property("superclass", JavaClassPrototype::superclass)
+			.property("interface", JavaClassPrototype::isInterface)
+			.property("array", JavaClassPrototype::isArray)
+			.property("enum", JavaClassPrototype::isEnum)
+			.property("primitive", JavaClassPrototype::isPrimitive)
+			.property("annotation", JavaClassPrototype::isAnnotation)
+			.property("synthetic", JavaClassPrototype::isSynthetic)
+			.property("package", JavaClassPrototype::getPackage)
+			.property("descriptor", JavaClassPrototype::descriptor)
+			.property("simpleName", JavaClassPrototype::simpleName)
+			.property("componentType", JavaClassPrototype::componentType)
+			.function("isInstance", JavaClassPrototype::isInstance)
+			.function("isAssignableFrom", JavaClassPrototype::isAssignableFrom);
 
 	private static Class<?> c(Object self) {
 		return (Class<?>) self;

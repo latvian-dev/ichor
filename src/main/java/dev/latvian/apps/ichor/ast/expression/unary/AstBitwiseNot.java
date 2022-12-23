@@ -1,9 +1,10 @@
 package dev.latvian.apps.ichor.ast.expression.unary;
 
 import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.ast.expression.AstDouble;
+import dev.latvian.apps.ichor.token.DoubleToken;
 
 public class AstBitwiseNot extends AstUnary {
 	@Override
@@ -28,11 +29,11 @@ public class AstBitwiseNot extends AstUnary {
 	}
 
 	@Override
-	public Evaluable optimize() {
-		node = node.optimize();
+	public Evaluable optimize(Parser parser) {
+		node = node.optimize(parser);
 
-		if (node instanceof AstDouble n) {
-			return new AstDouble(~((int) n.value)).pos(pos);
+		if (node instanceof DoubleToken n) {
+			return DoubleToken.of(~((int) n.value));
 		}
 
 		return this;

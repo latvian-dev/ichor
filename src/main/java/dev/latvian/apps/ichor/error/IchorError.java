@@ -27,6 +27,14 @@ public abstract class IchorError extends RuntimeException {
 		return this;
 	}
 
+	public IchorError pos(Object pos) {
+		if (pos instanceof TokenPosSupplier supplier) {
+			tokenPos = supplier.getPos();
+		}
+
+		return this;
+	}
+
 	public String getCode() {
 		return "";
 	}
