@@ -5,6 +5,7 @@ import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.token.DoubleToken;
 import dev.latvian.apps.ichor.token.StringToken;
 
 public class AstAdd extends AstBinary {
@@ -56,7 +57,9 @@ public class AstAdd extends AstBinary {
 	public Evaluable optimize(Parser parser) {
 		var s = super.optimize(parser);
 
-		if (s == this && left instanceof StringToken l && right instanceof StringToken r) {
+		if (s == this && left instanceof DoubleToken l && right instanceof DoubleToken r) {
+			return DoubleToken.of(l.value + r.value);
+		} else if (s == this && left instanceof StringToken l && right instanceof StringToken r) {
 			return StringToken.of(l.value + r.value);
 		}
 

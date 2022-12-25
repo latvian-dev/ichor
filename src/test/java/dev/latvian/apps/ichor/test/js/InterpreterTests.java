@@ -416,6 +416,21 @@ public class InterpreterTests {
 	}
 
 	@Test
+	public void forNumbers() {
+		testInterpreter("""
+				for (let i = 0; i < 5; i++) {
+				  print(i)
+				}
+				""", """
+				0
+				1
+				2
+				3
+				4
+				""");
+	}
+
+	@Test
 	public void forIndex() {
 		testInterpreter("""
 				const arr = ['a', 'b', 'c']

@@ -1,6 +1,9 @@
 package dev.latvian.apps.ichor.ast.expression.binary;
 
+import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
+import dev.latvian.apps.ichor.token.DoubleToken;
 
 public class AstSub extends AstBinary {
 	@Override
@@ -21,5 +24,16 @@ public class AstSub extends AstBinary {
 	@Override
 	public int evalInt(Scope scope) {
 		return left.evalInt(scope) - right.evalInt(scope);
+	}
+
+	@Override
+	public Evaluable optimize(Parser parser) {
+		var s = super.optimize(parser);
+
+		if (s == this && left instanceof DoubleToken l && right instanceof DoubleToken r) {
+			return DoubleToken.of(l.value - r.value);
+		}
+
+		return s;
 	}
 }

@@ -316,7 +316,7 @@ public class ParserJS implements Parser {
 
 		Interpretable initializer;
 		if (advanceIf(SymbolTokenJS.SEMI)) {
-			initializer = null;
+			initializer = new AstEmptyBlock(false).pos(pos);
 		} else if (advanceIf(VAR_TOKENS)) {
 			initializer = varDeclaration(current.prev);
 		} else if (current.isName() && current.next.is(FOR_OF_IN_TOKENS)) {
@@ -370,6 +370,8 @@ public class ParserJS implements Parser {
 
 		if (!current.is(SymbolTokenJS.RP)) {
 			ast.increment = expressionStatement(true);
+		} else {
+			ast.increment = new AstEmptyBlock(false);
 		}
 
 		consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_FOR);

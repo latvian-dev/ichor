@@ -216,7 +216,7 @@ public abstract class Context {
 
 	public Prototype getPrototype(Object o) {
 		if (o == null) {
-			return Special.NULL.getPrototype(this);
+			return Special.NULL.prototype;
 		} else if (o instanceof CharSequence) {
 			return stringPrototype;
 		} else if (o instanceof Number) {
@@ -238,7 +238,7 @@ public abstract class Context {
 
 	public Prototype getClassPrototype(Class<?> c) {
 		if (c == null || c == Void.class || c == Void.TYPE) {
-			return Special.NULL.getPrototype(this);
+			return Special.NULL.prototype;
 		} else if (c == String.class || c == Character.class || c == Character.TYPE) {
 			return stringPrototype;
 		} else if (c == Boolean.class || c == Boolean.TYPE) {
@@ -313,6 +313,6 @@ public abstract class Context {
 	}
 
 	public int compareTo(Scope scope, Evaluable left, Evaluable right) {
-		return Double.compare(left.evalDouble(scope), right instanceof Number n ? n.doubleValue() : Double.NaN);
+		return left == right ? 0 : left.compareTo(scope, right);
 	}
 }

@@ -84,7 +84,7 @@ public class BooleanToken implements Token, Evaluable, AppendableAst {
 	}
 
 	@Override
-	public int compareTo(Evaluable right, Scope scope) {
+	public int compareTo(Scope scope, Evaluable right) {
 		return Boolean.compare(value, right.evalBoolean(scope));
 	}
 }

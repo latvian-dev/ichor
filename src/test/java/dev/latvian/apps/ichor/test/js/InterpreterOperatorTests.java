@@ -56,4 +56,44 @@ public class InterpreterOperatorTests {
 	public void divf() {
 		testOp("2 / 0.5", "4");
 	}
+
+	@Test
+	public void eq() {
+		testOp("3 == 3.0", "true");
+	}
+
+	@Test
+	public void seq() {
+		testOp("3 === 3.0", "true");
+	}
+
+	@Test
+	public void neq() {
+		testOp("3 != 30.0", "true");
+	}
+
+	@Test
+	public void sneq() {
+		testOp("3 !== 3.0", "false");
+	}
+
+	@Test
+	public void lt() {
+		testOp("1 < 3.0", "true");
+	}
+
+	@Test
+	public void lte() {
+		testOp("1 <= 1.0", "true");
+	}
+
+	@Test
+	public void gt() {
+		testOp("3 > 1.0", "true");
+	}
+
+	@Test
+	public void gte() {
+		testOp("3 >= 3.0", "true");
+	}
 }

@@ -22,11 +22,13 @@ public class AstFor extends AstLabeledStatement {
 
 		builder.append("for(");
 
-		if (initializer != null) {
+		if (!(initializer instanceof AstEmptyBlock)) {
 			builder.append(initializer);
 		}
 
-		builder.append(';');
+		if (!(initializer instanceof AstDeclareStatement)) {
+			builder.append(';');
+		}
 
 		if (condition != null) {
 			builder.append(condition);
@@ -34,7 +36,7 @@ public class AstFor extends AstLabeledStatement {
 
 		builder.append(';');
 
-		if (increment != null) {
+		if (!(increment instanceof AstEmptyBlock)) {
 			builder.append(increment);
 		}
 
@@ -51,11 +53,7 @@ public class AstFor extends AstLabeledStatement {
 	public void interpret(Scope scope) {
 		var s = scope.push();
 
-		if (initializer != null) {
-			initializer.interpretSafe(s);
-		}
-
-		while (condition == null || condition.evalBoolean(s)) {
+		for (initializer.interpretSafe(scope); condition == null || condition.evalBoolean(scope); increment.interpretSafe(scope)) {
 			try {
 				if (body != null) {
 					body.interpretSafe(s);
@@ -70,10 +68,6 @@ public class AstFor extends AstLabeledStatement {
 				if (exit.stop != this) {
 					throw exit;
 				}
-			}
-
-			if (increment != null) {
-				increment.interpretSafe(s);
 			}
 		}
 	}

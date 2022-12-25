@@ -7,12 +7,11 @@ import dev.latvian.apps.ichor.ast.expression.AstParam;
 import dev.latvian.apps.ichor.token.DeclaringToken;
 import dev.latvian.apps.ichor.util.AssignType;
 
-public class AstMultiDeclareStatement extends AstStatement {
-	public final DeclaringToken assignToken;
+public class AstMultiDeclareStatement extends AstDeclareStatement {
 	public final AstParam[] variables;
 
 	public AstMultiDeclareStatement(DeclaringToken assignToken, AstParam[] variables) {
-		this.assignToken = assignToken;
+		super(assignToken);
 		this.variables = variables;
 	}
 

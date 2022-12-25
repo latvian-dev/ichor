@@ -18,7 +18,7 @@ public class Special implements PrototypeSupplier, Token {
 		return o == null || o instanceof Special;
 	}
 
-	private final Prototype prototype;
+	public final Prototype prototype;
 
 	private Special(String name) {
 		prototype = new PrototypeBuilder(name);

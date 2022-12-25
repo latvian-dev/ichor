@@ -60,6 +60,7 @@ public interface Evaluable {
 		return this;
 	}
 
+	// TODO: Move this to Prototype
 	default boolean equals(Scope scope, Evaluable right, boolean shallow) {
 		if (this == right) {
 			return true;
@@ -70,7 +71,8 @@ public interface Evaluable {
 		}
 	}
 
-	default int compareTo(Evaluable right, Scope scope) {
-		return Double.compare(evalDouble(scope), right instanceof Number n ? n.doubleValue() : Double.NaN);
+	// TODO: Move this to Prototype
+	default int compareTo(Scope scope, Evaluable right) {
+		return Double.compare(evalDouble(scope), right.evalDouble(scope));
 	}
 }
