@@ -44,6 +44,9 @@ public enum ParseErrorType implements ParseErrorMessage {
 	EXPR_NOT_CALLABLE("Expression %s is not callable (%s)"),
 	MULTIPLE_VARARGS("Function can only have one vararg parameter"),
 	EXP_LABELLED_STATEMENT("Expected statement that supports labels"),
+	UNKNOWN_LABEL("Label '%s' for %s statement not found"),
+	EXIT_NOT_SUPPORTED("%s statement not supported here"),
+	UNREACHABLE_STATEMENT("Unreachable statement"),
 
 	;
 

@@ -2,10 +2,10 @@ package dev.latvian.apps.ichor.ast.expression;
 
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Special;
-import dev.latvian.apps.ichor.ast.AstAppendable;
+import dev.latvian.apps.ichor.ast.AppendableAst;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
-public class AstParam implements AstAppendable {
+public class AstParam implements AppendableAst {
 	private static final String DEFAULT_TYPE = "any";
 
 	public final String name;

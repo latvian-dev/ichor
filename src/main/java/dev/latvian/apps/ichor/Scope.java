@@ -196,6 +196,7 @@ public class Scope {
 	public Scope push(Object owner) {
 		var p = new Scope(this);
 		p.owner = owner;
+		root.checkTimeout();
 		root.context.debugger.pushScope(this);
 		return p;
 	}

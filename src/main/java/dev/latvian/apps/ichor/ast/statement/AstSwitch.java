@@ -5,21 +5,17 @@ import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.BreakExit;
+import dev.latvian.apps.ichor.exit.ExitType;
 
-public class AstSwitch extends AstStatement {
+// TODO: Create optimized version for constant string, number and enum cases
+public class AstSwitch extends AstStatement implements LabeledStatement {
 	public record AstCase(Evaluable value, Interpretable body) {
 		public static final AstCase[] EMPTY = new AstCase[0];
 	}
 
-	public final Evaluable expression;
-	public final AstCase[] cases;
-	public final AstCase defaultCase;
-
-	public AstSwitch(Evaluable expression, AstCase[] cases, AstCase defaultCase) {
-		this.expression = expression;
-		this.cases = cases;
-		this.defaultCase = defaultCase;
-	}
+	public Evaluable expression;
+	public AstCase[] cases;
+	public AstCase defaultCase;
 
 	@Override
 	public void append(AstStringBuilder builder) {
@@ -43,15 +39,22 @@ public class AstSwitch extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) {
-		var value = expression.eval(scope);
+	public boolean handle(ExitType type) {
+		return type == ExitType.BREAK;
+	}
 
+	@Override
+	public void interpret(Scope scope) {
 		for (AstCase c : cases) {
-			if (c.value.equals(value, scope, true)) {
+			if (c.value.equals(scope, expression, true)) {
 				try {
 					c.body.interpretSafe(scope);
-				} catch (BreakExit ignored) {
-					return;
+				} catch (BreakExit exit) {
+					if (exit.stop == this) {
+						return;
+					} else {
+						throw exit;
+					}
 				}
 			}
 		}

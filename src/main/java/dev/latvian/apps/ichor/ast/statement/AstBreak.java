@@ -5,19 +5,19 @@ import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.BreakExit;
 
 public class AstBreak extends AstStatement {
-	public final String label;
+	public final LabeledStatement stop;
 
-	public AstBreak(String label) {
-		this.label = label;
+	public AstBreak(LabeledStatement stop) {
+		this.stop = stop;
 	}
 
 	@Override
 	public void append(AstStringBuilder builder) {
 		builder.append("break");
 
-		if (!label.isEmpty()) {
+		if (stop != null) {
 			builder.append(" ");
-			builder.append(label);
+			builder.append(stop.getLabel());
 		}
 
 		builder.append(';');
@@ -25,6 +25,6 @@ public class AstBreak extends AstStatement {
 
 	@Override
 	public void interpret(Scope scope) {
-		throw label.isEmpty() ? BreakExit.DEFAULT_BREAK : new BreakExit(label);
+		throw new BreakExit(stop);
 	}
 }

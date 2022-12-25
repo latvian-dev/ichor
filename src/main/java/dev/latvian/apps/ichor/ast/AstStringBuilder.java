@@ -90,7 +90,7 @@ public class AstStringBuilder {
 	}
 
 	public void append(Object o) {
-		if (o instanceof AstAppendable ast) {
+		if (o instanceof AppendableAst ast) {
 			ast.append(this);
 		} else {
 			builder.append(o);
@@ -100,7 +100,7 @@ public class AstStringBuilder {
 	public void appendValue(Object o) {
 		if (o instanceof CharSequence) {
 			wrapString(o, builder);
-		} else if (o instanceof AstAppendable ast) {
+		} else if (o instanceof AppendableAst ast) {
 			ast.append(this);
 		} else {
 			builder.append(o);

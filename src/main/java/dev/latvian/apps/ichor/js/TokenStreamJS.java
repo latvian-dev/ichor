@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.js;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.error.TokenStreamError;
 import dev.latvian.apps.ichor.exit.EndOfFileExit;
 import dev.latvian.apps.ichor.token.DoubleToken;
@@ -46,10 +47,10 @@ public class TokenStreamJS implements TokenStream {
 	private final Map<String, Token> nameTokenCache;
 	private final Stack<SymbolTokenJS> depth;
 	private SymbolTokenJS currentDepth;
+	private final long timeout;
 	private long timeoutTime;
-	private long timeout;
 
-	public TokenStreamJS(TokenSource source, String string) {
+	public TokenStreamJS(Context cx, TokenSource source, String string) {
 		tokenSource = source;
 		input = string.toCharArray();
 		lines = string.split("\n");
@@ -61,13 +62,8 @@ public class TokenStreamJS implements TokenStream {
 		nameTokenCache = new HashMap<>();
 		depth = new Stack<>();
 		currentDepth = null;
+		timeout = cx.getProperty(Context.TOKEN_STREAM_TIMEOUT);
 		timeoutTime = 0L;
-		timeout = 5000L;
-	}
-
-	public TokenStreamJS timeout(long t) {
-		timeout = t;
-		return this;
 	}
 
 	public StringToken makeString(String value) {

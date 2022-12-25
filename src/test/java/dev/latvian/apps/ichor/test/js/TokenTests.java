@@ -1,6 +1,7 @@
 package dev.latvian.apps.ichor.test.js;
 
 import dev.latvian.apps.ichor.error.TokenStreamError;
+import dev.latvian.apps.ichor.js.ContextJS;
 import dev.latvian.apps.ichor.js.KeywordTokenJS;
 import dev.latvian.apps.ichor.js.SymbolTokenJS;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
@@ -25,7 +26,8 @@ public class TokenTests {
 	private static void testTokenStream(String input, Object... match) {
 		System.out.println("--- Token Test ---");
 		System.out.println("Input: " + input);
-		var tokenStream = new TokenStreamJS(new NamedTokenSource(""), input);
+		var cx = new ContextJS();
+		var tokenStream = new TokenStreamJS(cx, new NamedTokenSource(""), input);
 
 		Token[] matchTokens = new Token[match.length];
 

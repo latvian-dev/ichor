@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.ast.expression;
 
+import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
@@ -59,8 +60,8 @@ public class AstRegEx extends AstExpression {
 	}
 
 	@Override
-	public boolean equals(Object right, Scope scope, boolean shallow) {
-		if (right instanceof Pattern r) {
+	public boolean equals(Scope scope, Evaluable right, boolean shallow) {
+		if (right.eval(scope) instanceof Pattern r) {
 			return pattern.pattern().equals(r.pattern()) && pattern.flags() == r.flags();
 		}
 

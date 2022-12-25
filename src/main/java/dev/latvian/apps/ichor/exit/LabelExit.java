@@ -1,10 +1,12 @@
 package dev.latvian.apps.ichor.exit;
 
-public class LabelExit extends ScopeExit {
-	public final String label;
+import dev.latvian.apps.ichor.Interpretable;
 
-	public LabelExit(String msg, String label) {
-		super(msg, label);
-		this.label = label;
+public class LabelExit extends ScopeExit {
+	public final Interpretable stop;
+
+	public LabelExit(String msg, Interpretable stop) {
+		super(msg, stop);
+		this.stop = stop;
 	}
 }

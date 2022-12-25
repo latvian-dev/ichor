@@ -1,12 +1,13 @@
 package dev.latvian.apps.ichor.token;
 
 import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.EvaluableType;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.ast.AstAppendable;
+import dev.latvian.apps.ichor.ast.AppendableAst;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
-public class DoubleToken implements Token, Evaluable, AstAppendable {
+public class DoubleToken implements Token, Evaluable, AppendableAst {
 	public static final DoubleToken ZERO = new DoubleToken(0.0);
 	public static final DoubleToken ONE = new DoubleToken(1.0);
 
@@ -51,6 +52,11 @@ public class DoubleToken implements Token, Evaluable, AstAppendable {
 	}
 
 	@Override
+	public EvaluableType getType(Scope scope) {
+		return EvaluableType.NUMBER;
+	}
+
+	@Override
 	public Object eval(Scope scope) {
 		return valueObj;
 	}
@@ -81,7 +87,7 @@ public class DoubleToken implements Token, Evaluable, AstAppendable {
 	}
 
 	@Override
-	public boolean equals(Object right, Scope scope, boolean shallow) {
-		return Math.abs(value - (right instanceof Number n ? n.doubleValue() : Double.NaN)) < 0.00001D;
+	public boolean equals(Scope scope, Evaluable right, boolean shallow) {
+		return Math.abs(value - right.evalDouble(scope)) < 0.00001D;
 	}
 }

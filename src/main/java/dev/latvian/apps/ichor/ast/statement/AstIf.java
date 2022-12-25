@@ -4,21 +4,21 @@ import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import org.jetbrains.annotations.Nullable;
+import dev.latvian.apps.ichor.exit.BreakExit;
+import dev.latvian.apps.ichor.exit.ExitType;
 
-public class AstIf extends AstLabelledStatement {
-	public final Evaluable condition;
-	public final Interpretable trueBody;
-	public final Interpretable falseBody;
-
-	public AstIf(Evaluable condition, @Nullable Interpretable ifTrue, @Nullable Interpretable ifFalse) {
-		this.condition = condition;
-		this.trueBody = ifTrue;
-		this.falseBody = ifFalse;
-	}
+public class AstIf extends AstLabeledStatement {
+	public Evaluable condition;
+	public Interpretable trueBody;
+	public Interpretable falseBody;
 
 	@Override
 	public void append(AstStringBuilder builder) {
+		if (!label.isEmpty()) {
+			builder.append(label);
+			builder.append(':');
+		}
+
 		builder.append("if (");
 		builder.append(condition);
 		builder.append(") ");
@@ -36,13 +36,24 @@ public class AstIf extends AstLabelledStatement {
 	}
 
 	@Override
+	public boolean handle(ExitType type) {
+		return type == ExitType.BREAK && !label.isEmpty();
+	}
+
+	@Override
 	public void interpret(Scope scope) {
-		if (condition.evalBoolean(scope)) {
-			if (trueBody != null) {
-				trueBody.interpretSafe(scope);
+		try {
+			if (condition.evalBoolean(scope)) {
+				if (trueBody != null) {
+					trueBody.interpretSafe(scope);
+				}
+			} else if (falseBody != null) {
+				falseBody.interpretSafe(scope);
 			}
-		} else if (falseBody != null) {
-			falseBody.interpretSafe(scope);
+		} catch (BreakExit exit) {
+			if (exit.stop != this) {
+				throw exit;
+			}
 		}
 	}
 }

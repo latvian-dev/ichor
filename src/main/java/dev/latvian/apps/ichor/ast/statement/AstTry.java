@@ -23,13 +23,22 @@ public class AstTry extends AstStatement {
 	@Override
 	public void append(AstStringBuilder builder) {
 		builder.append("try ");
-		builder.append(tryBlock);
+		if (tryBlock != null) {
+			builder.append(tryBlock);
+		} else {
+			builder.append("{}");
+		}
 
 		if (catchBlock != null) {
 			builder.append(" catch (");
 			builder.append(catchBlock.name);
 			builder.append(") ");
-			builder.append(catchBlock.body);
+
+			if (catchBlock.body != null) {
+				builder.append(catchBlock.body);
+			} else {
+				builder.append("{}");
+			}
 		}
 
 		if (finallyBlock != null) {
@@ -41,9 +50,11 @@ public class AstTry extends AstStatement {
 	@Override
 	public void interpret(Scope scope) {
 		try {
-			tryBlock.interpretSafe(scope);
+			if (tryBlock != null) {
+				tryBlock.interpretSafe(scope);
+			}
 		} catch (Exception ex) {
-			if (catchBlock != null) {
+			if (catchBlock != null && catchBlock.body != null) {
 				var s = scope.push();
 				s.declareMember(catchBlock.name, ex, AssignType.MUTABLE);
 				catchBlock.body.interpretSafe(s);

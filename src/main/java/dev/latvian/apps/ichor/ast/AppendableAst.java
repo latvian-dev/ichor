@@ -1,5 +1,5 @@
 package dev.latvian.apps.ichor.ast;
 
-public interface AstAppendable {
+public interface AppendableAst {
 	void append(AstStringBuilder builder);
 }

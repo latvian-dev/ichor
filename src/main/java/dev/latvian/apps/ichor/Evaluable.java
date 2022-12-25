@@ -5,6 +5,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 public interface Evaluable {
+	default EvaluableType getType(Scope scope) {
+		return EvaluableType.UNKNOWN;
+	}
+
 	Object eval(Scope scope);
 
 	@Nullable
@@ -56,17 +60,17 @@ public interface Evaluable {
 		return this;
 	}
 
-	default boolean equals(Object right, Scope scope, boolean shallow) {
+	default boolean equals(Scope scope, Evaluable right, boolean shallow) {
 		if (this == right) {
 			return true;
 		} else if (shallow) {
-			return eval(scope) == right;
+			return eval(scope) == right.eval(scope);
 		} else {
-			return Objects.equals(eval(scope), right);
+			return Objects.equals(eval(scope), right.eval(scope));
 		}
 	}
 
-	default int compareTo(Object right, Scope scope) {
+	default int compareTo(Evaluable right, Scope scope) {
 		return Double.compare(evalDouble(scope), right instanceof Number n ? n.doubleValue() : Double.NaN);
 	}
 }

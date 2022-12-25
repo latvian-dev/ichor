@@ -1,6 +1,6 @@
 package dev.latvian.apps.ichor.test.js;
 
-import dev.latvian.apps.ichor.ast.AstAppendable;
+import dev.latvian.apps.ichor.ast.AppendableAst;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.js.ContextJS;
 import dev.latvian.apps.ichor.js.ParserJS;
@@ -18,13 +18,13 @@ public class ParserTests {
 		System.out.println("Input: " + (match.equals("*") ? "<skipped>" : input));
 		System.out.println("Expected: " + match);
 		var cx = new ContextJS();
-		var tokenStream = new TokenStreamJS(new NamedTokenSource(filename), input);
+		var tokenStream = new TokenStreamJS(cx, new NamedTokenSource(filename), input);
 		var rootToken = tokenStream.getRootToken();
 		var parser = new ParserJS(cx, rootToken);
 		var ast = parser.parse();
 
 		var sb = new AstStringBuilder();
-		((AstAppendable) ast).append(sb);
+		((AppendableAst) ast).append(sb);
 
 		if (!match.equals("*")) {
 			var astStr = sb.toString();

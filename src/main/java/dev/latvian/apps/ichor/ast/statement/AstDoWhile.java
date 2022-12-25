@@ -1,24 +1,18 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Evaluable;
-import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.BreakExit;
 import dev.latvian.apps.ichor.exit.ContinueExit;
-import org.jetbrains.annotations.Nullable;
 
-public class AstDoWhile extends AstLabelledStatement {
-	public final Evaluable condition;
-	public final Interpretable body;
-
-	public AstDoWhile(Evaluable condition, @Nullable Interpretable body) {
-		this.condition = condition;
-		this.body = body;
-	}
-
+public class AstDoWhile extends AstWhile {
 	@Override
 	public void append(AstStringBuilder builder) {
+		if (!label.isEmpty()) {
+			builder.append(label);
+			builder.append(':');
+		}
+
 		builder.append("do ");
 
 		if (body != null) {
@@ -39,8 +33,15 @@ public class AstDoWhile extends AstLabelledStatement {
 				try {
 					body.interpretSafe(scope);
 				} catch (BreakExit exit) {
-					break;
-				} catch (ContinueExit ignored) {
+					if (exit.stop == this) {
+						break;
+					} else {
+						throw exit;
+					}
+				} catch (ContinueExit exit) {
+					if (exit.stop != this) {
+						throw exit;
+					}
 				}
 			}
 		}

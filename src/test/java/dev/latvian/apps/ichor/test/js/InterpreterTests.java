@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.test.js;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.RootScope;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.exit.ScopeExit;
@@ -17,14 +18,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.api.Timeout;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-@Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+// @Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class InterpreterTests {
 	private static void printLines(List<String> lines) {
@@ -45,6 +45,9 @@ public class InterpreterTests {
 		System.out.println();
 
 		var cx = new ContextJS();
+		cx.setProperty(Context.INTERPRETING_TIMEOUT, 1500L);
+		cx.setProperty(Context.TOKEN_STREAM_TIMEOUT, filename.isEmpty() ? 1500L : 0L);
+
 		var rootScope = new RootScope(cx);
 		rootScope.addSafeClasses();
 		var console = new TestConsole(System.out, new ArrayList<>());
@@ -52,8 +55,7 @@ public class InterpreterTests {
 		rootScopeCallback.accept(rootScope);
 		cx.debugger = new ConsoleDebugger();
 
-		var tokenStream = new TokenStreamJS(new NamedTokenSource(filename), input);
-		tokenStream.timeout(filename.isEmpty() ? 1500L : 0L);
+		var tokenStream = new TokenStreamJS(cx, new NamedTokenSource(filename), input);
 		var rootToken = tokenStream.getRootToken();
 		var parser = new ParserJS(cx, rootToken);
 		var ast = parser.parse();
@@ -87,7 +89,7 @@ public class InterpreterTests {
 
 	@Test
 	public void numberOps() {
-		testInterpreter("let x = 4.0; x++; ++x; const y = x; print(y);", "6");
+		testInterpreter("let x = 4.0; x++; ++x; const y = x; x++; print(y);", "6");
 	}
 
 	@Test
@@ -643,6 +645,29 @@ public class InterpreterTests {
 				""", """
 				face
 				swap
+				""");
+	}
+
+	@Test
+	public void labelledMultiLevelBlock() {
+		testInterpreter("""
+				a: {
+				  print('a')
+				  
+				  b: {
+				    c: {
+				      break a;
+				      print('c')
+				    }
+				    
+				    print('b')
+				  }
+				}
+								
+				print('d')
+				""", """
+				a
+				d
 				""");
 	}
 }

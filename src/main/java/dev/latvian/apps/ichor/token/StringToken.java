@@ -2,12 +2,13 @@ package dev.latvian.apps.ichor.token;
 
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.EvaluableStringBase;
+import dev.latvian.apps.ichor.EvaluableType;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.ast.AstAppendable;
+import dev.latvian.apps.ichor.ast.AppendableAst;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
-public class StringToken implements Token, EvaluableStringBase, AstAppendable {
+public class StringToken implements Token, EvaluableStringBase, AppendableAst {
 	public static final StringToken EMPTY = new StringToken("");
 
 	public static StringToken of(String string) {
@@ -43,6 +44,11 @@ public class StringToken implements Token, EvaluableStringBase, AstAppendable {
 	@Override
 	public void evalString(Scope scope, StringBuilder builder) {
 		builder.append(value);
+	}
+
+	@Override
+	public EvaluableType getType(Scope scope) {
+		return EvaluableType.STRING;
 	}
 
 	@Override

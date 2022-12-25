@@ -5,19 +5,19 @@ import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.ContinueExit;
 
 public class AstContinue extends AstStatement {
-	public final String label;
+	public final LabeledStatement stop;
 
-	public AstContinue(String label) {
-		this.label = label;
+	public AstContinue(LabeledStatement stop) {
+		this.stop = stop;
 	}
 
 	@Override
 	public void append(AstStringBuilder builder) {
 		builder.append("continue");
 
-		if (!label.isEmpty()) {
+		if (stop != null) {
 			builder.append(" ");
-			builder.append(label);
+			builder.append(stop.getLabel());
 		}
 
 		builder.append(';');
@@ -25,6 +25,6 @@ public class AstContinue extends AstStatement {
 
 	@Override
 	public void interpret(Scope scope) {
-		throw label.isEmpty() ? ContinueExit.DEFAULT_CONTINUE : new ContinueExit(label);
+		throw new ContinueExit(stop);
 	}
 }

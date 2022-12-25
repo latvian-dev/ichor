@@ -3,7 +3,7 @@ package dev.latvian.apps.ichor.ast;
 import dev.latvian.apps.ichor.token.TokenPos;
 import dev.latvian.apps.ichor.token.TokenPosSupplier;
 
-public abstract class Ast implements AstAppendable, TokenPosSupplier {
+public abstract class Ast implements AppendableAst, TokenPosSupplier {
 	public TokenPos pos = TokenPos.UNKNOWN;
 
 	@Override
@@ -19,9 +19,10 @@ public abstract class Ast implements AstAppendable, TokenPosSupplier {
 		return sb.toString();
 	}
 
-	public Ast pos(TokenPosSupplier pos) {
+	@SuppressWarnings("unchecked")
+	public <T extends Ast> T pos(TokenPosSupplier pos) {
 		this.pos = pos.getPos();
-		return this;
+		return (T) this;
 	}
 
 	@Override

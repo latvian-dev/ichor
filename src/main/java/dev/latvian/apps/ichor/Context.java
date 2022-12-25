@@ -7,15 +7,18 @@ import dev.latvian.apps.ichor.java.JavaObjectPrototype;
 import dev.latvian.apps.ichor.js.NumberJS;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executor;
 
 public abstract class Context {
+	public static final ContextProperty<Integer> MAX_SCOPE_DEPTH = new ContextProperty<>("maxScopeDepth", 1000);
+	public static final ContextProperty<Long> INTERPRETING_TIMEOUT = new ContextProperty<>("interpretingTimeout", 30000L);
+	public static final ContextProperty<Long> TOKEN_STREAM_TIMEOUT = new ContextProperty<>("tokenStreamTimeout", 5000L);
+
 	public Debugger debugger;
 	public final List<Prototype> safePrototypes;
 	public Prototype stringPrototype;
@@ -25,32 +28,23 @@ public abstract class Context {
 	public Prototype mapPrototype;
 	public Prototype classPrototype;
 	private Map<Class<?>, Prototype> classPrototypeCache;
-	private Map<String, Object> properties;
-	public Executor timeoutExecutor;
-	public Executor timeoutExecutorFinal;
+	private final Map<ContextProperty<?>, Object> properties;
 
 	public Context() {
 		debugger = Debugger.DEFAULT;
 		safePrototypes = new ArrayList<>();
 		classPrototype = JavaClassPrototype.PROTOTYPE;
-	}
-
-	@Nullable
-	public Object getProperty(String name) {
-		return properties == null ? null : properties.get(name);
+		properties = new IdentityHashMap<>();
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> T getProperty(String name, T defaultValue) {
-		return properties == null ? defaultValue : (T) properties.getOrDefault(name, defaultValue);
+	public <T> T getProperty(ContextProperty<T> property) {
+		var val = properties == null ? null : properties.get(property);
+		return val == null ? property.defaultValue() : (T) val;
 	}
 
-	public void setProperty(String name, Object value) {
-		if (properties == null) {
-			properties = new HashMap<>(1);
-		}
-
-		properties.put(name, value);
+	public <T> void setProperty(ContextProperty<T> property, T value) {
+		properties.put(property, value);
 	}
 
 	public void asString(Scope scope, Object o, StringBuilder builder) {
@@ -298,5 +292,27 @@ public abstract class Context {
 		}
 
 		throw new IllegalArgumentException(object + " is not Adaptable");
+	}
+
+	public static boolean shallowEquals(Object l, Object r) {
+		if (l == r) {
+			return true;
+		} else if (Special.isInvalid(l)) {
+			return Special.isInvalid(r);
+		} else if (l instanceof Number && r instanceof Number || l instanceof Boolean && r instanceof Boolean) {
+			return l.equals(r);
+		} else if (l instanceof CharSequence && r instanceof CharSequence) {
+			return l.toString().equals(r.toString());
+		}
+
+		return l == r;
+	}
+
+	public boolean equals(Scope scope, Evaluable left, Evaluable right, boolean shallow) {
+		return left == right || right.equals(scope, left, shallow) || left.equals(scope, right, shallow);
+	}
+
+	public int compareTo(Scope scope, Evaluable left, Evaluable right) {
+		return Double.compare(left.evalDouble(scope), right instanceof Number n ? n.doubleValue() : Double.NaN);
 	}
 }

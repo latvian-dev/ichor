@@ -6,23 +6,20 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.BreakExit;
 import dev.latvian.apps.ichor.exit.ContinueExit;
-import org.jetbrains.annotations.Nullable;
 
-public class AstFor extends AstLabelledStatement {
-	public final Interpretable initializer;
-	public final Evaluable condition;
-	public final Interpretable increment;
-	public final Interpretable body;
-
-	public AstFor(@Nullable Interpretable initializer, @Nullable Evaluable condition, @Nullable Interpretable increment, @Nullable Interpretable body) {
-		this.initializer = initializer;
-		this.condition = condition;
-		this.increment = increment;
-		this.body = body;
-	}
+public class AstFor extends AstLabeledStatement {
+	public Interpretable initializer;
+	public Evaluable condition;
+	public Interpretable increment;
+	public Interpretable body;
 
 	@Override
 	public void append(AstStringBuilder builder) {
+		if (!label.isEmpty()) {
+			builder.append(label);
+			builder.append(':');
+		}
+
 		builder.append("for(");
 
 		if (initializer != null) {
@@ -63,13 +60,20 @@ public class AstFor extends AstLabelledStatement {
 				if (body != null) {
 					body.interpretSafe(s);
 				}
-
-				if (increment != null) {
-					increment.interpretSafe(s);
-				}
 			} catch (BreakExit exit) {
-				break;
-			} catch (ContinueExit ignored) {
+				if (exit.stop == this) {
+					break;
+				} else {
+					throw exit;
+				}
+			} catch (ContinueExit exit) {
+				if (exit.stop != this) {
+					throw exit;
+				}
+			}
+
+			if (increment != null) {
+				increment.interpretSafe(s);
 			}
 		}
 	}

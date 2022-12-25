@@ -8,20 +8,13 @@ import dev.latvian.apps.ichor.exit.BreakExit;
 import dev.latvian.apps.ichor.exit.ContinueExit;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.AssignType;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
-public class AstForOf extends AstLabelledStatement {
-	public final String name;
-	public final Evaluable from;
-	public final Interpretable body;
-
-	public AstForOf(String name, Evaluable from, @Nullable Interpretable body) {
-		this.name = name;
-		this.from = from;
-		this.body = body;
-	}
+public class AstForOf extends AstLabeledStatement {
+	public String name;
+	public Evaluable from;
+	public Interpretable body;
 
 	protected String appendKeyword() {
 		return " of ";
@@ -29,6 +22,11 @@ public class AstForOf extends AstLabelledStatement {
 
 	@Override
 	public void append(AstStringBuilder builder) {
+		if (!label.isEmpty()) {
+			builder.append(label);
+			builder.append(':');
+		}
+
 		builder.append("for(");
 		builder.append(name);
 		builder.append(appendKeyword());
@@ -39,7 +37,7 @@ public class AstForOf extends AstLabelledStatement {
 		if (body != null) {
 			builder.append(body);
 		} else {
-			builder.append(';');
+			builder.append("{}");
 		}
 	}
 
@@ -58,8 +56,16 @@ public class AstForOf extends AstLabelledStatement {
 				var s = scope.push();
 				s.declareMember(name, it, AssignType.MUTABLE);
 				body.interpretSafe(s);
-			} catch (ContinueExit exit) {
 			} catch (BreakExit exit) {
+				if (exit.stop == this) {
+					break;
+				} else {
+					throw exit;
+				}
+			} catch (ContinueExit exit) {
+				if (exit.stop != this) {
+					throw exit;
+				}
 			}
 		}
 	}

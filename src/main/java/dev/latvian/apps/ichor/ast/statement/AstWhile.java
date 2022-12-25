@@ -6,16 +6,10 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.BreakExit;
 import dev.latvian.apps.ichor.exit.ContinueExit;
-import org.jetbrains.annotations.Nullable;
 
-public class AstWhile extends AstLabelledStatement {
-	public final Evaluable condition;
-	public final Interpretable body;
-
-	public AstWhile(Evaluable condition, @Nullable Interpretable body) {
-		this.condition = condition;
-		this.body = body;
-	}
+public class AstWhile extends AstLabeledStatement {
+	public Evaluable condition;
+	public Interpretable body;
 
 	@Override
 	public void append(AstStringBuilder builder) {
@@ -37,8 +31,15 @@ public class AstWhile extends AstLabelledStatement {
 				try {
 					body.interpretSafe(scope);
 				} catch (BreakExit exit) {
-					break;
-				} catch (ContinueExit ignored) {
+					if (exit.stop == this) {
+						break;
+					} else {
+						throw exit;
+					}
+				} catch (ContinueExit exit) {
+					if (exit.stop != this) {
+						throw exit;
+					}
 				}
 			}
 		}

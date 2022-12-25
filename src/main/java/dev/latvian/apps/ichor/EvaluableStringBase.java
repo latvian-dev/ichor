@@ -1,5 +1,7 @@
 package dev.latvian.apps.ichor;
 
+import dev.latvian.apps.ichor.token.StringToken;
+
 public interface EvaluableStringBase extends Evaluable {
 	@Override
 	void evalString(Scope scope, StringBuilder builder);
@@ -35,7 +37,15 @@ public interface EvaluableStringBase extends Evaluable {
 	}
 
 	@Override
-	default boolean equals(Object right, Scope scope, boolean shallow) {
-		return eval(scope).equals(String.valueOf(right));
+	default boolean equals(Scope scope, Evaluable right, boolean shallow) {
+		var left = eval(scope);
+
+		if (right instanceof StringToken string) {
+			return left.equals(string.value);
+		} else {
+			var builder = new StringBuilder();
+			right.evalString(scope, builder);
+			return left.equals(builder.toString());
+		}
 	}
 }
