@@ -1,7 +1,8 @@
 package dev.latvian.apps.ichor.ast.statement;
 
+import dev.latvian.apps.ichor.Context;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.ast.expression.AstParam;
 import dev.latvian.apps.ichor.token.DeclaringToken;
@@ -19,19 +20,17 @@ public class AstSingleDeclareStatement extends AstDeclareStatement {
 	public void append(AstStringBuilder builder) {
 		builder.append(assignToken);
 		builder.append(' ');
-
-		builder.append(variable.name);
-
-		if (variable.defaultValue != Special.UNDEFINED) {
-			builder.append('=');
-			builder.append(variable.defaultValue);
-		}
-
+		builder.append(variable);
 		builder.append(';');
 	}
 
 	@Override
-	public void interpret(Scope scope) {
-		scope.declareParam(variable, assignToken.isConst() ? AssignType.IMMUTABLE : AssignType.MUTABLE);
+	public void interpret(Context cx, Scope scope) {
+		variable.declare(scope, cx.eval(scope, variable.defaultValue), assignToken.isConst() ? AssignType.IMMUTABLE : AssignType.MUTABLE);
+	}
+
+	@Override
+	public void optimize(Parser parser) {
+		variable.defaultValue = parser.optimize(variable.defaultValue);
 	}
 }

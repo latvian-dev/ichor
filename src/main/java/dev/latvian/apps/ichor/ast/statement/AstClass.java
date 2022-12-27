@@ -1,6 +1,7 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.ast.expression.AstClassFunction;
@@ -12,7 +13,7 @@ import java.util.Map;
 
 public class AstClass extends AstStatement {
 	public final String name;
-	public Evaluable parent;
+	public Object parent;
 	public AstClassFunction constructor;
 	public final Map<String, AstClassFunction> methods;
 	public final Map<String, AstClassFunction> getters;
@@ -43,7 +44,7 @@ public class AstClass extends AstStatement {
 
 		if (parent != null) {
 			builder.append(" extends ");
-			builder.append(parent);
+			builder.appendValue(parent);
 		}
 
 		builder.append(" {");
@@ -62,7 +63,29 @@ public class AstClass extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) {
+	public void interpret(Context cx, Scope scope) {
 		scope.add(name, new ClassPrototype(this));
+	}
+
+	@Override
+	public void optimize(Parser parser) {
+		super.optimize(parser);
+		parent = parser.optimize(parent);
+
+		if (constructor != null) {
+			constructor.optimize(parser);
+		}
+
+		for (var entry : methods.entrySet()) {
+			entry.getValue().optimize(parser);
+		}
+
+		for (var entry : getters.entrySet()) {
+			entry.getValue().optimize(parser);
+		}
+
+		for (var entry : setters.entrySet()) {
+			entry.getValue().optimize(parser);
+		}
 	}
 }

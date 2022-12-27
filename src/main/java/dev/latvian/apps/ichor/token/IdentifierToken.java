@@ -2,10 +2,10 @@ package dev.latvian.apps.ichor.token;
 
 import java.util.Objects;
 
-public class NameToken implements Token {
+public class IdentifierToken implements Token {
 	public final String name;
 
-	public NameToken(String name) {
+	public IdentifierToken(String name) {
 		this.name = name;
 	}
 
@@ -24,7 +24,7 @@ public class NameToken implements Token {
 		return Objects.hash(name);
 	}
 
-	public boolean canBeName() {
+	public boolean isIdentifier() {
 		return true;
 	}
 }

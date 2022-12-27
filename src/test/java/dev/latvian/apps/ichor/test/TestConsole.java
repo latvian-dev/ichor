@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.test;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.prototype.Prototype;
@@ -15,9 +16,9 @@ public record TestConsole(PrintStream printStream, List<String> output) implemen
 	}
 
 	@Override
-	public Object call(Scope scope, Object self, Object[] args) {
+	public Object call(Context cx, Scope scope, Object self, Object[] args) {
 		for (var o : args) {
-			var s = scope.getContext().asString(scope, o);
+			var s = cx.asString(scope, o, false);
 
 			if (!s.isBlank()) {
 				output.add(s.trim());
@@ -26,12 +27,12 @@ public record TestConsole(PrintStream printStream, List<String> output) implemen
 			printStream.println("> " + s);
 		}
 
-		return null;
+		return Special.UNDEFINED;
 	}
 
 	@Override
 	@Nullable
-	public Object get(Scope scope, Object self, String name) {
+	public Object get(Context cx, Scope scope, Object self, String name) {
 		if (name.equals("lastLine")) {
 			return output.isEmpty() ? "" : output.get(output.size() - 1);
 		}

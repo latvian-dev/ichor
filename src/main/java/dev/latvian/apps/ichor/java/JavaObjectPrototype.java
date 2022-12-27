@@ -17,7 +17,7 @@ import java.lang.reflect.Modifier;
 public class JavaObjectPrototype extends PrototypeBuilder {
 	private record FieldProperty(Field field) implements PrototypeProperty {
 		@Override
-		public Object get(Scope scope, Object self) {
+		public Object get(Context cx, Scope scope, Object self) {
 			try {
 				return field.get(self);
 			} catch (Exception ex) {
@@ -26,9 +26,9 @@ public class JavaObjectPrototype extends PrototypeBuilder {
 		}
 
 		@Override
-		public boolean set(Scope scope, Object self, @Nullable Object value) {
+		public boolean set(Context cx, Scope scope, Object self, @Nullable Object value) {
 			try {
-				field.set(self, scope.getContext().as(scope, value, field.getType()));
+				field.set(self, cx.as(scope, value, field.getType()));
 				return true;
 			} catch (Exception ex) {
 				return false;
@@ -43,13 +43,13 @@ public class JavaObjectPrototype extends PrototypeBuilder {
 
 	private record MethodFunction(Method method, Class<?>[] methodParams) implements PrototypeFunction {
 		@Override
-		public Object call(Scope scope, Object self, Object[] args) {
+		public Object call(Context cx, Scope scope, Object self, Object[] args) {
 			try {
 				if (methodParams.length > 0) {
 					var args1 = new Object[methodParams.length];
 
 					for (int i = 0; i < args1.length; i++) {
-						args1[i] = i >= args.length ? null : scope.getContext().as(scope, args[i], methodParams[i]);
+						args1[i] = i >= args.length ? null : cx.as(scope, args[i], methodParams[i]);
 					}
 
 					return method.invoke(self, args1);

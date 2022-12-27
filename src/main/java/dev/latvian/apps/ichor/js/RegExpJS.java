@@ -1,28 +1,8 @@
-package dev.latvian.apps.ichor.ast.expression;
-
-import dev.latvian.apps.ichor.Evaluable;
-import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.ast.AstStringBuilder;
+package dev.latvian.apps.ichor.js;
 
 import java.util.regex.Pattern;
 
-public class AstRegEx extends AstExpression {
-	public final Pattern pattern;
-
-	public AstRegEx(Pattern pattern) {
-		this.pattern = pattern;
-	}
-
-	@Override
-	public Object eval(Scope scope) {
-		return pattern;
-	}
-
-	@Override
-	public void append(AstStringBuilder builder) {
-		appendRegEx(builder.builder, pattern);
-	}
-
+public class RegExpJS {
 	public static void appendRegEx(StringBuilder builder, Pattern pattern) {
 		builder.append('/');
 		builder.append(pattern.pattern());
@@ -57,14 +37,5 @@ public class AstRegEx extends AstExpression {
 		if ((flags & Pattern.UNICODE_CHARACTER_CLASS) != 0) {
 			builder.append('U');
 		}
-	}
-
-	@Override
-	public boolean equals(Scope scope, Evaluable right, boolean shallow) {
-		if (right.eval(scope) instanceof Pattern r) {
-			return pattern.pattern().equals(r.pattern()) && pattern.flags() == r.flags();
-		}
-
-		return false;
 	}
 }

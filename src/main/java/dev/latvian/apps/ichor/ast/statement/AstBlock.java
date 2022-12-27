@@ -1,6 +1,8 @@
 package dev.latvian.apps.ichor.ast.statement;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Interpretable;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.BreakExit;
@@ -33,12 +35,12 @@ public class AstBlock extends AstLabeledStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) {
+	public void interpret(Context cx, Scope scope) {
 		var s = scope.push();
 
 		for (var statement : interpretable) {
 			try {
-				statement.interpretSafe(s);
+				statement.interpretSafe(cx, s);
 			} catch (BreakExit exit) {
 				if (exit.stop == this) {
 					break;
@@ -50,6 +52,13 @@ public class AstBlock extends AstLabeledStatement {
 
 		if (forceReturn) {
 			throw ReturnExit.DEFAULT_RETURN;
+		}
+	}
+
+	@Override
+	public void optimize(Parser parser) {
+		for (var statement : interpretable) {
+			statement.optimize(parser);
 		}
 	}
 }

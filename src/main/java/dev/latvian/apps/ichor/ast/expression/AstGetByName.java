@@ -1,6 +1,6 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -13,13 +13,13 @@ public class AstGetByName extends AstGetFrom {
 
 	public final String name;
 
-	public AstGetByName(Evaluable from, String name) {
+	public AstGetByName(Object from, String name) {
 		super(from);
 		this.name = name;
 	}
 
 	@Override
-	public Object evalKey(Scope scope) {
+	public Object evalKey(Context cx, Scope scope) {
 		return name;
 	}
 
@@ -38,40 +38,37 @@ public class AstGetByName extends AstGetFrom {
 	}
 
 	@Override
-	public Object eval(Scope scope) {
-		var cx = scope.getContext();
-		var self = from.eval(scope);
-		var p = cx.getPrototype(self);
-		cx.debugger.pushSelf(scope, self);
+	public Object eval(Context cx, Scope scope) {
+		var self = evalSelf(cx, scope);
+		var p = cx.getPrototype(scope, self);
+		cx.debugger.pushSelf(cx, scope, self);
 
-		var r = p.get(scope, self, name);
+		var r = p.get(cx, scope, self, name);
 
 		if (r == Special.NOT_FOUND) {
 			throw new ScriptError("Cannot find " + this + " of " + p);
 		}
 
-		cx.debugger.get(scope, this, r);
+		cx.debugger.get(cx, scope, this, r);
 		return r;
 	}
 
 	@Override
-	public void set(Scope scope, Object value) {
-		var cx = scope.getContext();
-		var self = from.eval(scope);
-		var p = cx.getPrototype(self);
-		cx.debugger.pushSelf(scope, self);
-		p.set(scope, self, name, value);
-		cx.debugger.set(scope, this, value);
+	public void set(Context cx, Scope scope, Object value) {
+		var self = evalSelf(cx, scope);
+		var p = cx.getPrototype(scope, self);
+		cx.debugger.pushSelf(cx, scope, self);
+		p.set(cx, scope, self, name, value);
+		cx.debugger.set(cx, scope, this, value);
 	}
 
 	@Override
-	public boolean delete(Scope scope) {
-		var cx = scope.getContext();
-		var self = from.eval(scope);
-		var p = cx.getPrototype(self);
-		cx.debugger.pushSelf(scope, self);
-		p.delete(scope, self, name);
-		cx.debugger.delete(scope, this);
+	public boolean delete(Context cx, Scope scope) {
+		var self = evalSelf(cx, scope);
+		var p = cx.getPrototype(scope, self);
+		cx.debugger.pushSelf(cx, scope, self);
+		p.delete(cx, scope, self, name);
+		cx.debugger.delete(cx, scope, this);
 		return true;
 	}
 }

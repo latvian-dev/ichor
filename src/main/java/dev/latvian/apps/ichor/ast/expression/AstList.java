@@ -1,6 +1,8 @@
 package dev.latvian.apps.ichor.ast.expression;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
@@ -9,9 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AstList extends AstExpression {
-	public final List<Evaluable> values;
+	public final List<Object> values;
 
-	public AstList(List<Evaluable> v) {
+	public AstList(List<Object> v) {
 		values = v;
 	}
 
@@ -31,12 +33,12 @@ public class AstList extends AstExpression {
 	}
 
 	@Override
-	public Object eval(Scope scope) {
+	public Object eval(Context cx, Scope scope) {
 		var list = new ArrayList<>(values.size());
 
 		for (var o : values) {
 			if (o instanceof AstSpread spread) {
-				var s = spread.value.eval(scope);
+				var s = cx.eval(scope, spread.value);
 
 				if (s instanceof Iterable<?> itr) {
 					for (var o1 : itr) {
@@ -46,10 +48,21 @@ public class AstList extends AstExpression {
 					throw new ScriptError("Spread used on non-array").pos(pos);
 				}
 			} else {
-				list.add(o.eval(scope));
+				list.add(cx.eval(scope, o));
 			}
 		}
 
 		return list;
+	}
+
+	@Override
+	public Object optimize(Parser parser) {
+		for (var o : values) {
+			if (o instanceof Evaluable) {
+				return this;
+			}
+		}
+
+		return values;
 	}
 }

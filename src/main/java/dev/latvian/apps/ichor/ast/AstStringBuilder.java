@@ -51,6 +51,24 @@ public class AstStringBuilder {
 		}
 	}
 
+	public static String wrapNumber(Object number) {
+		if (number instanceof Double || number instanceof Float) {
+			var s = number.toString();
+
+			if (s.length() > 2) {
+				int i = s.lastIndexOf('.');
+
+				if (i == s.length() - 2 && s.charAt(i + 1) == '0') {
+					return s.substring(0, i);
+				}
+			}
+
+			return s;
+		} else {
+			return number.toString();
+		}
+	}
+
 	public static boolean isKey(String key) {
 		char[] c = key.toCharArray();
 

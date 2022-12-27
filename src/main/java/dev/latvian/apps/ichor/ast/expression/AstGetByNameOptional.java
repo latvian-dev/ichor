@@ -1,12 +1,12 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
 public class AstGetByNameOptional extends AstGetByName {
-	public AstGetByNameOptional(Evaluable from, String name) {
+	public AstGetByNameOptional(Object from, String name) {
 		super(from, name);
 	}
 
@@ -18,20 +18,19 @@ public class AstGetByNameOptional extends AstGetByName {
 	}
 
 	@Override
-	public Object eval(Scope scope) {
-		var cx = scope.getContext();
-		var self = from.eval(scope);
-		var p = cx.getPrototype(self);
-		cx.debugger.pushSelf(scope, self);
+	public Object eval(Context cx, Scope scope) {
+		var self = evalSelf(cx, scope);
+		var p = cx.getPrototype(scope, self);
+		cx.debugger.pushSelf(cx, scope, self);
 
-		var r = p.get(scope, self, name);
+		var r = p.get(cx, scope, self, name);
 
 		if (Special.isInvalid(r)) {
-			cx.debugger.get(scope, this, "undefined");
+			cx.debugger.get(cx, scope, this, "undefined");
 			return Special.UNDEFINED;
 		}
 
-		cx.debugger.get(scope, this, r);
+		cx.debugger.get(cx, scope, this, r);
 		return r;
 	}
 }

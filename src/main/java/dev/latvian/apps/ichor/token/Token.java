@@ -7,6 +7,10 @@ import dev.latvian.apps.ichor.ast.expression.unary.AstUnary;
 import org.jetbrains.annotations.Nullable;
 
 public interface Token {
+	default boolean isLiteralPre() {
+		return false;
+	}
+
 	@Nullable
 	default Evaluable toEvaluable(Parser parser, TokenPos pos) {
 		return null;

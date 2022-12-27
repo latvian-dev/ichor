@@ -1,10 +1,9 @@
 package dev.latvian.apps.ichor.ast.expression.unary;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.token.BooleanToken;
 
 public class AstNot extends AstUnary {
 	@Override
@@ -14,31 +13,31 @@ public class AstNot extends AstUnary {
 	}
 
 	@Override
-	public Object eval(Scope scope) {
-		return evalBoolean(scope);
+	public Object eval(Context cx, Scope scope) {
+		return evalBoolean(cx, scope);
 	}
 
 	@Override
-	public boolean evalBoolean(Scope scope) {
-		return !node.evalBoolean(scope);
+	public double evalDouble(Context cx, Scope scope) {
+		return evalInt(cx, scope);
 	}
 
 	@Override
-	public int evalInt(Scope scope) {
-		return node.evalBoolean(scope) ? 0 : 1;
+	public int evalInt(Context cx, Scope scope) {
+		return cx.asBoolean(scope, node) ? 0 : 1;
 	}
 
 	@Override
-	public double evalDouble(Scope scope) {
-		return evalInt(scope);
+	public boolean evalBoolean(Context cx, Scope scope) {
+		return !cx.asBoolean(scope, node);
 	}
 
 	@Override
-	public Evaluable optimize(Parser parser) {
-		node = node.optimize(parser);
+	public Object optimize(Parser parser) {
+		super.optimize(parser);
 
-		if (node instanceof BooleanToken n) {
-			return BooleanToken.of(!n.value);
+		if (node instanceof Boolean n) {
+			return !n;
 		}
 
 		return this;

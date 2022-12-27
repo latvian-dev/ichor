@@ -24,11 +24,6 @@ public class RootScope extends Scope {
 	}
 
 	@Override
-	public Context getContext() {
-		return context;
-	}
-
-	@Override
 	public String toString() {
 		return "RootScope";
 	}
@@ -43,7 +38,7 @@ public class RootScope extends Scope {
 		timeoutAt = interpretingTimeout > 0L ? System.currentTimeMillis() + interpretingTimeout : 0L;
 
 		try {
-			interpretable.interpret(this);
+			interpretable.interpret(context, this);
 		} finally {
 			timeoutAt = 0L;
 		}

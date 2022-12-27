@@ -1,7 +1,8 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Interpretable;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.BreakExit;
@@ -13,7 +14,7 @@ import java.util.Collection;
 
 public class AstForOf extends AstLabeledStatement {
 	public String name;
-	public Evaluable from;
+	public Object from;
 	public Interpretable body;
 
 	protected String appendKeyword() {
@@ -42,10 +43,10 @@ public class AstForOf extends AstLabeledStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) {
-		var f = from.eval(scope);
-		var p = scope.getContext().getPrototype(f);
-		var itr = getIterable(scope, p, f);
+	public void interpret(Context cx, Scope scope) {
+		var f = cx.eval(scope, from);
+		var p = cx.getPrototype(scope, f);
+		var itr = getIterable(cx, scope, p, f);
 
 		if (itr.isEmpty()) {
 			return;
@@ -55,7 +56,7 @@ public class AstForOf extends AstLabeledStatement {
 			try {
 				var s = scope.push();
 				s.declareMember(name, it, AssignType.MUTABLE);
-				body.interpretSafe(s);
+				body.interpretSafe(cx, s);
 			} catch (BreakExit exit) {
 				if (exit.stop == this) {
 					break;
@@ -70,7 +71,13 @@ public class AstForOf extends AstLabeledStatement {
 		}
 	}
 
-	protected Collection<?> getIterable(Scope scope, Prototype prototype, Object from) {
-		return prototype.values(scope, from);
+	protected Collection<?> getIterable(Context cx, Scope scope, Prototype prototype, Object from) {
+		return prototype.values(cx, scope, from);
+	}
+
+	@Override
+	public void optimize(Parser parser) {
+		from = parser.optimize(from);
+		body.optimize(parser);
 	}
 }

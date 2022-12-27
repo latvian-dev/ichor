@@ -12,23 +12,23 @@ public class PositionedToken implements TokenPosSupplier {
 		NONE.next = NONE;
 	}
 
-	public final Token token;
+	public final Object token;
 	public final TokenPos pos;
 	public PositionedToken prev;
 	public PositionedToken next;
 
-	public PositionedToken(Token t, TokenPos p) {
+	public PositionedToken(Object t, TokenPos p) {
 		token = t;
 		pos = p;
 	}
 
-	public boolean isName() {
-		return token instanceof NameToken n && n.canBeName();
+	public boolean isIdentifier() {
+		return token instanceof IdentifierToken t && t.isIdentifier();
 	}
 
-	public String name(ParseErrorMessage error) {
-		if (token instanceof NameToken n && n.canBeName()) {
-			return n.name;
+	public String identifier(ParseErrorMessage error) {
+		if (token instanceof IdentifierToken t && t.isIdentifier()) {
+			return t.name;
 		} else {
 			throw new ParseError(pos, error);
 		}

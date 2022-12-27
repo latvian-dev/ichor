@@ -1,7 +1,8 @@
 package dev.latvian.apps.ichor.ast.expression;
 
 import dev.latvian.apps.ichor.Callable;
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -9,15 +10,15 @@ import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import java.math.BigInteger;
 
 public class AstTypeOf extends AstExpression {
-	public final Evaluable of;
+	public Object of;
 
-	public AstTypeOf(Evaluable of) {
+	public AstTypeOf(Object of) {
 		this.of = of;
 	}
 
 	@Override
-	public Object eval(Scope scope) {
-		var o = of.eval(scope);
+	public Object eval(Context cx, Scope scope) {
+		var o = cx.eval(scope, of);
 
 		if (o == Special.UNDEFINED) {
 			return "undefined";
@@ -39,6 +40,25 @@ public class AstTypeOf extends AstExpression {
 	@Override
 	public void append(AstStringBuilder builder) {
 		builder.append("typeof ");
-		builder.append(of);
+		builder.appendValue(of);
+	}
+
+	@Override
+	public Object optimize(Parser parser) {
+		of = parser.optimize(of);
+
+		if (of == Special.UNDEFINED) {
+			return "undefined";
+		} else if (of instanceof String) {
+			return "string";
+		} else if (of instanceof Number) {
+			return "number";
+		} else if (of instanceof Boolean) {
+			return "boolean";
+		} else if (of instanceof BigInteger) {
+			return "bigint";
+		} else {
+			return this;
+		}
 	}
 }

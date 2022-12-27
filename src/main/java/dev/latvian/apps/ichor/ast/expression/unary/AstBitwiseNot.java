@@ -1,10 +1,9 @@
 package dev.latvian.apps.ichor.ast.expression.unary;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.token.DoubleToken;
 
 public class AstBitwiseNot extends AstUnary {
 	@Override
@@ -14,26 +13,26 @@ public class AstBitwiseNot extends AstUnary {
 	}
 
 	@Override
-	public Object eval(Scope scope) {
-		return evalInt(scope);
+	public Object eval(Context cx, Scope scope) {
+		return evalInt(cx, scope);
 	}
 
 	@Override
-	public int evalInt(Scope scope) {
-		return ~node.evalInt(scope);
+	public double evalDouble(Context cx, Scope scope) {
+		return evalInt(cx, scope);
 	}
 
 	@Override
-	public double evalDouble(Scope scope) {
-		return evalInt(scope);
+	public int evalInt(Context cx, Scope scope) {
+		return ~cx.asInt(scope, node);
 	}
 
 	@Override
-	public Evaluable optimize(Parser parser) {
-		node = node.optimize(parser);
+	public Object optimize(Parser parser) {
+		super.optimize(parser);
 
-		if (node instanceof DoubleToken n) {
-			return DoubleToken.of(~((int) n.value));
+		if (node instanceof Number n) {
+			return ~((int) n.intValue());
 		}
 
 		return this;

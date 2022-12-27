@@ -6,33 +6,33 @@ public interface Debugger {
 	Debugger DEFAULT = new Debugger() {
 	};
 
-	default void pushScope(Scope scope) {
+	default void pushScope(Context cx, Scope scope) {
 	}
 
-	default void pushSelf(Scope scope, Object self) {
+	default void pushSelf(Context cx, Scope scope, Object self) {
 	}
 
-	default void get(Scope scope, Object object, Object returnValue) {
+	default void get(Context cx, Scope scope, Object object, Object returnValue) {
 	}
 
-	default void set(Scope scope, Object object, Object value) {
+	default void set(Context cx, Scope scope, Object object, Object value) {
 	}
 
-	default void delete(Scope scope, Object object) {
+	default void delete(Context cx, Scope scope, Object object) {
 	}
 
-	default void call(Scope scope, AstCall call, Object returnValue) {
+	default void call(Context cx, Scope scope, AstCall call, Object func, Object[] args, Object returnValue) {
 	}
 
-	default void assignNew(Scope scope, Object object, Object value) {
+	default void assignNew(Context cx, Scope scope, Object object, Object value) {
 	}
 
-	default void assignSet(Scope scope, Object object, Object value) {
+	default void assignSet(Context cx, Scope scope, Object object, Object value) {
 	}
 
-	default void exit(Scope scope, Object value) {
+	default void exit(Context cx, Scope scope, Object value) {
 	}
 
-	default void debuggerStatement(Scope scope) {
+	default void debuggerStatement(Context cx, Scope scope) {
 	}
 }

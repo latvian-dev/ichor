@@ -1,7 +1,8 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Interpretable;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.BreakExit;
@@ -9,7 +10,7 @@ import dev.latvian.apps.ichor.exit.ContinueExit;
 
 public class AstFor extends AstLabeledStatement {
 	public Interpretable initializer;
-	public Evaluable condition;
+	public Object condition;
 	public Interpretable increment;
 	public Interpretable body;
 
@@ -31,7 +32,7 @@ public class AstFor extends AstLabeledStatement {
 		}
 
 		if (condition != null) {
-			builder.append(condition);
+			builder.appendValue(condition);
 		}
 
 		builder.append(';');
@@ -50,13 +51,13 @@ public class AstFor extends AstLabeledStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) {
+	public void interpret(Context cx, Scope scope) {
 		var s = scope.push();
 
-		for (initializer.interpretSafe(scope); condition == null || condition.evalBoolean(scope); increment.interpretSafe(scope)) {
+		for (initializer.interpretSafe(cx, scope); condition == null || cx.asBoolean(scope, condition); increment.interpretSafe(cx, scope)) {
 			try {
 				if (body != null) {
-					body.interpretSafe(s);
+					body.interpretSafe(cx, s);
 				}
 			} catch (BreakExit exit) {
 				if (exit.stop == this) {
@@ -70,5 +71,13 @@ public class AstFor extends AstLabeledStatement {
 				}
 			}
 		}
+	}
+
+	@Override
+	public void optimize(Parser parser) {
+		initializer.optimize(parser);
+		condition = parser.optimize(condition);
+		increment.optimize(parser);
+		body.optimize(parser);
 	}
 }

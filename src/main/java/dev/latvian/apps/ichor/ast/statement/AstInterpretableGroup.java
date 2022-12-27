@@ -1,6 +1,8 @@
 package dev.latvian.apps.ichor.ast.statement;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Interpretable;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
@@ -24,15 +26,22 @@ public class AstInterpretableGroup extends AstStatement {
 
 	@Override
 	public void append(AstStringBuilder builder) {
-		for (Interpretable value : interpretable) {
-			builder.append(value);
+		for (var statement : interpretable) {
+			builder.append(statement);
 		}
 	}
 
 	@Override
-	public void interpret(Scope scope) {
+	public void interpret(Context cx, Scope scope) {
 		for (var statement : interpretable) {
-			statement.interpretSafe(scope);
+			statement.interpretSafe(cx, scope);
+		}
+	}
+
+	@Override
+	public void optimize(Parser parser) {
+		for (var statement : interpretable) {
+			statement.optimize(parser);
 		}
 	}
 }

@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.ast.expression;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -19,20 +20,20 @@ public class AstGetScopeMember extends AstGetBase {
 	}
 
 	@Override
-	public Object eval(Scope scope) {
+	public Object eval(Context cx, Scope scope) {
 		var r = scope.getMember(name);
 
 		if (r == Special.NOT_FOUND) {
 			throw new ScriptError("Member " + name + " not found");
 		}
 
-		scope.getContext().debugger.get(scope, this, r);
+		cx.debugger.get(cx, scope, this, r);
 		return r;
 	}
 
 	@Override
-	public void set(Scope scope, Object value) {
-		scope.getContext().debugger.set(scope, this, value);
+	public void set(Context cx, Scope scope, Object value) {
+		cx.debugger.set(cx, scope, this, value);
 
 		if (!scope.setMember(name, value, AssignType.NONE)) {
 			throw new ScriptError("Member " + name + " not found");
@@ -40,8 +41,8 @@ public class AstGetScopeMember extends AstGetBase {
 	}
 
 	@Override
-	public boolean delete(Scope scope) {
-		scope.getContext().debugger.delete(scope, this);
+	public boolean delete(Context cx, Scope scope) {
+		cx.debugger.delete(cx, scope, this);
 
 		if (scope.deleteDeclaredMember(name) == Special.NOT_FOUND) {
 			throw new ScriptError("Member " + name + " not found");

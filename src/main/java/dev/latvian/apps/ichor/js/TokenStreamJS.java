@@ -3,11 +3,8 @@ package dev.latvian.apps.ichor.js;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.error.TokenStreamError;
 import dev.latvian.apps.ichor.exit.EndOfFileExit;
-import dev.latvian.apps.ichor.token.DoubleToken;
-import dev.latvian.apps.ichor.token.NameToken;
+import dev.latvian.apps.ichor.token.IdentifierToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
-import dev.latvian.apps.ichor.token.RegExToken;
-import dev.latvian.apps.ichor.token.StringToken;
 import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.token.TokenPos;
 import dev.latvian.apps.ichor.token.TokenSource;
@@ -15,21 +12,10 @@ import dev.latvian.apps.ichor.token.TokenStream;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
 public class TokenStreamJS implements TokenStream {
-	public static final Set<Token> LITERAL_PRE = Set.of(
-			SymbolTokenJS.LP,
-			SymbolTokenJS.SET,
-			SymbolTokenJS.ARROW,
-			KeywordTokenJS.RETURN,
-			KeywordTokenJS.TYPEOF,
-			KeywordTokenJS.IN,
-			KeywordTokenJS.OF
-	);
-
 	private final TokenSource tokenSource;
 	private final char[] input;
 	private final String[] lines;
@@ -42,8 +28,7 @@ public class TokenStreamJS implements TokenStream {
 	private int tokenCount;
 	private PositionedToken rootToken;
 	private PositionedToken currentToken;
-	private final Map<String, StringToken> stringTokenCache;
-	private final Map<String, DoubleToken> doubleTokenCache;
+	private final Map<String, Double> doubleTokenCache;
 	private final Map<String, Token> nameTokenCache;
 	private final Stack<SymbolTokenJS> depth;
 	private SymbolTokenJS currentDepth;
@@ -57,7 +42,6 @@ public class TokenStreamJS implements TokenStream {
 		pos = 0;
 		row = 1;
 		col = 1;
-		stringTokenCache = new HashMap<>();
 		doubleTokenCache = new HashMap<>();
 		nameTokenCache = new HashMap<>();
 		depth = new Stack<>();
@@ -66,12 +50,8 @@ public class TokenStreamJS implements TokenStream {
 		timeoutTime = 0L;
 	}
 
-	public StringToken makeString(String value) {
-		return stringTokenCache.computeIfAbsent(value, StringToken::of);
-	}
-
 	private Token makeName(String s) {
-		return nameTokenCache.computeIfAbsent(s, NameToken::new);
+		return nameTokenCache.computeIfAbsent(s, IdentifierToken::new);
 	}
 
 	private char peek(int i) {
@@ -137,7 +117,7 @@ public class TokenStreamJS implements TokenStream {
 		return isDigit(t) || (t >= 'a' && t <= 'f') || (t >= 'A' && t <= 'F');
 	}
 
-	private Token readToken() {
+	private Object readToken() {
 		if (currentDepth == SymbolTokenJS.TEMPLATE_LITERAL && peek(1) != '`' && !(peek(1) == '$' && peek(2) == '{')) {
 			var sb = new StringBuilder();
 
@@ -156,88 +136,77 @@ public class TokenStreamJS implements TokenStream {
 				}
 			}
 
-			return makeString(sb.toString());
+			return sb.toString();
 		}
 
 		var t = readSkippingWhitespace();
+		var s = SymbolTokenJS.read(this, t);
 
-		if (t == '/') {
-			if (peek(1) == '/') {
-				read();
-				while (true) {
-					t = peek(1);
+		if (s == SymbolTokenJS.COMMENT_LINE) {
+			while (true) {
+				t = read();
 
-					if (t == 0 || t == '\n') {
-						return readToken();
-					} else {
-						read();
-					}
+				if (t == '\n') {
+					return readToken();
 				}
-			} else if (peek(1) == '*') {
-				read();
-
-				while (true) {
-					t = peek(1);
-
-					if (t == '*' && peek(2) == '/') {
-						read();
-						read();
-						return readToken();
-					} else {
-						read();
-					}
-				}
-			} else if (currentToken != null && LITERAL_PRE.contains(currentToken.token)) {
-				var sbP = new StringBuilder();
-				var sbF = new StringBuilder();
-
-				while (true) {
-					char c = read();
-
-					if (c == '\\' && peek(1) == '/') {
-						read();
-						sbP.append('\\');
-						sbP.append('/');
-					} else if (c == '/') {
-						char p = peek(1);
-
-						while (p >= 'a' && p <= 'z' || p >= 'A' && p <= 'Z') {
-							sbF.append(read());
-							p = peek(1);
-						}
-
-						break;
-					} else if (c == '\n') {
-						throw error("Newline isn't allowed in RegEx!");
-					} else {
-						sbP.append(c);
-					}
-				}
-
-				int flags = 0;
-
-				for (int i = 0; i < sbF.length(); i++) {
-					switch (sbF.charAt(i)) {
-						case 'd' -> flags |= Pattern.UNIX_LINES;
-						case 'i' -> flags |= Pattern.CASE_INSENSITIVE;
-						case 'x' -> flags |= Pattern.COMMENTS;
-						case 'm' -> flags |= Pattern.MULTILINE;
-						case 's' -> flags |= Pattern.DOTALL;
-						case 'u' -> flags |= Pattern.UNICODE_CASE;
-						case 'U' -> flags |= Pattern.UNICODE_CHARACTER_CLASS;
-						case 'g' -> {
-						}
-						default -> throw error("Invalid RegEx flag: '" + sbF.charAt(i) + "'");
-					}
-				}
-
-				return new RegExToken(Pattern.compile(sbP.toString(), flags));
 			}
-		}
+		} else if (s == SymbolTokenJS.COMMENT_BLOCK_START) {
+			while (true) {
+				t = read();
 
-		if (t == '.' && isDigit(peek(1))) {
-			return readNumber();
-		} else if (t == '\'' || t == '"') {
+				if (t == '*' && peek(1) == '/') {
+					read();
+					return readToken();
+				}
+			}
+		} else if (s == SymbolTokenJS.DIV && (currentToken == null || currentToken.token instanceof Token tk && tk.isLiteralPre())) {
+			var sbP = new StringBuilder();
+			var sbF = new StringBuilder();
+
+			while (true) {
+				char c = read();
+
+				if (c == '\\' && peek(1) == '/') {
+					read();
+					sbP.append('\\');
+					sbP.append('/');
+				} else if (c == '/') {
+					char p = peek(1);
+
+					while (p >= 'a' && p <= 'z' || p >= 'A' && p <= 'Z') {
+						sbF.append(read());
+						p = peek(1);
+					}
+
+					break;
+				} else if (c == '\n') {
+					throw error("Newline isn't allowed in RegEx!");
+				} else {
+					sbP.append(c);
+				}
+			}
+
+			int flags = 0;
+
+			for (int i = 0; i < sbF.length(); i++) {
+				switch (sbF.charAt(i)) {
+					case 'd' -> flags |= Pattern.UNIX_LINES;
+					case 'i' -> flags |= Pattern.CASE_INSENSITIVE;
+					case 'x' -> flags |= Pattern.COMMENTS;
+					case 'm' -> flags |= Pattern.MULTILINE;
+					case 's' -> flags |= Pattern.DOTALL;
+					case 'u' -> flags |= Pattern.UNICODE_CASE;
+					case 'U' -> flags |= Pattern.UNICODE_CHARACTER_CLASS;
+					case 'g' -> {
+					}
+					default -> throw error("Invalid RegEx flag: '" + sbF.charAt(i) + "'");
+				}
+			}
+
+			return Pattern.compile(sbP.toString(), flags);
+		} else if (s == SymbolTokenJS.DOT && isDigit(peek(1))) {
+			return readNumber(); // fix this
+		} else if (s == SymbolTokenJS.SSTRING || s == SymbolTokenJS.DSTRING) {
 			var sb = new StringBuilder();
 
 			while (true) {
@@ -255,12 +224,8 @@ public class TokenStreamJS implements TokenStream {
 				}
 			}
 
-			return makeString(sb.toString());
-		}
-
-		var s = SymbolTokenJS.read(this, t);
-
-		if (s != null) {
+			return sb.toString();
+		} else if (s != null) {
 			if (s == SymbolTokenJS.TEMPLATE_LITERAL_VAR || s == SymbolTokenJS.LC || s == SymbolTokenJS.LP || s == SymbolTokenJS.LS) {
 				depth.push(s);
 				currentDepth = s;
@@ -298,7 +263,7 @@ public class TokenStreamJS implements TokenStream {
 		}
 	}
 
-	private Token readLiteral(char t) {
+	private Object readLiteral(char t) {
 		if (isDigit(t)) {
 			return readNumber();
 		} else if (Character.isJavaIdentifierStart(t)) {
@@ -308,7 +273,7 @@ public class TokenStreamJS implements TokenStream {
 			while (true) {
 				char c = peek(1);
 
-				if (Character.isJavaIdentifierPart(c)) {
+				if (c != 0 && Character.isJavaIdentifierPart(c)) {
 					len++;
 					read();
 				} else {
@@ -324,7 +289,7 @@ public class TokenStreamJS implements TokenStream {
 		}
 	}
 
-	private Token readNumber() {
+	private Number readNumber() {
 		// TODO: Support for exp, hex, oct, bin, bigint
 		// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#numeric_literals
 
@@ -361,7 +326,7 @@ public class TokenStreamJS implements TokenStream {
 		}
 
 		try {
-			num = DoubleToken.of(Double.parseDouble(numStr));
+			num = Double.parseDouble(numStr);
 			doubleTokenCache.put(numStr, num);
 			return num;
 		} catch (Exception ex) {

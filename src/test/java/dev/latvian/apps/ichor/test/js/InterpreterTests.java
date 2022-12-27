@@ -45,6 +45,7 @@ public class InterpreterTests {
 		System.out.println();
 
 		var cx = new ContextJS();
+		cx.debugger = ConsoleDebugger.INSTANCE;
 		cx.setProperty(Context.INTERPRETING_TIMEOUT, 1500L);
 		cx.setProperty(Context.TOKEN_STREAM_TIMEOUT, filename.isEmpty() ? 1500L : 0L);
 
@@ -53,7 +54,6 @@ public class InterpreterTests {
 		var console = new TestConsole(System.out, new ArrayList<>());
 		rootScope.declareMember("print", console, AssignType.IMMUTABLE);
 		rootScopeCallback.accept(rootScope);
-		cx.debugger = new ConsoleDebugger();
 
 		var tokenStream = new TokenStreamJS(cx, new NamedTokenSource(filename), input);
 		var rootToken = tokenStream.getRootToken();
@@ -66,7 +66,7 @@ public class InterpreterTests {
 		System.out.println();
 
 		try {
-			ast.interpretSafe(rootScope);
+			ast.interpretSafe(cx, rootScope);
 		} catch (ScopeExit ex) {
 			throw new ScriptError(ex);
 		} catch (Throwable ex) {
@@ -335,6 +335,24 @@ public class InterpreterTests {
 				3
 				1
 				Hi
+				""");
+	}
+
+	@Test
+	public void arrayPrint() {
+		testInterpreter("""
+				print([1, 2.5, 'Hi'])
+				""", """
+				[1, 2.5, 'Hi']
+				""");
+	}
+
+	@Test
+	public void objectPrint() {
+		testInterpreter("""
+				print({a: 1, b: 2.5, c: 'Hi'})
+				""", """
+				{a: 1, b: 2.5, c: 'Hi'}
 				""");
 	}
 
@@ -685,4 +703,61 @@ public class InterpreterTests {
 				d
 				""");
 	}
+
+	@Test
+	public void weirdClosure() {
+		testInterpreter("""
+				function closure() {
+				    let b = 10;
+				    print(b); // 10
+				    callMe(function() {
+				        b++;
+				        return b;
+				    })
+				    print(b); // 11
+				}
+				    
+				function callMe(fn) {
+				    print(fn()); // 11
+				}
+								
+				closure()
+				""", """
+				10
+				11
+				11
+				""");
+	}
+
+	@Test
+	public void weirdClosure2() {
+		testInterpreter("""
+				function giveMeClosure() {
+				    let a = 10;
+				    return function() {
+				      a++;
+				      return a;
+				    }
+				}
+								
+				print(giveMeClosure()())
+				""", """
+				11
+				""");
+	}
+
+	/*
+	@Test
+	public void destructing() {
+		testInterpreter("""
+				let props = {a: '1', b: '2'}
+				let {a, b} = props
+				print(a)
+				print(b)
+				""", """
+				1
+				2
+				""");
+	}
+	 */
 }

@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor;
 
-import dev.latvian.apps.ichor.ast.expression.AstParam;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.AssignType;
@@ -60,7 +59,7 @@ public class Scope {
 			} else {
 				slot.value = value;
 				// slot.prototype = null;
-				root.context.debugger.assignSet(this, name, value);
+				root.context.debugger.assignSet(root.context, this, name, value);
 			}
 		} else {
 			if (slot == null) {
@@ -76,12 +75,8 @@ public class Scope {
 			slot.value = value;
 			slot.immutable = type == AssignType.IMMUTABLE;
 			// slot.prototype = null;
-			root.context.debugger.assignNew(this, name, value);
+			root.context.debugger.assignNew(root.context, this, name, value);
 		}
-	}
-
-	public void declareParam(AstParam param, AssignType type) {
-		declareMember(param.name, param.defaultValue.eval(this), type);
 	}
 
 	public AssignType hasDeclaredMember(String name) {
@@ -197,12 +192,8 @@ public class Scope {
 		var p = new Scope(this);
 		p.owner = owner;
 		root.checkTimeout();
-		root.context.debugger.pushScope(this);
+		root.context.debugger.pushScope(root.context, this);
 		return p;
-	}
-
-	public Context getContext() {
-		return root.context;
 	}
 
 	@Override

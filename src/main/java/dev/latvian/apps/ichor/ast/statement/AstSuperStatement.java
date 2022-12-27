@@ -1,12 +1,12 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.expression.AstClassFunction;
 import dev.latvian.apps.ichor.error.ScriptError;
 
 public class AstSuperStatement extends AstThisStatement {
-	public AstSuperStatement(Evaluable[] a) {
+	public AstSuperStatement(Object[] a) {
 		super(a);
 	}
 
@@ -16,7 +16,7 @@ public class AstSuperStatement extends AstThisStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) {
+	public void interpret(Context cx, Scope scope) {
 		if (scope.owner instanceof AstClassFunction func && func.type == AstClassFunction.Type.CONSTRUCTOR) {
 			var c = scope.parent.findOwnerClass();
 

@@ -1,51 +1,36 @@
 package dev.latvian.apps.ichor;
 
-import dev.latvian.apps.ichor.token.StringToken;
-
 public interface EvaluableStringBase extends Evaluable {
 	@Override
-	void evalString(Scope scope, StringBuilder builder);
+	void evalString(Context cx, Scope scope, StringBuilder builder);
 
 	@Override
-	default String eval(Scope scope) {
+	default String eval(Context cx, Scope scope) {
 		var builder = new StringBuilder();
-		evalString(scope, builder);
+		evalString(cx, scope, builder);
 		return builder.toString();
 	}
 
 	@Override
-	default double evalDouble(Scope scope) {
+	default double evalDouble(Context cx, Scope scope) {
 		try {
-			return Double.parseDouble(eval(scope));
+			return Double.parseDouble(eval(cx, scope));
 		} catch (NumberFormatException ex) {
 			return Double.NaN;
 		}
 	}
 
 	@Override
-	default int evalInt(Scope scope) {
+	default int evalInt(Context cx, Scope scope) {
 		try {
-			return (int) Double.parseDouble(eval(scope));
+			return (int) Double.parseDouble(eval(cx, scope));
 		} catch (NumberFormatException ex) {
 			return 0;
 		}
 	}
 
 	@Override
-	default boolean evalBoolean(Scope scope) {
-		return !eval(scope).isEmpty();
-	}
-
-	@Override
-	default boolean equals(Scope scope, Evaluable right, boolean shallow) {
-		var left = eval(scope);
-
-		if (right instanceof StringToken string) {
-			return left.equals(string.value);
-		} else {
-			var builder = new StringBuilder();
-			right.evalString(scope, builder);
-			return left.equals(builder.toString());
-		}
+	default boolean evalBoolean(Context cx, Scope scope) {
+		return !eval(cx, scope).isEmpty();
 	}
 }

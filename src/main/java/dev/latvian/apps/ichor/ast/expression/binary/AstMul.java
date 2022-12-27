@@ -1,9 +1,8 @@
 package dev.latvian.apps.ichor.ast.expression.binary;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.token.DoubleToken;
 
 public class AstMul extends AstBinary {
 	@Override
@@ -12,28 +11,23 @@ public class AstMul extends AstBinary {
 	}
 
 	@Override
-	public Object eval(Scope scope) {
-		return evalDouble(scope);
+	public Object eval(Context cx, Scope scope) {
+		return evalDouble(cx, scope);
 	}
 
 	@Override
-	public double evalDouble(Scope scope) {
-		return left.evalDouble(scope) * right.evalDouble(scope);
+	public double evalDouble(Context cx, Scope scope) {
+		return cx.asDouble(scope, left) * cx.asDouble(scope, right);
 	}
 
 	@Override
-	public int evalInt(Scope scope) {
-		return (int) evalDouble(scope);
-	}
+	public Object optimize(Parser parser) {
+		super.optimize(parser);
 
-	@Override
-	public Evaluable optimize(Parser parser) {
-		var s = super.optimize(parser);
-
-		if (s == this && left instanceof DoubleToken l && right instanceof DoubleToken r) {
-			return DoubleToken.of(l.value * r.value);
+		if (left instanceof Number l && right instanceof Number r) {
+			return l.doubleValue() * r.doubleValue();
 		}
 
-		return s;
+		return this;
 	}
 }

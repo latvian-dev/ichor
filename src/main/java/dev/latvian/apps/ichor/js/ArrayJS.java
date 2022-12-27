@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.js;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.java.ListValueHandler;
 import dev.latvian.apps.ichor.prototype.Prototype;
@@ -11,25 +12,32 @@ import java.util.Collection;
 import java.util.List;
 
 public class ArrayJS {
-	public static final Prototype PROTOTYPE = new PrototypeBuilder("Array")
-			.constructor((cx, args, hasNew) -> args.length == 0 ? new ArrayList<>() : Arrays.asList(args))
-			.asString((scope, self, builder) -> {
-				builder.append('[');
+	public static final Prototype PROTOTYPE = new PrototypeBuilder("Array") {
+		@Override
+		public Object call(Context cx, Scope scope, Object self, Object[] args) {
+			return args.length == 0 ? new ArrayList<>() : Arrays.asList(args);
+		}
 
-				boolean first = true;
+		@Override
+		public void asString(Context cx, Scope scope, Object self, StringBuilder builder, boolean escape) {
+			builder.append('[');
 
-				for (Object o : collection(self)) {
-					if (first) {
-						first = false;
-					} else {
-						builder.append(',');
-					}
+			boolean first = true;
 
-					scope.getContext().asString(scope, o, builder);
+			for (Object o : collection(self)) {
+				if (first) {
+					first = false;
+				} else {
+					builder.append(',');
+					builder.append(' ');
 				}
 
-				builder.append(']');
-			})
+				cx.asString(scope, o, builder, true);
+			}
+
+			builder.append(']');
+		}
+	}
 			.property("length", ArrayJS::length)
 			.indexedValueHandler(ListValueHandler.INSTANCE);
 
@@ -43,7 +51,7 @@ public class ArrayJS {
 		return (List) self;
 	}
 
-	private static Object length(Scope scope, Object self) {
+	private static Object length(Context cx, Scope scope, Object self) {
 		return collection(self).size();
 	}
 }

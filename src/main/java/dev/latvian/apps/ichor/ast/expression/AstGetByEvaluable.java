@@ -1,91 +1,96 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
 
 public class AstGetByEvaluable extends AstGetFrom {
-	public final Evaluable key;
+	public Object key;
 
-	public AstGetByEvaluable(Evaluable from, Evaluable key) {
+	public AstGetByEvaluable(Object from, Object key) {
 		super(from);
 		this.key = key;
 	}
 
 	@Override
-	public Object evalKey(Scope scope) {
-		return key.eval(scope);
+	public Object evalKey(Context cx, Scope scope) {
+		return cx.eval(scope, key);
 	}
 
 	@Override
 	public void append(AstStringBuilder builder) {
 		builder.appendValue(from);
 		builder.append('[');
-		builder.append(key);
+		builder.appendValue(key);
 		builder.append(']');
 	}
 
 	@Override
-	public Object eval(Scope scope) {
-		var cx = scope.getContext();
-		var self = from.eval(scope);
-		var p = cx.getPrototype(self);
-		cx.debugger.pushSelf(scope, self);
+	public Object eval(Context cx, Scope scope) {
+		var self = evalSelf(cx, scope);
+		var p = cx.getPrototype(scope, self);
+		cx.debugger.pushSelf(cx, scope, self);
 
-		var k = key.eval(scope);
+		var k = evalKey(cx, scope);
 
 		Object r;
 
-		if (k instanceof Number) {
-			r = p.get(scope, self, ((Number) k).intValue());
+		if (k instanceof Number n) {
+			r = p.get(cx, scope, self, n.intValue());
 		} else {
-			r = p.get(scope, self, scope.getContext().asString(scope, k));
+			r = p.get(cx, scope, self, cx.asString(scope, k, false));
 		}
 
 		if (r == Special.NOT_FOUND) {
 			throw new ScriptError("Cannot find " + this + " of " + p);
 		}
 
-		cx.debugger.get(scope, this, r);
+		cx.debugger.get(cx, scope, this, r);
 		return r;
 	}
 
 	@Override
-	public void set(Scope scope, Object value) {
-		var cx = scope.getContext();
-		var self = from.eval(scope);
-		var p = cx.getPrototype(self);
-		cx.debugger.pushSelf(scope, self);
+	public void set(Context cx, Scope scope, Object value) {
+		var self = evalSelf(cx, scope);
+		var p = cx.getPrototype(scope, self);
+		cx.debugger.pushSelf(cx, scope, self);
 
-		var k = key.eval(scope);
+		var k = evalKey(cx, scope);
 
 		if (k instanceof Number) {
-			p.set(scope, self, ((Number) k).intValue(), value);
+			p.set(cx, scope, self, ((Number) k).intValue(), value);
 		} else {
-			p.set(scope, self, scope.getContext().asString(scope, k), value);
+			p.set(cx, scope, self, cx.asString(scope, k, false), value);
 		}
 
-		cx.debugger.set(scope, this, value);
+		cx.debugger.set(cx, scope, this, value);
 	}
 
 	@Override
-	public boolean delete(Scope scope) {
-		var cx = scope.getContext();
-		var self = from.eval(scope);
-		var p = cx.getPrototype(self);
-		cx.debugger.pushSelf(scope, self);
+	public boolean delete(Context cx, Scope scope) {
+		var self = evalSelf(cx, scope);
+		var p = cx.getPrototype(scope, self);
+		cx.debugger.pushSelf(cx, scope, self);
 
-		var k = key.eval(scope);
+		var k = evalKey(cx, scope);
 
 		if (k instanceof Number) {
-			p.delete(scope, self, ((Number) k).intValue());
+			p.delete(cx, scope, self, ((Number) k).intValue());
 		} else {
-			p.delete(scope, self, scope.getContext().asString(scope, k));
+			p.delete(cx, scope, self, cx.asString(scope, k, false));
 		}
 
-		cx.debugger.delete(scope, this);
+		cx.debugger.delete(cx, scope, this);
 		return true;
+	}
+
+	@Override
+	public Object optimize(Parser parser) {
+		super.optimize(parser);
+		key = parser.optimize(key);
+		return this;
 	}
 }

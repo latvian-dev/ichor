@@ -13,43 +13,43 @@ import java.util.Collections;
 public interface Prototype extends PrototypeSupplier, Callable {
 
 	@Override
-	default Prototype getPrototype(Context cx) {
+	default Prototype getPrototype(Context cx, Scope scope) {
 		return this;
 	}
 
 	String getPrototypeName();
 
 	@Override
-	default Object call(Scope scope, Object self, Object[] args) {
+	default Object call(Context cx, Scope scope, Object self, Object[] args) {
 		return Special.NOT_FOUND;
 	}
 
 	@Nullable
-	default Object get(Scope scope, Object self, String name) {
+	default Object get(Context cx, Scope scope, Object self, String name) {
 		return Special.NOT_FOUND;
 	}
 
-	default boolean set(Scope scope, Object self, String name, @Nullable Object value) {
+	default boolean set(Context cx, Scope scope, Object self, String name, @Nullable Object value) {
 		return false;
 	}
 
-	default boolean delete(Scope scope, Object self, String name) {
+	default boolean delete(Context cx, Scope scope, Object self, String name) {
 		return false;
 	}
 
-	default Collection<?> keys(Scope scope, Object self) {
+	default Collection<?> keys(Context cx, Scope scope, Object self) {
 		return Collections.emptySet();
 	}
 
-	default Collection<?> values(Scope scope, Object self) {
+	default Collection<?> values(Context cx, Scope scope, Object self) {
 		return Collections.emptySet();
 	}
 
-	default Collection<?> entries(Scope scope, Object self) {
+	default Collection<?> entries(Context cx, Scope scope, Object self) {
 		return Collections.emptySet();
 	}
 
-	default int getMemberCount(Scope scope, Object self) {
+	default int getMemberCount(Context cx, Scope scope, Object self) {
 		return 0;
 	}
 
@@ -58,27 +58,27 @@ public interface Prototype extends PrototypeSupplier, Callable {
 	}
 
 	@Nullable
-	default Object get(Scope scope, Object self, int index) {
+	default Object get(Context cx, Scope scope, Object self, int index) {
 		return Special.NOT_FOUND;
 	}
 
-	default boolean set(Scope scope, Object self, int index, @Nullable Object value) {
+	default boolean set(Context cx, Scope scope, Object self, int index, @Nullable Object value) {
 		return false;
 	}
 
-	default boolean delete(Scope scope, Object self, int index) {
+	default boolean delete(Context cx, Scope scope, Object self, int index) {
 		return false;
 	}
 
-	default void asString(Scope scope, Object self, StringBuilder builder) {
+	default void asString(Context cx, Scope scope, Object self, StringBuilder builder, boolean escape) {
 		builder.append(self);
 	}
 
-	default Number asNumber(Scope scope, Object self) {
+	default Number asNumber(Context cx, Scope scope, Object self) {
 		return NumberJS.ONE;
 	}
 
-	default Boolean asBoolean(Scope scope, Object self) {
-		return Boolean.TRUE;
+	default boolean asBoolean(Context cx, Scope scope, Object self) {
+		return true;
 	}
 }

@@ -1,13 +1,12 @@
 package dev.latvian.apps.ichor.ast.expression.binary;
 
-import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.ast.expression.AstExpression;
 
 public abstract class AstBinary extends AstExpression {
-	public Evaluable left;
-	public Evaluable right;
+	public Object left;
+	public Object right;
 
 	@Override
 	public final void append(AstStringBuilder builder) {
@@ -21,9 +20,9 @@ public abstract class AstBinary extends AstExpression {
 	public abstract void appendSymbol(StringBuilder builder);
 
 	@Override
-	public Evaluable optimize(Parser parser) {
-		left = left.optimize(parser);
-		right = right.optimize(parser);
+	public Object optimize(Parser parser) {
+		left = parser.optimize(left);
+		right = parser.optimize(right);
 		return this;
 	}
 }

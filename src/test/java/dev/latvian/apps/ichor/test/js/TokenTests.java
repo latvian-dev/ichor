@@ -2,13 +2,8 @@ package dev.latvian.apps.ichor.test.js;
 
 import dev.latvian.apps.ichor.error.TokenStreamError;
 import dev.latvian.apps.ichor.js.ContextJS;
-import dev.latvian.apps.ichor.js.KeywordTokenJS;
-import dev.latvian.apps.ichor.js.SymbolTokenJS;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
-import dev.latvian.apps.ichor.token.BooleanToken;
-import dev.latvian.apps.ichor.token.DoubleToken;
-import dev.latvian.apps.ichor.token.NameToken;
-import dev.latvian.apps.ichor.token.Token;
+import dev.latvian.apps.ichor.token.IdentifierToken;
 import dev.latvian.apps.ichor.util.NamedTokenSource;
 import dev.latvian.apps.ichor.util.PrintWrapper;
 import org.junit.jupiter.api.Assertions;
@@ -20,26 +15,22 @@ import org.junit.jupiter.api.function.Executable;
 
 import java.util.Arrays;
 
+import static dev.latvian.apps.ichor.js.KeywordTokenJS.*;
+import static dev.latvian.apps.ichor.js.SymbolTokenJS.SET;
+import static dev.latvian.apps.ichor.js.SymbolTokenJS.*;
+
 @Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TokenTests {
+	private static IdentifierToken n(String name) {
+		return new IdentifierToken(name);
+	}
+
 	private static void testTokenStream(String input, Object... match) {
 		System.out.println("--- Token Test ---");
 		System.out.println("Input: " + input);
 		var cx = new ContextJS();
 		var tokenStream = new TokenStreamJS(cx, new NamedTokenSource(""), input);
-
-		Token[] matchTokens = new Token[match.length];
-
-		for (int i = 0; i < match.length; i++) {
-			if (match[i] instanceof Token token) {
-				matchTokens[i] = token;
-			} else if (match[i] instanceof Number number) {
-				matchTokens[i] = DoubleToken.of(number.doubleValue());
-			} else {
-				matchTokens[i] = tokenStream.makeString(match[i].toString());
-			}
-		}
 
 		var current = tokenStream.getRootToken();
 
@@ -47,7 +38,7 @@ public class TokenTests {
 			throw new IllegalStateException("No tokens!");
 		}
 
-		var tokens = new Token[tokenStream.getTokenCount()];
+		var tokens = new Object[tokenStream.getTokenCount()];
 		int i = 0;
 
 		while (current.exists()) {
@@ -55,9 +46,9 @@ public class TokenTests {
 			current = current.next;
 		}
 
-		System.out.println("Expected: " + Arrays.toString(matchTokens));
+		System.out.println("Expected: " + Arrays.toString(match));
 		System.out.println("Parsed:   " + Arrays.toString(tokens));
-		Assertions.assertArrayEquals(matchTokens, tokens);
+		Assertions.assertArrayEquals(match, tokens);
 	}
 
 	private static void testError(Executable test) {
@@ -73,12 +64,12 @@ public class TokenTests {
 
 	@Test
 	public void numberInt() {
-		testTokenStream("4", 4);
+		testTokenStream("4", 4.0);
 	}
 
 	@Test
 	public void numberDec() {
-		testTokenStream("4.0", 4);
+		testTokenStream("4.0", 4.0);
 	}
 
 	@Test
@@ -93,27 +84,27 @@ public class TokenTests {
 
 	@Test
 	public void symbols() {
-		testTokenStream("+ - * /", SymbolTokenJS.ADD, SymbolTokenJS.SUB, SymbolTokenJS.MUL, SymbolTokenJS.DIV);
+		testTokenStream("x + x - x * x / x", n("x"), ADD, n("x"), SUB, n("x"), MUL, n("x"), DIV, n("x"));
 	}
 
 	@Test
 	public void complexSymbols() {
-		testTokenStream("+ ++ >>> ??", SymbolTokenJS.ADD, SymbolTokenJS.ADD1, SymbolTokenJS.URSH, SymbolTokenJS.NC);
+		testTokenStream("+ ++ >>> ??", ADD, ADD1, URSH, NC);
 	}
 
 	@Test
 	public void equation() {
-		testTokenStream("-3 +   4.0 * 3.0", SymbolTokenJS.SUB, 3, SymbolTokenJS.ADD, 4, SymbolTokenJS.MUL, 3);
+		testTokenStream("-3 +   4.0 * 3.0", SUB, 3.0, ADD, 4.0, MUL, 3.0);
 	}
 
 	@Test
 	public void dot() {
-		testTokenStream(". .. ... .3", SymbolTokenJS.DOT, SymbolTokenJS.DDOT, SymbolTokenJS.TDOT, 0.3);
+		testTokenStream(". .. ... .3", DOT, DDOT, TDOT, 0.3);
 	}
 
 	@Test
 	public void var() {
-		testTokenStream("let x = 20;", KeywordTokenJS.LET, new NameToken("x"), SymbolTokenJS.SET, 20, SymbolTokenJS.SEMI);
+		testTokenStream("let x = 20;", LET, n("x"), SET, 20.0, SEMI);
 	}
 
 	@Test
@@ -129,66 +120,66 @@ public class TokenTests {
 						      console.print("X: " + x)
 						    }
 						""",
-				KeywordTokenJS.LET, new NameToken("x"), SymbolTokenJS.SET, 4.444, SymbolTokenJS.SEMI,
-				KeywordTokenJS.WHILE, SymbolTokenJS.LP, BooleanToken.TRUE, SymbolTokenJS.RP, SymbolTokenJS.LC,
-				KeywordTokenJS.IF, SymbolTokenJS.LP, SymbolTokenJS.ADD1, new NameToken("x"), SymbolTokenJS.GTE, 10, SymbolTokenJS.RP, SymbolTokenJS.LC,
-				KeywordTokenJS.BREAK, SymbolTokenJS.SEMI,
-				SymbolTokenJS.RC,
-				new NameToken("console"), SymbolTokenJS.DOT, new NameToken("print"), SymbolTokenJS.LP, "X: ", SymbolTokenJS.ADD, new NameToken("x"), SymbolTokenJS.RP,
-				SymbolTokenJS.RC
+				LET, n("x"), SET, 4.444, SEMI,
+				WHILE, LP, true, RP, LC,
+				IF, LP, ADD1, n("x"), GTE, 10.0, RP, LC,
+				BREAK, SEMI,
+				RC,
+				n("console"), DOT, n("print"), LP, "X: ", ADD, n("x"), RP,
+				RC
 		);
 	}
 
 	@Test
 	public void brackets() {
-		testTokenStream("{}", SymbolTokenJS.LC, SymbolTokenJS.RC);
+		testTokenStream("{}", LC, RC);
 	}
 
 	@Test
 	public void bracketsOpen() {
-		testError(() -> testTokenStream("{", SymbolTokenJS.LC));
+		testError(() -> testTokenStream("{", LC));
 	}
 
 	@Test
 	public void bracketsClosed() {
-		testError(() -> testTokenStream("}", SymbolTokenJS.RC));
+		testError(() -> testTokenStream("}", RC));
 	}
 
 	@Test
 	public void bracketsMismatch() {
-		testError(() -> testTokenStream("{]", SymbolTokenJS.LC, SymbolTokenJS.RS));
+		testError(() -> testTokenStream("{]", LC, RS));
 	}
 
 	@Test
 	public void templateLiteralString() {
 		testTokenStream("`Entity has spawned`",
-				SymbolTokenJS.TEMPLATE_LITERAL,
+				TEMPLATE_LITERAL,
 				"Entity has spawned",
-				SymbolTokenJS.TEMPLATE_LITERAL
+				TEMPLATE_LITERAL
 		);
 	}
 
 	@Test
 	public void templateLiteralExpression() {
 		testTokenStream("`Entity has spawned at X: ${location.pos.x}, Y: ${location.pos.y}`",
-				SymbolTokenJS.TEMPLATE_LITERAL,
+				TEMPLATE_LITERAL,
 				"Entity has spawned at X: ",
-				SymbolTokenJS.TEMPLATE_LITERAL_VAR,
-				new NameToken("location"),
-				SymbolTokenJS.DOT,
-				new NameToken("pos"),
-				SymbolTokenJS.DOT,
-				new NameToken("x"),
-				SymbolTokenJS.RC,
+				TEMPLATE_LITERAL_VAR,
+				n("location"),
+				DOT,
+				n("pos"),
+				DOT,
+				n("x"),
+				RC,
 				", Y: ",
-				SymbolTokenJS.TEMPLATE_LITERAL_VAR,
-				new NameToken("location"),
-				SymbolTokenJS.DOT,
-				new NameToken("pos"),
-				SymbolTokenJS.DOT,
-				new NameToken("y"),
-				SymbolTokenJS.RC,
-				SymbolTokenJS.TEMPLATE_LITERAL
+				TEMPLATE_LITERAL_VAR,
+				n("location"),
+				DOT,
+				n("pos"),
+				DOT,
+				n("y"),
+				RC,
+				TEMPLATE_LITERAL
 		);
 	}
 }

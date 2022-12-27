@@ -7,7 +7,8 @@ import dev.latvian.apps.ichor.token.PositionedToken;
 
 public class InKeywordJS extends KeywordToken {
 	public InKeywordJS() {
-		super("in", true);
+		super("in");
+		identifier();
 	}
 
 	@Override

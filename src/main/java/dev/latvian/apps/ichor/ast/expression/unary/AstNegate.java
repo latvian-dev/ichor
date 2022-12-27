@@ -1,11 +1,10 @@
 package dev.latvian.apps.ichor.ast.expression.unary;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
-import dev.latvian.apps.ichor.token.DoubleToken;
 
 public class AstNegate extends AstUnary {
 	@Override
@@ -15,36 +14,36 @@ public class AstNegate extends AstUnary {
 	}
 
 	@Override
-	public Object eval(Scope scope) {
-		return evalDouble(scope);
+	public Object eval(Context cx, Scope scope) {
+		return evalDouble(cx, scope);
 	}
 
 	@Override
-	public double evalDouble(Scope scope) {
-		return -node.evalDouble(scope);
+	public double evalDouble(Context cx, Scope scope) {
+		return -cx.asDouble(scope, node);
 	}
 
 	@Override
-	public boolean evalBoolean(Scope scope) {
-		return !node.evalBoolean(scope);
+	public int evalInt(Context cx, Scope scope) {
+		return -cx.asInt(scope, node);
 	}
 
 	@Override
-	public int evalInt(Scope scope) {
-		return -node.evalInt(scope);
+	public boolean evalBoolean(Context cx, Scope scope) {
+		return !cx.asBoolean(scope, node);
 	}
 
 	@Override
-	public void evalString(Scope scope, StringBuilder builder) {
+	public void evalString(Context cx, Scope scope, StringBuilder builder) {
 		throw new ScriptError("Can't negate string!");
 	}
 
 	@Override
-	public Evaluable optimize(Parser parser) {
-		node = node.optimize(parser);
+	public Object optimize(Parser parser) {
+		super.optimize(parser);
 
-		if (node instanceof DoubleToken n) {
-			return DoubleToken.of(-n.value);
+		if (node instanceof Number n) {
+			return -n.doubleValue();
 		}
 
 		return this;

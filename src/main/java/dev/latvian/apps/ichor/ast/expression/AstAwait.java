@@ -1,6 +1,7 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -9,9 +10,9 @@ import dev.latvian.apps.ichor.error.ScriptError;
 import java.util.concurrent.Future;
 
 public class AstAwait extends AstExpression {
-	public final Evaluable future;
+	public Object future;
 
-	public AstAwait(Evaluable future) {
+	public AstAwait(Object future) {
 		this.future = future;
 	}
 
@@ -22,8 +23,8 @@ public class AstAwait extends AstExpression {
 	}
 
 	@Override
-	public Object eval(Scope scope) {
-		var e = future.eval(scope);
+	public Object eval(Context cx, Scope scope) {
+		var e = cx.eval(scope, future);
 
 		if (Special.isInvalid(e)) {
 			return e;
@@ -36,5 +37,11 @@ public class AstAwait extends AstExpression {
 		}
 
 		throw new ScriptError(e + " is not a Promise/Future").pos(this);
+	}
+
+	@Override
+	public Object optimize(Parser parser) {
+		future = parser.optimize(future);
+		return this;
 	}
 }

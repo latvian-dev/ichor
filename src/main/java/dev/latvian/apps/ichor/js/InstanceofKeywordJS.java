@@ -7,7 +7,7 @@ import dev.latvian.apps.ichor.token.PositionedToken;
 
 public class InstanceofKeywordJS extends KeywordToken {
 	public InstanceofKeywordJS() {
-		super("instanceof", false);
+		super("instanceof");
 	}
 
 	@Override

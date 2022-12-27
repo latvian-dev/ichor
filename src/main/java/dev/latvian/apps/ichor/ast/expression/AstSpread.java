@@ -1,24 +1,24 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
 public class AstSpread extends AstExpression {
-	public final Evaluable value;
+	public Object value;
 
-	public AstSpread(Evaluable v) {
+	public AstSpread(Object v) {
 		value = v;
 	}
 
 	@Override
-	public Object eval(Scope scope) {
-		return value.eval(scope);
+	public Object eval(Context cx, Scope scope) {
+		return cx.eval(scope, value);
 	}
 
 	@Override
 	public void append(AstStringBuilder builder) {
 		builder.append("...");
-		builder.append(value);
+		builder.appendValue(value);
 	}
 }

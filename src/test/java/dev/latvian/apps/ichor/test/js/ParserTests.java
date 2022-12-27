@@ -50,6 +50,6 @@ public class ParserTests {
 				let a = {b: 1, c: true}
 				let d = true
 				print(a.b = (a.c) ? d : false)
-				""", "let a={b:1.0,c:true};let d=true;print(a.b=(a.c?d:false));");
+				""", "let a={b=1.0, c=true};let d=true;print(a.b=(a.c?d:false));");
 	}
 }

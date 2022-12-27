@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public abstract class Context {
 	public static final ContextProperty<Integer> MAX_SCOPE_DEPTH = new ContextProperty<>("maxScopeDepth", 1000);
@@ -47,24 +48,54 @@ public abstract class Context {
 		properties.put(property, value);
 	}
 
-	public void asString(Scope scope, Object o, StringBuilder builder) {
+	public Object eval(Scope scope, Object o) {
+		return o instanceof Evaluable eval ? eval.eval(this, scope) : o;
+	}
+
+	public void asString(Scope scope, Object o, StringBuilder builder, boolean toString) {
 		if (o == null) {
 			builder.append("null");
 		} else if (o instanceof Number) {
 			AstStringBuilder.wrapNumber(o, builder);
-		} else if (o instanceof CharSequence || o instanceof Character || o instanceof Boolean || o instanceof Special) {
+		} else if (o instanceof Character || o instanceof CharSequence) {
+			if (toString) {
+				AstStringBuilder.wrapString(o, builder);
+			} else {
+				builder.append(o);
+			}
+		} else if (o instanceof Boolean || o instanceof Special) {
 			builder.append(o);
 		} else if (o instanceof Evaluable eval) {
-			eval.evalString(scope, builder);
+			eval.evalString(this, scope, builder);
 		} else {
-			getPrototype(o).asString(scope, o, builder);
+			getPrototype(scope, o).asString(this, scope, o, builder, toString);
 		}
 	}
 
-	public String asString(Scope scope, Object o) {
-		var builder = new StringBuilder();
-		asString(scope, o, builder);
-		return builder.toString();
+	public String asString(Scope scope, Object o, boolean escape) {
+		if (o == null) {
+			return "null";
+		} else if (o instanceof Number) {
+			return AstStringBuilder.wrapNumber(o);
+		} else if (o instanceof Character || o instanceof CharSequence) {
+			if (escape) {
+				var builder = new StringBuilder();
+				AstStringBuilder.wrapString(o, builder);
+				return builder.toString();
+			} else {
+				return o.toString();
+			}
+		} else if (o instanceof Boolean || o instanceof Special) {
+			return o.toString();
+		} else if (o instanceof Evaluable eval) {
+			var builder = new StringBuilder();
+			eval.evalString(this, scope, builder);
+			return builder.toString();
+		} else {
+			var builder = new StringBuilder();
+			getPrototype(scope, o).asString(this, scope, o, builder, escape);
+			return builder.toString();
+		}
 	}
 
 	public Number asNumber(Scope scope, Object o) {
@@ -82,10 +113,10 @@ public abstract class Context {
 				return NumberJS.NaN;
 			}
 		} else if (o instanceof Evaluable) {
-			return ((Evaluable) o).evalDouble(scope);
+			return ((Evaluable) o).evalDouble(this, scope);
 		}
 
-		return getPrototype(o).asNumber(scope, o);
+		return getPrototype(scope, o).asNumber(this, scope, o);
 	}
 
 	public double asDouble(Scope scope, Object o) {
@@ -102,7 +133,7 @@ public abstract class Context {
 				return 0;
 			}
 		} else if (o instanceof Evaluable) {
-			return ((Evaluable) o).evalDouble(scope);
+			return ((Evaluable) o).evalDouble(this, scope);
 		}
 
 		return asNumber(scope, o).doubleValue();
@@ -122,7 +153,7 @@ public abstract class Context {
 				return 0;
 			}
 		} else if (o instanceof Evaluable) {
-			return ((Evaluable) o).evalInt(scope);
+			return ((Evaluable) o).evalInt(this, scope);
 		}
 
 		return asNumber(scope, o).intValue();
@@ -143,26 +174,26 @@ public abstract class Context {
 			}
 		} else if (o instanceof Evaluable) {
 			// add evalLong
-			return ((Evaluable) o).evalInt(scope);
+			return ((Evaluable) o).evalInt(this, scope);
 		}
 
 		return asNumber(scope, o).longValue();
 	}
 
-	public Boolean asBoolean(Scope scope, Object o) {
+	public boolean asBoolean(Scope scope, Object o) {
 		if (o instanceof Boolean) {
 			return (Boolean) o;
 		} else if (Special.isInvalid(o)) {
-			return Boolean.FALSE;
+			return false;
 		} else if (o instanceof Number) {
 			return ((Number) o).doubleValue() != 0D;
 		} else if (o instanceof CharSequence) {
 			return !o.toString().isEmpty();
 		} else if (o instanceof Evaluable) {
-			return ((Evaluable) o).evalBoolean(scope);
+			return ((Evaluable) o).evalBoolean(this, scope);
 		}
 
-		return getPrototype(o).asBoolean(scope, o);
+		return getPrototype(scope, o).asBoolean(this, scope, o);
 	}
 
 	public char asChar(Scope scope, Object o) {
@@ -174,7 +205,7 @@ public abstract class Context {
 			return (char) ((Number) o).intValue();
 		} else if (o instanceof Evaluable) {
 			var builder = new StringBuilder();
-			((Evaluable) o).evalString(scope, builder);
+			((Evaluable) o).evalString(this, scope, builder);
 			return builder.charAt(0);
 		}
 
@@ -188,11 +219,11 @@ public abstract class Context {
 		} else if (toType == null || toType == Void.TYPE || toType == Object.class || toType.isInstance(o)) {
 			return (T) o;
 		} else if (toType == String.class || toType == CharSequence.class) {
-			return (T) asString(scope, o);
+			return (T) asString(scope, o, false);
 		} else if (toType == Number.class) {
 			return (T) asNumber(scope, o);
 		} else if (toType == Boolean.class || toType == Boolean.TYPE) {
-			return (T) asBoolean(scope, o);
+			return (T) Boolean.valueOf(asBoolean(scope, o));
 		} else if (toType == Character.class || toType == Character.TYPE) {
 			return (T) Character.valueOf(asChar(scope, o));
 		} else if (toType == Byte.class || toType == Byte.TYPE) {
@@ -214,7 +245,7 @@ public abstract class Context {
 		throw new ScriptError("Cannot cast " + o.getClass().getName() + " to " + toType.getName());
 	}
 
-	public Prototype getPrototype(Object o) {
+	public Prototype getPrototype(Scope scope, Object o) {
 		if (o == null) {
 			return Special.NULL.prototype;
 		} else if (o instanceof CharSequence) {
@@ -224,7 +255,7 @@ public abstract class Context {
 		} else if (o instanceof Boolean) {
 			return booleanPrototype;
 		} else if (o instanceof PrototypeSupplier s) {
-			return s.getPrototype(this);
+			return s.getPrototype(this, scope);
 		} else if (o instanceof Class) {
 			return classPrototype;
 		} else if (o instanceof Map<?, ?>) {
@@ -308,11 +339,25 @@ public abstract class Context {
 		return l == r;
 	}
 
-	public boolean equals(Scope scope, Evaluable left, Evaluable right, boolean shallow) {
-		return left == right || right.equals(scope, left, shallow) || left.equals(scope, right, shallow);
+	public boolean equals(Scope scope, Object left, Object right, boolean shallow) {
+		if (left == right) {
+			return true;
+		} else if (left instanceof Number l && right instanceof Number r) {
+			return Math.abs(l.doubleValue() - r.doubleValue()) < 0.00001D;
+		} else if (left instanceof CharSequence || left instanceof Character || right instanceof CharSequence || right instanceof Character) {
+			return asString(scope, left, false).equals(asString(scope, right, false));
+		}
+
+		return Objects.equals(left, right); // prototype equals
 	}
 
-	public int compareTo(Scope scope, Evaluable left, Evaluable right) {
-		return left == right ? 0 : left.compareTo(scope, right);
+	public int compareTo(Scope scope, Object left, Object right) {
+		if (left == right || Objects.equals(left, right)) {
+			return 0;
+		} else if (left instanceof Number l && right instanceof Number r) {
+			return Double.compare(l.doubleValue(), r.doubleValue());
+		} else {
+			return 0; // prototype compare
+		}
 	}
 }

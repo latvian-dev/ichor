@@ -96,6 +96,10 @@ public enum SymbolTokenJS implements Token {
 	ARROW("=>"), // arrow
 	TEMPLATE_LITERAL("`"), // template literal
 	TEMPLATE_LITERAL_VAR("${"), // template literal variable
+	COMMENT_LINE("//"), // comment line
+	COMMENT_BLOCK_START("/*"), // comment block start
+	SSTRING("'"), // single quote string
+	DSTRING("\""), // double quote string
 
 	;
 
@@ -141,7 +145,7 @@ public enum SymbolTokenJS implements Token {
 			case '+' -> s.readIf('=') ? ADD_SET : s.readIf('+') ? ADD1 : ADD;
 			case '-' -> s.readIf('=') ? SUB_SET : s.readIf('-') ? SUB1 : SUB;
 			case '*' -> s.readIf('=') ? MUL_SET : s.readIf('*') ? s.readIf('=') ? POW_SET : POW : MUL;
-			case '/' -> s.readIf('=') ? DIV_SET : DIV;
+			case '/' -> s.readIf('=') ? DIV_SET : s.readIf('/') ? COMMENT_LINE : s.readIf('*') ? COMMENT_BLOCK_START : DIV;
 			case '%' -> s.readIf('=') ? MOD_SET : MOD;
 			case '!' -> s.readIf('=') ? s.readIf('=') ? SNEQ : NEQ : NOT;
 			case '~' -> BNOT;
@@ -155,6 +159,8 @@ public enum SymbolTokenJS implements Token {
 			case ';' -> SEMI;
 			case '`' -> TEMPLATE_LITERAL;
 			case '$' -> s.readIf('{') ? TEMPLATE_LITERAL_VAR : null;
+			case '\'' -> SSTRING;
+			case '"' -> DSTRING;
 			default -> null;
 		};
 	}
@@ -201,6 +207,16 @@ public enum SymbolTokenJS implements Token {
 			case POW, POW_SET -> new AstPow();
 			case NC, NC_SET -> new AstNc();
 			default -> null;
+		};
+	}
+
+	@Override
+	public boolean isLiteralPre() {
+		return switch (this) {
+			// case LP, SET, ARROW -> true;
+			// default -> false;
+			case DOT, DDOT, TDOT, RP, RC, RS, DCOL, OC, TEMPLATE_LITERAL, TEMPLATE_LITERAL_VAR -> false;
+			default -> true;
 		};
 	}
 }

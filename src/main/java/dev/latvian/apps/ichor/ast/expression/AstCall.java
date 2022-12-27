@@ -1,7 +1,9 @@
 package dev.latvian.apps.ichor.ast.expression;
 
 import dev.latvian.apps.ichor.Callable;
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -9,7 +11,7 @@ import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.util.Empty;
 
 public class AstCall extends AstExpression {
-	public static Object[] convertArgs(Scope scope, Evaluable[] arguments) {
+	public static Object[] convertArgs(Context cx, Scope scope, Object[] arguments) {
 		if (arguments.length == 0) {
 			return Empty.OBJECTS;
 		}
@@ -17,21 +19,15 @@ public class AstCall extends AstExpression {
 		var args = new Object[arguments.length];
 
 		for (int i = 0; i < arguments.length; i++) {
-			args[i] = arguments[i].eval(scope);
+			args[i] = cx.eval(scope, arguments[i]);
 		}
 
 		return args;
 	}
 
-	public final Evaluable function;
-	public final Evaluable[] arguments;
-	public final boolean isNew;
-
-	public AstCall(Evaluable function, Evaluable[] arguments, boolean isNew) {
-		this.function = function;
-		this.arguments = arguments;
-		this.isNew = isNew;
-	}
+	public Object function;
+	public Object[] arguments;
+	public boolean isNew;
 
 	@Override
 	public void append(AstStringBuilder builder) {
@@ -54,27 +50,39 @@ public class AstCall extends AstExpression {
 	}
 
 	@Override
-	public Object eval(Scope scope) {
-		var func = function.eval(scope);
+	public Object eval(Context cx, Scope scope) {
+		var func = cx.eval(scope, function);
 
 		if (Special.isInvalid(func)) {
 			throw new ScriptError("Cannot find " + function);
 		} else if (!(func instanceof Callable)) {
-			throw new ScriptError("Cannot call " + function + ", " + scope.getContext().asString(scope, func) + " (" + scope.getContext().getPrototype(func) + ")" + " is not a function");
+			throw new ScriptError("Cannot call " + function + ", " + func + " (" + cx.getPrototype(scope, func) + ")" + " is not a function");
 		}
 
-		var self = isNew ? Special.NEW : function.evalSelf(scope);
+		var self = isNew ? Special.NEW : function instanceof Evaluable eval ? eval.evalSelf(cx, scope) : function;
 
-		var cx = scope.getContext();
-		cx.debugger.pushSelf(scope, self);
+		cx.debugger.pushSelf(cx, scope, self);
 
-		var r = ((Callable) func).call(scope, self, convertArgs(scope, arguments));
+		var args = convertArgs(cx, scope, arguments);
+
+		var r = ((Callable) func).call(cx, scope, self, args);
 
 		if (r == Special.NOT_FOUND) {
 			throw new ScriptError("Cannot call " + function);
 		}
 
-		cx.debugger.call(scope, this, r);
+		cx.debugger.call(cx, scope, this, func, args, r);
 		return r;
+	}
+
+	@Override
+	public Object optimize(Parser parser) {
+		function = parser.optimize(function);
+
+		for (int i = 0; i < arguments.length; i++) {
+			arguments[i] = parser.optimize(arguments[i]);
+		}
+
+		return this;
 	}
 }

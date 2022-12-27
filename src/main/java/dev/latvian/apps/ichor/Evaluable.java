@@ -1,78 +1,53 @@
 package dev.latvian.apps.ichor;
 
+import dev.latvian.apps.ichor.prototype.Prototype;
+import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
-
-public interface Evaluable {
-	default EvaluableType getType(Scope scope) {
-		return EvaluableType.UNKNOWN;
+public interface Evaluable extends PrototypeSupplier {
+	@Override
+	default Prototype getPrototype(Context cx, Scope scope) {
+		return cx.getPrototype(scope, eval(cx, scope));
 	}
 
-	Object eval(Scope scope);
+	Object eval(Context cx, Scope scope);
 
 	@Nullable
-	default Object evalSelf(Scope scope) {
+	default Object evalSelf(Context cx, Scope scope) {
 		return null;
 	}
 
-	default void evalString(Scope scope, StringBuilder builder) {
-		var e = this.eval(scope);
+	default void evalString(Context cx, Scope scope, StringBuilder builder) {
+		var e = this.eval(cx, scope);
 
 		if (e == this) {
 			builder.append(this);
 		} else {
-			scope.getContext().asString(scope, e, builder);
+			cx.asString(scope, e, builder, false);
 		}
 	}
 
-	default double evalDouble(Scope scope) {
-		var e = this.eval(scope);
+	default double evalDouble(Context cx, Scope scope) {
+		var e = this.eval(cx, scope);
 
 		if (e == this) {
 			return Double.NaN;
 		} else {
-			return scope.getContext().asDouble(scope, e);
+			return cx.asDouble(scope, e);
 		}
 	}
 
-	default boolean evalBoolean(Scope scope) {
-		var e = this.eval(scope);
-
-		if (e == this) {
-			return true;
-		} else {
-			return scope.getContext().asBoolean(scope, e);
-		}
+	default int evalInt(Context cx, Scope scope) {
+		var d = evalDouble(cx, scope);
+		return Double.isNaN(d) ? 0 : (int) d;
 	}
 
-	default int evalInt(Scope scope) {
-		var e = this.eval(scope);
-
-		if (e == this) {
-			return 1;
-		} else {
-			return scope.getContext().asInt(scope, e);
-		}
+	default boolean evalBoolean(Context cx, Scope scope) {
+		var d = evalDouble(cx, scope);
+		return !Double.isNaN(d) && d != 0D;
 	}
 
-	default Evaluable optimize(Parser parser) {
+	default Object optimize(Parser parser) {
 		return this;
-	}
-
-	// TODO: Move this to Prototype
-	default boolean equals(Scope scope, Evaluable right, boolean shallow) {
-		if (this == right) {
-			return true;
-		} else if (shallow) {
-			return eval(scope) == right.eval(scope);
-		} else {
-			return Objects.equals(eval(scope), right.eval(scope));
-		}
-	}
-
-	// TODO: Move this to Prototype
-	default int compareTo(Scope scope, Evaluable right) {
-		return Double.compare(evalDouble(scope), right.evalDouble(scope));
 	}
 }

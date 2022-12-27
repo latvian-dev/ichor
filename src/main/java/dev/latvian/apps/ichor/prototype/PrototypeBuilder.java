@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.prototype;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
@@ -104,23 +105,23 @@ public class PrototypeBuilder implements Prototype {
 
 	@Override
 	@Nullable
-	public Object get(Scope scope, Object self, String name) {
+	public Object get(Context cx, Scope scope, Object self, String name) {
 		initLazy();
 
 		if (members != null) {
 			var m = members.get(name);
 
 			if (m instanceof PrototypeProperty p) {
-				return p.get(scope, self);
+				return p.get(cx, scope, self);
 			} else if (m instanceof Evaluable e) {
-				return e.eval(scope);
+				return e.eval(cx, scope);
 			} else if (m != null) {
 				return m;
 			}
 		}
 
 		if (namedValueHandler != null && self != null) {
-			var m = namedValueHandler.get(scope, self, name);
+			var m = namedValueHandler.get(cx, scope, self, name);
 
 			if (m != Special.NOT_FOUND) {
 				return m;
@@ -130,34 +131,34 @@ public class PrototypeBuilder implements Prototype {
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			var v = parent0.get(scope, self, name);
+			var v = parent0.get(cx, scope, self, name);
 
 			if (v != Special.NOT_FOUND) {
 				return v;
 			}
 
-			parent0 = parent0.getPrototype(scope.getContext());
+			parent0 = parent0.getPrototype(cx, scope);
 		}
 
 		return Special.NOT_FOUND;
 	}
 
 	@Override
-	public boolean set(Scope scope, Object self, String name, @Nullable Object value) {
+	public boolean set(Context cx, Scope scope, Object self, String name, @Nullable Object value) {
 		initLazy();
 
 		if (members != null) {
 			var m = members.get(name);
 
 			if (m instanceof PrototypeProperty p) {
-				return p.set(scope, self, value);
+				return p.set(cx, scope, self, value);
 			} else if (m != null) {
 				return false;
 			}
 		}
 
 		if (namedValueHandler != null && self != null) {
-			if (namedValueHandler.set(scope, self, name, value)) {
+			if (namedValueHandler.set(cx, scope, self, name, value)) {
 				return true;
 			}
 		}
@@ -165,22 +166,22 @@ public class PrototypeBuilder implements Prototype {
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			if (parent0.set(scope, self, name, value)) {
+			if (parent0.set(cx, scope, self, name, value)) {
 				return true;
 			}
 
-			parent0 = parent0.getPrototype(scope.getContext());
+			parent0 = parent0.getPrototype(cx, scope);
 		}
 
 		return false;
 	}
 
 	@Override
-	public boolean delete(Scope scope, Object self, String name) {
+	public boolean delete(Context cx, Scope scope, Object self, String name) {
 		initLazy();
 
 		if (namedValueHandler != null && self != null) {
-			if (namedValueHandler.delete(scope, self, name)) {
+			if (namedValueHandler.delete(cx, scope, self, name)) {
 				return true;
 			}
 		}
@@ -188,38 +189,38 @@ public class PrototypeBuilder implements Prototype {
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			if (parent0.delete(scope, self, name)) {
+			if (parent0.delete(cx, scope, self, name)) {
 				return true;
 			}
 
-			parent0 = parent0.getPrototype(scope.getContext());
+			parent0 = parent0.getPrototype(cx, scope);
 		}
 
 		return false;
 	}
 
 	@Override
-	public Collection<?> keys(Scope scope, Object self) {
+	public Collection<?> keys(Context cx, Scope scope, Object self) {
 		var h = namedValueHandler != null ? namedValueHandler : indexedValueHandler;
-		return h != null ? h.keys(scope, self) : Collections.emptySet();
+		return h != null ? h.keys(cx, scope, self) : Collections.emptySet();
 	}
 
 	@Override
-	public Collection<?> values(Scope scope, Object self) {
+	public Collection<?> values(Context cx, Scope scope, Object self) {
 		var h = namedValueHandler != null ? namedValueHandler : indexedValueHandler;
-		return h != null ? h.values(scope, self) : Collections.emptySet();
+		return h != null ? h.values(cx, scope, self) : Collections.emptySet();
 	}
 
 	@Override
-	public Collection<?> entries(Scope scope, Object self) {
+	public Collection<?> entries(Context cx, Scope scope, Object self) {
 		var h = namedValueHandler != null ? namedValueHandler : indexedValueHandler;
-		return h != null ? h.entries(scope, self) : Collections.emptySet();
+		return h != null ? h.entries(cx, scope, self) : Collections.emptySet();
 	}
 
 	@Override
-	public int getMemberCount(Scope scope, Object self) {
+	public int getMemberCount(Context cx, Scope scope, Object self) {
 		var h = namedValueHandler != null ? namedValueHandler : indexedValueHandler;
-		return h != null ? h.getMemberCount(scope, self) : 0;
+		return h != null ? h.getMemberCount(cx, scope, self) : 0;
 	}
 
 	@Override
@@ -229,11 +230,11 @@ public class PrototypeBuilder implements Prototype {
 
 	@Override
 	@Nullable
-	public Object get(Scope scope, Object self, int index) {
+	public Object get(Context cx, Scope scope, Object self, int index) {
 		initLazy();
 
 		if (indexedValueHandler != null && self != null) {
-			var m = indexedValueHandler.get(scope, self, index);
+			var m = indexedValueHandler.get(cx, scope, self, index);
 
 			if (m != Special.NOT_FOUND) {
 				return m;
@@ -243,24 +244,24 @@ public class PrototypeBuilder implements Prototype {
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			var v = parent0.get(scope, self, index);
+			var v = parent0.get(cx, scope, self, index);
 
 			if (v != Special.NOT_FOUND) {
 				return v;
 			}
 
-			parent0 = parent0.getPrototype(scope.getContext());
+			parent0 = parent0.getPrototype(cx, scope);
 		}
 
 		return Special.NOT_FOUND;
 	}
 
 	@Override
-	public boolean set(Scope scope, Object self, int index, @Nullable Object value) {
+	public boolean set(Context cx, Scope scope, Object self, int index, @Nullable Object value) {
 		initLazy();
 
 		if (indexedValueHandler != null && self != null) {
-			if (indexedValueHandler.set(scope, self, index, value)) {
+			if (indexedValueHandler.set(cx, scope, self, index, value)) {
 				return true;
 			}
 		}
@@ -268,22 +269,22 @@ public class PrototypeBuilder implements Prototype {
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			if (parent0.set(scope, self, index, value)) {
+			if (parent0.set(cx, scope, self, index, value)) {
 				return true;
 			}
 
-			parent0 = parent0.getPrototype(scope.getContext());
+			parent0 = parent0.getPrototype(cx, scope);
 		}
 
 		return false;
 	}
 
 	@Override
-	public boolean delete(Scope scope, Object self, int index) {
+	public boolean delete(Context cx, Scope scope, Object self, int index) {
 		initLazy();
 
 		if (indexedValueHandler != null && self != null) {
-			if (indexedValueHandler.delete(scope, self, index)) {
+			if (indexedValueHandler.delete(cx, scope, self, index)) {
 				return true;
 			}
 		}
@@ -291,51 +292,51 @@ public class PrototypeBuilder implements Prototype {
 		var parent0 = parent;
 
 		while (parent0 != null) {
-			if (parent0.delete(scope, self, index)) {
+			if (parent0.delete(cx, scope, self, index)) {
 				return true;
 			}
 
-			parent0 = parent0.getPrototype(scope.getContext());
+			parent0 = parent0.getPrototype(cx, scope);
 		}
 
 		return false;
 	}
 
 	@Override
-	public Object call(Scope scope, Object self, Object[] args) {
+	public Object call(Context cx, Scope scope, Object self, Object[] args) {
 		initLazy();
 
 		if (constructor != null) {
-			return constructor.construct(scope, args, false);
+			return constructor.construct(cx, scope, args, false);
 		}
 
 		return Special.NOT_FOUND;
 	}
 
 	@Override
-	public void asString(Scope scope, Object self, StringBuilder builder) {
+	public void asString(Context cx, Scope scope, Object self, StringBuilder builder, boolean escape) {
 		if (asString != null) {
-			asString.asString(scope, self, builder);
+			asString.asString(cx, scope, self, builder, escape);
 		} else {
 			builder.append(self);
 		}
 	}
 
 	@Override
-	public Number asNumber(Scope scope, Object self) {
+	public Number asNumber(Context cx, Scope scope, Object self) {
 		if (asNumber != null) {
-			return asNumber.asNumber(scope, self);
+			return asNumber.asNumber(cx, scope, self);
 		}
 
 		return NumberJS.ONE;
 	}
 
 	@Override
-	public Boolean asBoolean(Scope scope, Object self) {
+	public boolean asBoolean(Context cx, Scope scope, Object self) {
 		if (asBoolean != null) {
-			return asBoolean.asBoolean(scope, self);
+			return asBoolean.asBoolean(cx, scope, self);
 		}
 
-		return Boolean.TRUE;
+		return true;
 	}
 }

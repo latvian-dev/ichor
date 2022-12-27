@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.java;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.prototype.Prototype;
@@ -24,35 +25,35 @@ public class MapValueHandler implements Prototype {
 	}
 
 	@Override
-	public Object get(Scope scope, Object self, String name) {
+	public Object get(Context cx, Scope scope, Object self, String name) {
 		var v = map(self).get(name);
 		return v == Special.NULL ? null : v;
 	}
 
 	@Override
-	public boolean set(Scope scope, Object self, String name, @Nullable Object value) {
+	public boolean set(Context cx, Scope scope, Object self, String name, @Nullable Object value) {
 		map(self).put(name, value == null ? Special.NULL : value);
 		return true;
 	}
 
 	@Override
-	public boolean delete(Scope scope, Object self, String name) {
+	public boolean delete(Context cx, Scope scope, Object self, String name) {
 		map(self).remove(name);
 		return true;
 	}
 
 	@Override
-	public Collection<?> keys(Scope scope, Object self) {
+	public Collection<?> keys(Context cx, Scope scope, Object self) {
 		return map(self).keySet();
 	}
 
 	@Override
-	public Collection<Object> values(Scope scope, Object self) {
+	public Collection<Object> values(Context cx, Scope scope, Object self) {
 		return map(self).values();
 	}
 
 	@Override
-	public Collection<Map.Entry<String, Object>> entries(Scope scope, Object self) {
+	public Collection<Map.Entry<String, Object>> entries(Context cx, Scope scope, Object self) {
 		return map(self).entrySet();
 	}
 }

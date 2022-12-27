@@ -1,7 +1,7 @@
 package dev.latvian.apps.ichor.error;
 
 public enum ParseErrorType implements ParseErrorMessage {
-	INVALID_TARGET("Invalid assignment target"),
+	INVALID_TARGET("Invalid assignment target %s"),
 	INVALID_BINARY("'%s' is not a binary operator"),
 	INVALID_UNARY("'%s' is not a unary operator"),
 	EXP_TOKEN("Expected '%s' token"),
@@ -47,6 +47,7 @@ public enum ParseErrorType implements ParseErrorMessage {
 	UNKNOWN_LABEL("Label '%s' for %s statement not found"),
 	EXIT_NOT_SUPPORTED("%s statement not supported here"),
 	UNREACHABLE_STATEMENT("Unreachable statement"),
+	DESTRUCT_NOT_SUPPORTED("Destructured param not supported here yet"),
 
 	;
 

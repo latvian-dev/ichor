@@ -1,6 +1,6 @@
 package dev.latvian.apps.ichor.ast.expression.unary;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -14,12 +14,12 @@ public class AstPositive extends AstUnary {
 	}
 
 	@Override
-	public Object eval(Scope scope) {
+	public Object eval(Context cx, Scope scope) {
 		throw new ScriptError("Something didn't call optimize()");
 	}
 
 	@Override
-	public Evaluable optimize(Parser parser) {
-		return node.optimize(parser);
+	public Object optimize(Parser parser) {
+		return parser.optimize(node);
 	}
 }

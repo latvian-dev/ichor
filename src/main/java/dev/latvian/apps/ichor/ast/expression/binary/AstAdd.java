@@ -1,12 +1,9 @@
 package dev.latvian.apps.ichor.ast.expression.binary;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
-import dev.latvian.apps.ichor.token.DoubleToken;
-import dev.latvian.apps.ichor.token.StringToken;
 
 public class AstAdd extends AstBinary {
 	@Override
@@ -15,54 +12,34 @@ public class AstAdd extends AstBinary {
 	}
 
 	@Override
-	public Object eval(Scope scope) {
-		var l = left.eval(scope);
-		var r = right.eval(scope);
+	public Object eval(Context cx, Scope scope) {
+		var l = cx.eval(scope, left);
+		var r = cx.eval(scope, right);
 
 		if (l instanceof CharSequence || l instanceof Character || r instanceof CharSequence || r instanceof Character) {
-			return scope.getContext().asString(scope, l) + scope.getContext().asString(scope, r);
+			return cx.asString(scope, l, false) + cx.asString(scope, r, false);
 		} else if (l instanceof Number && r instanceof Number) {
 			return ((Number) l).doubleValue() + ((Number) r).doubleValue();
 		} else {
-			throw new ScriptError("Can't add " + left + " + " + right).pos(pos);
+			throw new ScriptError("Can't add " + l + " + " + r).pos(pos);
 		}
 	}
 
 	@Override
-	public void evalString(Scope scope, StringBuilder builder) {
-		var l = left.eval(scope);
-		var r = right.eval(scope);
-
-		if (l instanceof CharSequence || l instanceof Character || r instanceof CharSequence || r instanceof Character) {
-			scope.getContext().asString(scope, l, builder);
-			scope.getContext().asString(scope, r, builder);
-		} else if (l instanceof Number && r instanceof Number) {
-			AstStringBuilder.wrapNumber(((Number) l).doubleValue() + ((Number) r).doubleValue(), builder);
-		} else {
-			throw new ScriptError("Can't add " + left + " + " + right).pos(pos);
-		}
+	public double evalDouble(Context cx, Scope scope) {
+		return cx.asDouble(scope, left) + cx.asDouble(scope, right);
 	}
 
 	@Override
-	public double evalDouble(Scope scope) {
-		return left.evalDouble(scope) + right.evalDouble(scope);
-	}
+	public Object optimize(Parser parser) {
+		super.optimize(parser);
 
-	@Override
-	public int evalInt(Scope scope) {
-		return left.evalInt(scope) + right.evalInt(scope);
-	}
-
-	@Override
-	public Evaluable optimize(Parser parser) {
-		var s = super.optimize(parser);
-
-		if (s == this && left instanceof DoubleToken l && right instanceof DoubleToken r) {
-			return DoubleToken.of(l.value + r.value);
-		} else if (s == this && left instanceof StringToken l && right instanceof StringToken r) {
-			return StringToken.of(l.value + r.value);
+		if (left instanceof Number l && right instanceof Number r) {
+			return l.doubleValue() + r.doubleValue();
+		} else if (left instanceof CharSequence l && right instanceof CharSequence r) {
+			return l.toString() + r;
 		}
 
-		return s;
+		return this;
 	}
 }

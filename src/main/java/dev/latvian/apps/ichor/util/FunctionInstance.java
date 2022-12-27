@@ -17,15 +17,17 @@ import java.util.concurrent.CompletableFuture;
 
 public class FunctionInstance implements Callable, Adaptable, InvocationHandler {
 	public final AstFunction function;
+	public final Context evalContext;
 	public final Scope evalScope;
 
-	public FunctionInstance(AstFunction function, Scope evalScope) {
+	public FunctionInstance(AstFunction function, Context evalContext, Scope evalScope) {
 		this.function = function;
+		this.evalContext = evalContext;
 		this.evalScope = evalScope;
 	}
 
 	@Override
-	public Object call(Scope callScope, Object self, Object[] args) {
+	public Object call(Context cx, Scope callScope, Object self, Object[] args) {
 		if (args.length < function.requiredParams) {
 			throw new ScriptError("Invalid number of arguments: " + args.length + " < " + function.requiredParams).pos(function.pos);
 		}
@@ -40,16 +42,16 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 					if (function.params[i].defaultValue == Special.UNDEFINED) {
 						value = Special.UNDEFINED;
 					} else {
-						value = function.params[i].defaultValue.eval(evalScope);
+						value = evalContext.eval(evalScope, function.params[i].defaultValue);
 					}
 				} else {
 					value = args[i];
 				}
 
-				s.declareMember(function.params[i].name, value, AssignType.MUTABLE);
+				function.params[i].declare(s, value, AssignType.MUTABLE);
 			}
 
-			function.body.interpretSafe(s);
+			function.body.interpretSafe(evalContext, s);
 		} catch (ReturnExit exit) {
 			if (function.hasMod(AstFunction.MOD_ASYNC)) {
 				return CompletableFuture.completedFuture(exit.value);
@@ -77,7 +79,7 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 			case "toString" -> "Proxy[" + function + "]";
 			case "hashCode" -> function.hashCode();
 			case "equals" -> proxy == args[0];
-			default -> call(evalScope, proxy, args);
+			default -> call(evalContext, evalScope, proxy, args);
 		};
 	}
 

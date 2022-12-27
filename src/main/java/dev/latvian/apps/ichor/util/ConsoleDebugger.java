@@ -1,78 +1,119 @@
 package dev.latvian.apps.ichor.util;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Debugger;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.ast.expression.AstCall;
+import dev.latvian.apps.ichor.ast.expression.AstFunction;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 
 public class ConsoleDebugger implements Debugger {
+	public static final ConsoleDebugger INSTANCE = new ConsoleDebugger();
+
+	private ConsoleDebugger() {
+	}
+
+	private String asString(Scope scope, Object value) {
+		if (value instanceof CharSequence) {
+			var sb = new StringBuilder();
+			AstStringBuilder.wrapString(value, sb);
+			return sb.toString();
+		} else if (value instanceof AstFunction func) {
+			var sb = new StringBuilder("function ");
+			sb.append(func.functionName);
+			sb.append("(");
+
+			for (int i = 0; i < func.params.length; i++) {
+				if (i > 0) {
+					sb.append(',');
+				}
+
+				sb.append(func.params[i]);
+			}
+
+			sb.append(") {...}");
+			return sb.toString();
+		} else if (value instanceof FunctionInstance func) {
+			return asString(scope, func.function);
+		}
+
+		return value == null ? "null" : value.toString();
+	}
+
 	@Override
-	public void pushScope(Scope scope) {
+	public void pushScope(Context cx, Scope scope) {
 		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Scope -> " + scope + " of " + scope.owner);
 	}
 
 	@Override
-	public void pushSelf(Scope scope, Object self) {
-		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Self -> " + scope.getContext().asString(scope, self));
+	public void pushSelf(Context cx, Scope scope, Object self) {
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Self -> " + asString(scope, self));
 	}
 
 	@Override
-	public void get(Scope scope, Object object, Object returnValue) {
-		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Get @ " + object + " = " + scope.getContext().asString(scope, returnValue));
+	public void get(Context cx, Scope scope, Object object, Object returnValue) {
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Get @ " + object + " = " + asString(scope, returnValue));
 	}
 
 	@Override
-	public void set(Scope scope, Object object, Object value) {
-		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Get @ " + object + " = " + scope.getContext().asString(scope, value));
+	public void set(Context cx, Scope scope, Object object, Object value) {
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Get @ " + object + " = " + asString(scope, value));
 	}
 
 	@Override
-	public void delete(Scope scope, Object object) {
+	public void delete(Context cx, Scope scope, Object object) {
 		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Delete @ " + object);
 	}
 
 	@Override
-	public void call(Scope scope, AstCall call, Object returnValue) {
+	public void call(Context cx, Scope scope, AstCall call, Object func, Object[] args, Object returnValue) {
 		var sb = new AstStringBuilder();
 		sb.append("[DEBUG] ");
 		sb.append("  ".repeat(scope.getDepth()));
 		sb.append("* Call => ");
-		sb.append(call.function);
+
+		if (func instanceof FunctionInstance funcInst) {
+			sb.append("hi");
+		} else {
+			sb.append(call.function);
+		}
+
+		sb.append(func);
 		sb.append('(');
 
-		for (int i = 0; i < call.arguments.length; i++) {
+		for (int i = 0; i < args.length; i++) {
 			if (i > 0) {
 				sb.append(',');
 			}
 
-			sb.append(call.arguments[i]);
+			sb.append(args[i]);
 			sb.append('=');
-			sb.append(scope.getContext().asString(scope, call.arguments[i]));
+			sb.append(asString(scope, args[i]));
 		}
 
 		sb.append(") = ");
-		sb.append(scope.getContext().asString(scope, returnValue));
+		sb.append(asString(scope, returnValue));
 
 		System.out.println(sb);
 	}
 
 	@Override
-	public void assignNew(Scope scope, Object object, Object value) {
+	public void assignNew(Context cx, Scope scope, Object object, Object value) {
 		if (value instanceof PrototypeBuilder) {
 			return;
 		}
 
-		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Assign New @ " + object + " = " + scope.getContext().asString(scope, value));
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Assign New @ " + object + " = " + asString(scope, value));
 	}
 
 	@Override
-	public void assignSet(Scope scope, Object object, Object value) {
-		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Assign Set @ " + object + " = " + scope.getContext().asString(scope, value));
+	public void assignSet(Context cx, Scope scope, Object object, Object value) {
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Assign Set @ " + object + " = " + asString(scope, value));
 	}
 
 	@Override
-	public void exit(Scope scope, Object value) {
-		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Exit = " + scope.getContext().asString(scope, value));
+	public void exit(Context cx, Scope scope, Object value) {
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Exit = " + asString(scope, value));
 	}
 }

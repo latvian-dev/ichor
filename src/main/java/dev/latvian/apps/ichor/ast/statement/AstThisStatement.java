@@ -1,13 +1,14 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
 public class AstThisStatement extends AstStatement {
-	public final Evaluable[] arguments;
+	public final Object[] arguments;
 
-	public AstThisStatement(Evaluable[] a) {
+	public AstThisStatement(Object[] a) {
 		this.arguments = a;
 	}
 
@@ -32,6 +33,13 @@ public class AstThisStatement extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) {
+	public void interpret(Context cx, Scope scope) {
+	}
+
+	@Override
+	public void optimize(Parser parser) {
+		for (int i = 0; i < arguments.length; i++) {
+			arguments[i] = parser.optimize(arguments[i]);
+		}
 	}
 }

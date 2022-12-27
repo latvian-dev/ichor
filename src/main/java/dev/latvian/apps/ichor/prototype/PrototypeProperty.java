@@ -1,13 +1,14 @@
 package dev.latvian.apps.ichor.prototype;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import org.jetbrains.annotations.Nullable;
 
 @FunctionalInterface
 public interface PrototypeProperty {
-	Object get(Scope scope, Object self);
+	Object get(Context cx, Scope scope, Object self);
 
-	default boolean set(Scope scope, Object self, @Nullable Object value) {
+	default boolean set(Context cx, Scope scope, Object self, @Nullable Object value) {
 		return false;
 	}
 }

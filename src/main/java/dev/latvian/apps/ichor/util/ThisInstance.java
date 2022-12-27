@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.util;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.prototype.Prototype;
@@ -30,7 +31,7 @@ public record ThisInstance(Scope evalScope) implements Prototype {
 	}
 
 	@Override
-	public Object get(Scope scope, Object self, String name) {
+	public Object get(Context cx, Scope scope, Object self, String name) {
 		var s = getActualScope(scope);
 
 		var r = s.getDeclaredMember(name);
@@ -38,7 +39,7 @@ public record ThisInstance(Scope evalScope) implements Prototype {
 	}
 
 	@Override
-	public boolean set(Scope scope, Object self, String name, Object value) {
+	public boolean set(Context cx, Scope scope, Object self, String name, Object value) {
 		var s = getActualScope(scope);
 
 		if (s.hasDeclaredMember(name) == AssignType.NONE) {
@@ -49,7 +50,7 @@ public record ThisInstance(Scope evalScope) implements Prototype {
 	}
 
 	@Override
-	public boolean delete(Scope scope, Object self, String name) {
+	public boolean delete(Context cx, Scope scope, Object self, String name) {
 		var s = getActualScope(scope);
 
 		s.deleteDeclaredMember(name);
@@ -57,19 +58,19 @@ public record ThisInstance(Scope evalScope) implements Prototype {
 	}
 
 	@Override
-	public Collection<?> keys(Scope scope, Object self) {
+	public Collection<?> keys(Context cx, Scope scope, Object self) {
 		var s = getActualScope(scope);
 		return s.members == null ? Collections.emptySet() : s.members.keySet();
 	}
 
 	@Override
-	public Collection<?> values(Scope scope, Object self) {
+	public Collection<?> values(Context cx, Scope scope, Object self) {
 		var s = getActualScope(scope);
 		return s.members == null ? Collections.emptySet() : s.members.values();
 	}
 
 	@Override
-	public Collection<?> entries(Scope scope, Object self) {
+	public Collection<?> entries(Context cx, Scope scope, Object self) {
 		var s = getActualScope(scope);
 		return s.members == null ? Collections.emptySet() : s.members.entrySet();
 	}

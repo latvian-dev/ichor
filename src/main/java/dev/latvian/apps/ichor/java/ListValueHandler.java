@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.java;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.prototype.Prototype;
@@ -29,14 +30,14 @@ public class ListValueHandler implements Prototype {
 	}
 
 	@Override
-	public Object get(Scope scope, Object self, int index) {
+	public Object get(Context cx, Scope scope, Object self, int index) {
 		var v = list(self).get(index);
 		return v == Special.NULL ? null : v;
 	}
 
 	@Override
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	public boolean set(Scope scope, Object self, int index, @Nullable Object value) {
+	public boolean set(Context cx, Scope scope, Object self, int index, @Nullable Object value) {
 		var c = collection(self);
 
 		if (index >= c.size()) {
@@ -49,13 +50,13 @@ public class ListValueHandler implements Prototype {
 	}
 
 	@Override
-	public boolean delete(Scope scope, Object self, int index) {
+	public boolean delete(Context cx, Scope scope, Object self, int index) {
 		list(self).remove(index);
 		return true;
 	}
 
 	@Override
-	public Collection<?> keys(Scope scope, Object self) {
+	public Collection<?> keys(Context cx, Scope scope, Object self) {
 		int size = collection(self).size();
 		var keys = new Integer[size];
 
@@ -67,12 +68,12 @@ public class ListValueHandler implements Prototype {
 	}
 
 	@Override
-	public Collection<?> values(Scope scope, Object self) {
+	public Collection<?> values(Context cx, Scope scope, Object self) {
 		return collection(self);
 	}
 
 	@Override
-	public Collection<?> entries(Scope scope, Object self) {
+	public Collection<?> entries(Context cx, Scope scope, Object self) {
 		var c = collection(self);
 		var entries = new Object[c.size()];
 		int i = 0;

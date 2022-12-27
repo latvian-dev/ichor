@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.ast.expression;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.statement.AstClass;
@@ -20,7 +21,7 @@ public class AstClassFunction extends AstFunction {
 	}
 
 	@Override
-	public Object eval(Scope scope) {
-		return new ClassFunctionInstance(this, scope);
+	public Object eval(Context cx, Scope scope) {
+		return new ClassFunctionInstance(this, cx, scope);
 	}
 }

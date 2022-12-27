@@ -1,14 +1,15 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Evaluable;
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Interpretable;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.BreakExit;
 import dev.latvian.apps.ichor.exit.ExitType;
 
 public class AstIf extends AstLabeledStatement {
-	public Evaluable condition;
+	public Object condition;
 	public Interpretable trueBody;
 	public Interpretable falseBody;
 
@@ -20,7 +21,7 @@ public class AstIf extends AstLabeledStatement {
 		}
 
 		builder.append("if (");
-		builder.append(condition);
+		builder.appendValue(condition);
 		builder.append(") ");
 
 		if (trueBody != null) {
@@ -41,19 +42,32 @@ public class AstIf extends AstLabeledStatement {
 	}
 
 	@Override
-	public void interpret(Scope scope) {
+	public void interpret(Context cx, Scope scope) {
 		try {
-			if (condition.evalBoolean(scope)) {
+			if (cx.asBoolean(scope, condition)) {
 				if (trueBody != null) {
-					trueBody.interpretSafe(scope);
+					trueBody.interpretSafe(cx, scope);
 				}
 			} else if (falseBody != null) {
-				falseBody.interpretSafe(scope);
+				falseBody.interpretSafe(cx, scope);
 			}
 		} catch (BreakExit exit) {
 			if (exit.stop != this) {
 				throw exit;
 			}
+		}
+	}
+
+	@Override
+	public void optimize(Parser parser) {
+		condition = parser.optimize(condition);
+
+		if (trueBody != null) {
+			trueBody.optimize(parser);
+		}
+
+		if (falseBody != null) {
+			falseBody.optimize(parser);
 		}
 	}
 }

@@ -1,6 +1,8 @@
 package dev.latvian.apps.ichor.js;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
+import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
@@ -10,10 +12,35 @@ public class StringJS {
 		return self.toString();
 	}
 
-	public static final Prototype PROTOTYPE = new PrototypeBuilder("String")
-			.constructor((scope, args, hasNew) -> args.length == 0 ? "" : scope.getContext().asString(scope, args[0]))
-			.asNumber((scope, self) -> scope.toString().isEmpty() ? NumberJS.ZERO : NumberJS.ONE)
-			.asBoolean((scope, self) -> !scope.toString().isEmpty())
+	public static final Prototype PROTOTYPE = new PrototypeBuilder("String") {
+		@Override
+		public Object call(Context cx, Scope scope, Object self, Object[] args) {
+			return args.length == 0 ? "" : cx.asString(scope, args[0], false);
+		}
+
+		@Override
+		public void asString(Context cx, Scope scope, Object self, StringBuilder builder, boolean escape) {
+			if (escape) {
+				AstStringBuilder.wrapString(self, builder);
+			} else {
+				builder.append(s(self));
+			}
+		}
+
+		@Override
+		public Number asNumber(Context cx, Scope scope, Object self) {
+			try {
+				return Double.parseDouble(s(self));
+			} catch (NumberFormatException ex) {
+				return Double.NaN;
+			}
+		}
+
+		@Override
+		public boolean asBoolean(Context cx, Scope scope, Object self) {
+			return !s(self).isEmpty();
+		}
+	}
 			.staticFunction("fromCharCode", StringJS::fromCharCode)
 			.staticFunction("fromCodePoint", StringJS::fromCodePoint)
 			.staticFunction("raw", StringJS::raw)
@@ -53,11 +80,11 @@ public class StringJS {
 		return self instanceof CharSequence c ? c : self.toString();
 	}
 
-	private static String unimpl(Scope scope, Object self, Object[] args) {
+	private static String unimpl(Context cx, Scope scope, Object self, Object[] args) {
 		throw new ScriptError("This function is not yet implemented!");
 	}
 
-	private static String fromCharCode(Scope scope, Object[] args) {
+	private static String fromCharCode(Context cx, Scope scope, Object[] args) {
 		int n = args.length;
 
 		if (n < 1) {
@@ -67,13 +94,13 @@ public class StringJS {
 		char[] chars = new char[n];
 
 		for (int i = 0; i != n; ++i) {
-			chars[i] = scope.getContext().asChar(scope, args[i]);
+			chars[i] = cx.asChar(scope, args[i]);
 		}
 
 		return new String(chars);
 	}
 
-	private static String fromCodePoint(Scope scope, Object[] args) {
+	private static String fromCodePoint(Context cx, Scope scope, Object[] args) {
 		int n = args.length;
 
 		if (n < 1) {
@@ -83,10 +110,10 @@ public class StringJS {
 		int[] codePoints = new int[n];
 
 		for (int i = 0; i != n; i++) {
-			int codePoint = scope.getContext().asInt(scope, args[i]);
+			int codePoint = cx.asInt(scope, args[i]);
 
 			if (!Character.isValidCodePoint(codePoint)) {
-				throw new ScriptError("Invalid code point " + scope.getContext().asString(scope, args[i]));
+				throw new ScriptError("Invalid code point " + cx.asString(scope, args[i], true));
 			}
 
 			codePoints[i] = codePoint;
@@ -95,19 +122,19 @@ public class StringJS {
 		return new String(codePoints, 0, n);
 	}
 
-	private static String raw(Scope scope, Object[] args) {
-		return scope.getContext().asString(scope, args[0]);
+	private static String raw(Context cx, Scope scope, Object[] args) {
+		return cx.asString(scope, args[0], false);
 	}
 
-	private static Object length(Scope scope, Object self) {
+	private static Object length(Context cx, Scope scope, Object self) {
 		return cs(self).length();
 	}
 
-	private static Object charAt(Scope scope, Object self, Object[] args) {
-		return cs(self).charAt(scope.getContext().asInt(scope, args[0]));
+	private static Object charAt(Context cx, Scope scope, Object self, Object[] args) {
+		return cs(self).charAt(cx.asInt(scope, args[0]));
 	}
 
-	private static String trim(Scope scope, Object self, Object[] args) {
+	private static String trim(Context cx, Scope scope, Object self, Object[] args) {
 		return s(self).trim();
 	}
 }
