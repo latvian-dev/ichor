@@ -48,7 +48,7 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 					value = args[i];
 				}
 
-				function.params[i].declare(s, value, AssignType.MUTABLE);
+				s.declareMember(function.params[i].name, value, AssignType.MUTABLE);
 			}
 
 			function.body.interpretSafe(evalContext, s);

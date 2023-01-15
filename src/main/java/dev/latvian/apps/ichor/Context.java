@@ -49,7 +49,7 @@ public abstract class Context {
 	}
 
 	public Object eval(Scope scope, Object o) {
-		return o instanceof Evaluable eval ? eval.eval(this, scope) : o;
+		return o instanceof Callable ? o : o instanceof Evaluable eval ? eval.eval(this, scope) : o;
 	}
 
 	public void asString(Scope scope, Object o, StringBuilder builder, boolean toString) {

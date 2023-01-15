@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Timeout;
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class InterpreterOperatorTests {
 	private static void testOp(String eval, String match) {
-		InterpreterTests.testInterpreter("print(" + eval + ")", match);
+		InterpreterTests.testInterpreter("console.log(" + eval + ")", match);
 	}
 
 	@Test

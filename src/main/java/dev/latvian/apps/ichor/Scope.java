@@ -48,7 +48,7 @@ public class Scope {
 		return slot == null ? Special.NOT_FOUND : slot.value;
 	}
 
-	public void declareMember(String name, Object value, AssignType type) {
+	public void declareMember(String name, @Nullable Object value, AssignType type) {
 		var slot = members == null ? null : members.get(name);
 
 		if (type == AssignType.NONE) {

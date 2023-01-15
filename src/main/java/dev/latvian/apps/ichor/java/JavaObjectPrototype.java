@@ -57,7 +57,8 @@ public class JavaObjectPrototype extends PrototypeBuilder {
 					return method.invoke(self, Empty.OBJECTS);
 				}
 			} catch (Exception ex) {
-				return Special.NOT_FOUND;
+				throw new RuntimeException(ex);
+				// return Special.NOT_FOUND;
 			}
 		}
 

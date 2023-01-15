@@ -19,7 +19,6 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
@@ -51,8 +50,8 @@ public class InterpreterTests {
 
 		var rootScope = new RootScope(cx);
 		rootScope.addSafeClasses();
-		var console = new TestConsole(System.out, new ArrayList<>());
-		rootScope.declareMember("print", console, AssignType.IMMUTABLE);
+		var console = new TestConsole(System.out);
+		rootScope.declareMember("console", console, AssignType.IMMUTABLE);
 		rootScopeCallback.accept(rootScope);
 
 		var tokenStream = new TokenStreamJS(cx, new NamedTokenSource(filename), input);
@@ -75,8 +74,8 @@ public class InterpreterTests {
 
 		System.out.println();
 		System.out.println("Returned:");
-		printLines(console.output());
-		Assertions.assertEquals(matchStr, console.output());
+		printLines(console.output);
+		Assertions.assertEquals(matchStr, console.output);
 	}
 
 	public static void testInterpreter(String input, Consumer<RootScope> rootScopeCallback, String match) {
@@ -89,7 +88,7 @@ public class InterpreterTests {
 
 	@Test
 	public void numberOps() {
-		testInterpreter("let x = 4.0; x++; ++x; const y = x; x++; print(y);", "6");
+		testInterpreter("let x = 4.0; x++; ++x; const y = x; x++; console.log(y);", "6");
 	}
 
 	@Test
@@ -101,14 +100,14 @@ public class InterpreterTests {
 				  x *= 2
 				}
 								
-				print(x)
+				console.log(x)
 				""", "256");
 	}
 
 	@Test
 	public void print() {
 		testInterpreter("""
-				print("Hello")
+				console.log("Hello")
 				""", "Hello");
 	}
 
@@ -116,7 +115,7 @@ public class InterpreterTests {
 	public void functionPrintDash() {
 		testInterpreter("""
 				function test(x) {
-				  print('- ' + x)
+				  console.log('- ' + x)
 				}
 								
 				test("Hello");
@@ -131,10 +130,10 @@ public class InterpreterTests {
 								
 				  while(--pow >= 0) {
 				  	y *= x
-				  	// print(y)
+				  	// console.log(y)
 				  }
 				  
-				  print(y)
+				  console.log(y)
 				}
 								
 				printPower(2, 3)
@@ -153,7 +152,7 @@ public class InterpreterTests {
 				}
 								
 				let z = a(3.5)
-				print(z)
+				console.log(z)
 				""", "24.5");
 	}
 
@@ -169,7 +168,7 @@ public class InterpreterTests {
 				}
 								
 				let z = fib(10)
-				print(z);
+				console.log(z);
 				""", "55");
 	}
 
@@ -186,8 +185,8 @@ public class InterpreterTests {
 				  return isOdd(n - 1)
 				}
 								
-				print(isOdd(7))
-				print(isEven(7))
+				console.log(isOdd(7))
+				console.log(isEven(7))
 				""", """
 				true
 				false
@@ -198,15 +197,15 @@ public class InterpreterTests {
 	public void redeclaration() {
 		testInterpreter("""
 				var x = 10
-				print(x)
+				console.log(x)
 								
 				{
-				  print(x)
+				  console.log(x)
 				  var x = 20
-				  print(x)
+				  console.log(x)
 				}
 								
-				print(x)
+				console.log(x)
 				""", """
 				10
 				10
@@ -218,7 +217,7 @@ public class InterpreterTests {
 	@Test
 	public void numberProtoAccess() {
 		testInterpreter("""
-				print(Number.MAX_SAFE_INTEGER);
+				console.log(Number.MAX_SAFE_INTEGER);
 				""", Double.toString(NumberJS.MAX_SAFE_INTEGER));
 	}
 
@@ -231,7 +230,7 @@ public class InterpreterTests {
 				}
 								
 				let z = a(3.5)
-				print(z)
+				console.log(z)
 				""", "24.5");
 	}
 
@@ -239,7 +238,7 @@ public class InterpreterTests {
 	public void defaultParams() {
 		testInterpreter("""
 				const a = (x, y = 'Y', z = 'Z') => {
-				  print(String(x) + " : " + String(y) + " : " + String(z))
+				  console.log(String(x) + " : " + String(y) + " : " + String(z))
 				}
 								
 				a('a', 'b', 'c')
@@ -261,7 +260,7 @@ public class InterpreterTests {
 				  }
 								
 				  printTest(y) {
-				    print(y)
+				    console.log(y)
 				  }
 				}
 								
@@ -289,10 +288,10 @@ public class InterpreterTests {
 	@Test
 	public void propertyTest() {
 		testInterpreter("""
-				print('A')
-				print('B')
-				print('C')
-				print(print.lastLine)
+				console.log('A')
+				console.log('B')
+				console.log('C')
+				console.log(console.lastLine)
 				""", """
 				A
 				B
@@ -304,10 +303,10 @@ public class InterpreterTests {
 	@Test
 	public void stringProto() {
 		testInterpreter("""
-				print('Hello'.length)
-				print('Hello'.charAt(0))
-				print(String(4))
-				print(new String(true))
+				console.log('Hello'.length)
+				console.log('Hello'.charAt(0))
+				console.log(String(4))
+				console.log(new String(true))
 				""", """
 				5
 				H
@@ -320,7 +319,7 @@ public class InterpreterTests {
 	public void emptyArray() {
 		testInterpreter("""
 				let empty = []
-				print(empty.length)
+				console.log(empty.length)
 				""", "0");
 	}
 
@@ -328,9 +327,9 @@ public class InterpreterTests {
 	public void arrays() {
 		testInterpreter("""
 				let a = [1, 2, 'Hi']
-				print(a.length)
-				print(a[0])
-				print(a[2])
+				console.log(a.length)
+				console.log(a[0])
+				console.log(a[2])
 				""", """
 				3
 				1
@@ -341,7 +340,7 @@ public class InterpreterTests {
 	@Test
 	public void arrayPrint() {
 		testInterpreter("""
-				print([1, 2.5, 'Hi'])
+				console.log([1, 2.5, 'Hi'])
 				""", """
 				[1, 2.5, 'Hi']
 				""");
@@ -350,7 +349,7 @@ public class InterpreterTests {
 	@Test
 	public void objectPrint() {
 		testInterpreter("""
-				print({a: 1, b: 2.5, c: 'Hi'})
+				console.log({a: 1, b: 2.5, c: 'Hi'})
 				""", """
 				{a: 1, b: 2.5, c: 'Hi'}
 				""");
@@ -360,11 +359,11 @@ public class InterpreterTests {
 	public void comments() {
 		testInterpreter("""
 				// before
-				print('A')
+				console.log('A')
 				/* block comment
-				print('B')
+				console.log('B')
 				*/
-				print('C')
+				console.log('C')
 				""", """
 				A
 				C
@@ -374,14 +373,14 @@ public class InterpreterTests {
 	@Test
 	public void reflection() {
 		testInterpreter("""
-				print(ref.publicField)
+				console.log(ref.publicField)
 				ref.publicField = 40
-				print(ref.publicField)
+				console.log(ref.publicField)
 				ref.sout('Hello')
 				ref.sout(7)
 				ref.soutNum('8')
-				print(ref.class.name)
-				print(ref.class.class.name)
+				console.log(ref.class.name)
+				console.log(ref.class.class.name)
 				""", scope -> scope.declareMember("ref", new ReflectionExample(), AssignType.IMMUTABLE), """
 				30
 				40
@@ -391,27 +390,9 @@ public class InterpreterTests {
 	}
 
 	@Test
-	public void ternary() {
-		testInterpreter("""
-				let x = 40
-				let y = 60
-				print()
-				// before
-				print('A')
-				/* block comment
-				print('B')
-				*/
-				print('C')
-				""", """
-				A
-				C
-				""");
-	}
-
-	@Test
 	public void templateLiteralString() {
 		testInterpreter("""
-				print(`Hello`)
+				console.log(`Hello`)
 				""", "Hello");
 	}
 
@@ -420,7 +401,7 @@ public class InterpreterTests {
 		testInterpreter("""
 				let x = 10
 				let y = 20
-				print(`Hello ${x} + ${y} = ${x + y}`)
+				console.log(`Hello ${x} + ${y} = ${x + y}`)
 				""", "Hello 10 + 20 = 30");
 	}
 
@@ -429,7 +410,7 @@ public class InterpreterTests {
 		testInterpreter("""
 				let x = 10
 				let y = 20
-				print(`Hello ${x} + ${y} = ${true ? `${x + y}` : 'impossible'}`)
+				console.log(`Hello ${x} + ${y} = ${true ? `${x + y}` : 'impossible'}`)
 				""", "Hello 10 + 20 = 30");
 	}
 
@@ -437,7 +418,7 @@ public class InterpreterTests {
 	public void forNumbers() {
 		testInterpreter("""
 				for (let i = 0; i < 5; i++) {
-				  print(i)
+				  console.log(i)
 				}
 				""", """
 				0
@@ -454,7 +435,7 @@ public class InterpreterTests {
 				const arr = ['a', 'b', 'c']
 								
 				for (let i = 0; i < arr.length; i++) {
-				  print(`${i}: ${arr[i]}`)
+				  console.log(`${i}: ${arr[i]}`)
 				}
 				""", """
 				0: a
@@ -471,7 +452,7 @@ public class InterpreterTests {
 				i = 50;
 								
 				for (i = 0; i < arr.length; i++) {
-				  print(`${i}: ${arr[i]}`)
+				  console.log(`${i}: ${arr[i]}`)
 				}
 				""", """
 				0: a
@@ -486,7 +467,7 @@ public class InterpreterTests {
 				const arr = ['a', 'b', 'c']
 								
 				for (const x of arr) {
-				  print(x)
+				  console.log(x)
 				}
 				""", """
 				a
@@ -501,7 +482,7 @@ public class InterpreterTests {
 				const arr = ['a', 'b', 'c']
 								
 				for (x in arr) {
-				  print(x)
+				  console.log(x)
 				}
 				""", """
 				0
@@ -516,7 +497,7 @@ public class InterpreterTests {
 				const obj = {a: 'X', b: 'Y', c: 'Z'}
 								
 				for (const x of obj) {
-				  print(x)
+				  console.log(x)
 				}
 				""", """
 				X
@@ -531,7 +512,7 @@ public class InterpreterTests {
 				const obj = {a: 'X', b: 'Y', c: 'Z'}
 								
 				for (x in obj) {
-				  print(x)
+				  console.log(x)
 				}
 				""", """
 				a
@@ -546,7 +527,7 @@ public class InterpreterTests {
 				let y = 28;
 				let x;
 				if((x = y/2) > 10)
-				  print(x)
+				  console.log(x)
 				""", """
 				14
 				""");
@@ -555,9 +536,14 @@ public class InterpreterTests {
 	@Test
 	public void callRef() {
 		testInterpreter("""
-				const a = print
+				const c = console
+				console.log(c)
+				const a = c.log
+				console.log(a)
 				a('Hi')
 				""", """
+				TestConsoleImpl
+				JavaMethod[public void dev.latvian.apps.ichor.test.TestConsole.log(java.lang.String)]
 				Hi
 				""");
 	}
@@ -565,7 +551,7 @@ public class InterpreterTests {
 	@Test
 	public void callRefArrow() {
 		testInterpreter("""
-				const a = text => print(text)
+				const a = text => console.log(text)
 				a('Hi')
 				""", """
 				Hi
@@ -575,7 +561,7 @@ public class InterpreterTests {
 	@Test
 	public void callChain() {
 		testInterpreter("""
-				const a = () => () => () => print('Hi')
+				const a = () => () => () => console.log('Hi')
 				a()()()
 				""", """
 				Hi
@@ -585,7 +571,7 @@ public class InterpreterTests {
 	@Test
 	public void singleGroupedStr() {
 		testInterpreter("""
-				print(('hi'))
+				console.log(('hi'))
 				""", """
 				hi
 				""");
@@ -594,7 +580,7 @@ public class InterpreterTests {
 	@Test
 	public void singleGroupedNum() {
 		testInterpreter("""
-				print((5.0))
+				console.log((5.0))
 				""", """
 				5
 				""");
@@ -603,8 +589,8 @@ public class InterpreterTests {
 	@Test
 	public void selfInvokingFunction() {
 		testInterpreter("""
-				(() => print('im self invoking'))()
-				print('hi')
+				(() => console.log('im self invoking'))()
+				console.log('hi')
 				""", """
 				im self invoking
 				hi
@@ -614,7 +600,7 @@ public class InterpreterTests {
 	@Test
 	public void expNumPos() {
 		testInterpreter("""
-				print(1e3)
+				console.log(1e3)
 				""", """
 				1000
 				""");
@@ -623,7 +609,7 @@ public class InterpreterTests {
 	@Test
 	public void expNumNeg() {
 		testInterpreter("""
-				print(1e-3)
+				console.log(1e-3)
 				""", """
 				0.001
 				""");
@@ -633,7 +619,7 @@ public class InterpreterTests {
 	public void redeclarationFuncScope() {
 		testInterpreter("""
 				let x = 10;
-				let func = (a) => { print(`${a} / ${x}`); }
+				let func = (a) => { console.log(`${a} / ${x}`); }
 				func(5);
 				x = 20;
 				func(5);
@@ -655,7 +641,7 @@ public class InterpreterTests {
 				    if (i === 1 && j === 1) {
 				      break loop1;
 				    }
-				    print(`i = ${i}, j = ${j}`);
+				    console.log(`i = ${i}, j = ${j}`);
 				  }
 				}
 				""", """
@@ -670,11 +656,11 @@ public class InterpreterTests {
 	public void labelledBlock() {
 		testInterpreter("""
 				foo: {
-				  print('face');
+				  console.log('face');
 				  break foo;
-				  print('this will not be executed');
+				  console.log('this will not be executed');
 				}
-				print('swap');
+				console.log('swap');
 				""", """
 				face
 				swap
@@ -685,19 +671,19 @@ public class InterpreterTests {
 	public void labelledMultiLevelBlock() {
 		testInterpreter("""
 				a: {
-				  print('a')
+				  console.log('a')
 				  
 				  b: {
 				    c: {
 				      break a;
-				      print('c')
+				      console.log('c')
 				    }
 				    
-				    print('b')
+				    console.log('b')
 				  }
 				}
 								
-				print('d')
+				console.log('d')
 				""", """
 				a
 				d
@@ -709,16 +695,16 @@ public class InterpreterTests {
 		testInterpreter("""
 				function closure() {
 				    let b = 10;
-				    print(b); // 10
+				    console.log(b); // 10
 				    callMe(function() {
 				        b++;
 				        return b;
 				    })
-				    print(b); // 11
+				    console.log(b); // 11
 				}
 				    
 				function callMe(fn) {
-				    print(fn()); // 11
+				    console.log(fn()); // 11
 				}
 								
 				closure()
@@ -740,24 +726,22 @@ public class InterpreterTests {
 				    }
 				}
 								
-				print(giveMeClosure()())
+				console.log(giveMeClosure()())
 				""", """
 				11
 				""");
 	}
 
-	/*
-	@Test
+	// @Test
 	public void destructing() {
 		testInterpreter("""
 				let props = {a: '1', b: '2'}
 				let {a, b} = props
-				print(a)
-				print(b)
+				console.log(a)
+				console.log(b)
 				""", """
 				1
 				2
 				""");
 	}
-	 */
 }

@@ -4,14 +4,13 @@ import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.ast.expression.AstParam;
 import dev.latvian.apps.ichor.token.DeclaringToken;
 import dev.latvian.apps.ichor.util.AssignType;
 
 public class AstMultiDeclareStatement extends AstDeclareStatement {
-	public final AstParam[] variables;
+	public final AstDeclaration[] variables;
 
-	public AstMultiDeclareStatement(DeclaringToken assignToken, AstParam[] variables) {
+	public AstMultiDeclareStatement(DeclaringToken assignToken, AstDeclaration[] variables) {
 		super(assignToken);
 		this.variables = variables;
 	}
@@ -34,15 +33,15 @@ public class AstMultiDeclareStatement extends AstDeclareStatement {
 
 	@Override
 	public void interpret(Context cx, Scope scope) {
-		for (AstParam v : variables) {
-			v.declare(scope, cx.eval(scope, v.defaultValue), assignToken.isConst() ? AssignType.IMMUTABLE : AssignType.MUTABLE);
+		for (var v : variables) {
+			v.declare(cx, scope, assignToken.isConst() ? AssignType.IMMUTABLE : AssignType.MUTABLE);
 		}
 	}
 
 	@Override
 	public void optimize(Parser parser) {
-		for (AstParam v : variables) {
-			v.defaultValue = parser.optimize(v.defaultValue);
+		for (var v : variables) {
+			v.optimize(parser);
 		}
 	}
 }

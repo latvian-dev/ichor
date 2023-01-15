@@ -21,7 +21,11 @@ public class ConsoleDebugger implements Debugger {
 			return sb.toString();
 		} else if (value instanceof AstFunction func) {
 			var sb = new StringBuilder("function ");
-			sb.append(func.functionName);
+
+			if (func.functionName != null) {
+				sb.append(func.functionName);
+			}
+
 			sb.append("(");
 
 			for (int i = 0; i < func.params.length; i++) {
@@ -43,7 +47,7 @@ public class ConsoleDebugger implements Debugger {
 
 	@Override
 	public void pushScope(Context cx, Scope scope) {
-		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Scope -> " + scope + " of " + scope.owner);
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Scope -> " + scope + " of " + asString(scope, scope.owner));
 	}
 
 	@Override
@@ -63,7 +67,7 @@ public class ConsoleDebugger implements Debugger {
 
 	@Override
 	public void delete(Context cx, Scope scope, Object object) {
-		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Delete @ " + object);
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Delete @ " + asString(scope, object));
 	}
 
 	@Override
@@ -74,9 +78,26 @@ public class ConsoleDebugger implements Debugger {
 		sb.append("* Call => ");
 
 		if (func instanceof FunctionInstance funcInst) {
-			sb.append("hi");
+			if (funcInst.function.functionName != null) {
+				sb.append(funcInst.function.functionName);
+			}
+
+			sb.append("(");
+
+			for (int i = 0; i < funcInst.function.params.length; i++) {
+				if (i > 0) {
+					sb.append(',');
+				}
+
+				sb.append(funcInst.function.params[i]);
+				sb.append("==>");
+				sb.append(i >= args.length ? "?" : asString(scope, args[i]));
+			}
+
+			sb.append(") {...}");
+
 		} else {
-			sb.append(call.function);
+			sb.append(call);
 		}
 
 		sb.append(func);

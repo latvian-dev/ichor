@@ -1,47 +1,35 @@
 package dev.latvian.apps.ichor.test;
 
-import dev.latvian.apps.ichor.Context;
-import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.Special;
-import dev.latvian.apps.ichor.prototype.Prototype;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 
-public record TestConsole(PrintStream printStream, List<String> output) implements Prototype {
-	@Override
-	public String getPrototypeName() {
-		return "console";
+public final class TestConsole {
+	private final PrintStream printStream;
+	public final List<String> output;
+	public String lastLine = null;
+
+	public TestConsole(PrintStream printStream) {
+		this.printStream = printStream;
+		this.output = new ArrayList<>();
 	}
 
-	@Override
-	public Object call(Context cx, Scope scope, Object self, Object[] args) {
-		for (var o : args) {
-			var s = cx.asString(scope, o, false);
-
-			if (!s.isBlank()) {
-				output.add(s.trim());
-			}
-
-			printStream.println("> " + s);
+	public void log(String s) {
+		if (s == null) {
+			s = "";
 		}
 
-		return Special.UNDEFINED;
-	}
+		lastLine = s;
 
-	@Override
-	@Nullable
-	public Object get(Context cx, Scope scope, Object self, String name) {
-		if (name.equals("lastLine")) {
-			return output.isEmpty() ? "" : output.get(output.size() - 1);
+		if (!s.isBlank()) {
+			output.add(s.trim());
 		}
 
-		return Special.NOT_FOUND;
+		printStream.println("> " + s);
 	}
 
 	@Override
 	public String toString() {
-		return "<console>";
+		return "TestConsoleImpl";
 	}
 }

@@ -8,23 +8,8 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
-import dev.latvian.apps.ichor.util.Empty;
 
 public class AstCall extends AstExpression {
-	public static Object[] convertArgs(Context cx, Scope scope, Object[] arguments) {
-		if (arguments.length == 0) {
-			return Empty.OBJECTS;
-		}
-
-		var args = new Object[arguments.length];
-
-		for (int i = 0; i < arguments.length; i++) {
-			args[i] = cx.eval(scope, arguments[i]);
-		}
-
-		return args;
-	}
-
 	public Object function;
 	public Object[] arguments;
 	public boolean isNew;
@@ -35,7 +20,14 @@ public class AstCall extends AstExpression {
 			builder.append("new ");
 		}
 
-		builder.append(function);
+		if (function instanceof AstFunction func && func.functionName != null) {
+			builder.append(func.functionName);
+		} else if (function instanceof AstGetScopeMember member) {
+			builder.append(member.name);
+		} else {
+			builder.append("<unknown function>");
+		}
+
 		builder.append('(');
 
 		for (int i = 0; i < arguments.length; i++) {
@@ -43,7 +35,7 @@ public class AstCall extends AstExpression {
 				builder.append(',');
 			}
 
-			builder.append(arguments[i]);
+			builder.appendValue(arguments[i]);
 		}
 
 		builder.append(')');
@@ -63,12 +55,12 @@ public class AstCall extends AstExpression {
 
 		cx.debugger.pushSelf(cx, scope, self);
 
-		var args = convertArgs(cx, scope, arguments);
+		var args = ((Callable) func).convertArgs(cx, scope, arguments);
 
 		var r = ((Callable) func).call(cx, scope, self, args);
 
 		if (r == Special.NOT_FOUND) {
-			throw new ScriptError("Cannot call " + function);
+			throw new ScriptError("Cannot call " + func);
 		}
 
 		cx.debugger.call(cx, scope, this, func, args, r);

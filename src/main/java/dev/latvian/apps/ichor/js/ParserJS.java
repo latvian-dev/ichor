@@ -25,6 +25,7 @@ import dev.latvian.apps.ichor.ast.expression.AstSuperExpression;
 import dev.latvian.apps.ichor.ast.expression.AstTemplateLiteral;
 import dev.latvian.apps.ichor.ast.expression.AstTernary;
 import dev.latvian.apps.ichor.ast.expression.AstThisExpression;
+import dev.latvian.apps.ichor.ast.expression.AstType;
 import dev.latvian.apps.ichor.ast.expression.AstTypeOf;
 import dev.latvian.apps.ichor.ast.expression.unary.AstAdd1R;
 import dev.latvian.apps.ichor.ast.expression.unary.AstSub1R;
@@ -33,6 +34,7 @@ import dev.latvian.apps.ichor.ast.statement.AstBreak;
 import dev.latvian.apps.ichor.ast.statement.AstClass;
 import dev.latvian.apps.ichor.ast.statement.AstContinue;
 import dev.latvian.apps.ichor.ast.statement.AstDebugger;
+import dev.latvian.apps.ichor.ast.statement.AstDeclaration;
 import dev.latvian.apps.ichor.ast.statement.AstDoWhile;
 import dev.latvian.apps.ichor.ast.statement.AstEmptyBlock;
 import dev.latvian.apps.ichor.ast.statement.AstExpressionStatement;
@@ -64,7 +66,9 @@ import dev.latvian.apps.ichor.util.Empty;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Stack;
 import java.util.function.Function;
 
@@ -97,11 +101,13 @@ public class ParserJS implements Parser {
 	private final ContextJS context;
 	private PositionedToken current;
 	private final Stack<LabeledStatement> labeledStatements;
+	private final Map<String, AstType.Generic> genericTypeCache;
 
 	public ParserJS(ContextJS cx, PositionedToken r) {
 		context = cx;
 		current = r;
 		labeledStatements = new Stack<>();
+		genericTypeCache = new HashMap<>();
 	}
 
 	@Override
@@ -145,6 +151,45 @@ public class ParserJS implements Parser {
 		} else {
 			return statement();
 		}
+	}
+
+	private AstType type() {
+		var id = name(ParseErrorType.EXP_TYPE_NAME);
+
+		AstType type = switch (id) {
+			case "any" -> AstType.Generic.ANY;
+			case "void" -> AstType.Generic.VOID;
+			case "boolean" -> AstType.Generic.BOOLEAN;
+			case "number" -> AstType.Generic.NUMBER;
+			case "string" -> AstType.Generic.STRING;
+			case "function" -> AstType.Generic.FUNCTION;
+			case "object" -> AstType.Generic.OBJECT;
+			case "bigint" -> AstType.Generic.BIGINT;
+			case "Array" -> AstType.Generic.ARRAY;
+			default -> genericTypeCache.computeIfAbsent(id, AstType.Generic::new);
+		};
+
+		if (advanceIf(SymbolTokenJS.LT)) {
+			var list = new ArrayList<AstType>();
+
+			do {
+				list.add(type());
+			} while (advanceIf(SymbolTokenJS.COMMA));
+
+			consume(SymbolTokenJS.GT, ParseErrorType.EXP_GT_TYPE);
+			type = new AstType.Typed(type, list.toArray(Empty.AST_TYPES));
+		}
+
+		while (advanceIf(SymbolTokenJS.LS)) {
+			consume(SymbolTokenJS.RS, ParseErrorType.EXP_RS_ARRAY);
+			type = new AstType.Array(type);
+		}
+
+		while (advanceIf(SymbolTokenJS.BOR)) {
+			type = new AstType.Or(type, type());
+		}
+
+		return AstType.Generic.ANY;
 	}
 
 	private void ignoreSemi() {
@@ -313,7 +358,7 @@ public class ParserJS implements Parser {
 			initializer = varDeclaration(current.prev);
 		} else if (current.isIdentifier() && current.next.is(FOR_OF_IN_TOKENS)) {
 			var n = name(ParseErrorType.EXP_VAR_NAME);
-			initializer = new AstSingleDeclareStatement(KeywordTokenJS.LET, new AstParam.Simple(n));
+			initializer = new AstSingleDeclareStatement(KeywordTokenJS.LET, new AstDeclaration.Simple(n));
 		} else {
 			initializer = expressionStatement(false);
 		}
@@ -326,7 +371,7 @@ public class ParserJS implements Parser {
 			String name;
 
 			if (initializer instanceof AstSingleDeclareStatement s) {
-				if (s.variable instanceof AstParam.Simple p) {
+				if (s.variable instanceof AstDeclaration.Simple p) {
 					name = p.name;
 				} else {
 					throw new ParseError(pos, ParseErrorType.DESTRUCT_NOT_SUPPORTED);
@@ -446,10 +491,10 @@ public class ParserJS implements Parser {
 	}
 
 	private Interpretable varDeclaration(DeclaringToken type, TokenPosSupplier pos) {
-		var list = new ArrayList<AstParam>(1);
+		var list = new ArrayList<AstDeclaration>(1);
 
 		do {
-			list.add(param(ParseErrorType.EXP_VAR_NAME));
+			list.add(varParam());
 		} while (ignoreComma());
 
 		// ignoreSemi();
@@ -458,7 +503,21 @@ public class ParserJS implements Parser {
 			return new AstSingleDeclareStatement(type, list.get(0)).pos(pos);
 		}
 
-		return new AstMultiDeclareStatement(type, list.toArray(Empty.AST_PARAMS)).pos(pos);
+		return new AstMultiDeclareStatement(type, list.toArray(Empty.AST_DECLARATIONS)).pos(pos);
+	}
+
+	private AstDeclaration varParam() {
+		var decl = new AstDeclaration.Simple(name(ParseErrorType.EXP_VAR_NAME));
+
+		if (advanceIf(SymbolTokenJS.COL)) {
+			decl.type = type();
+		}
+
+		if (advanceIf(SymbolTokenJS.SET)) {
+			decl.defaultValue = expression();
+		}
+
+		return decl;
 	}
 
 	private Interpretable whileStatement(PositionedToken pos, String label) {
@@ -492,7 +551,7 @@ public class ParserJS implements Parser {
 
 		if (advanceIf(KeywordTokenJS.CATCH)) {
 			consume(SymbolTokenJS.LP, ParseErrorType.EXP_LP_ARGS);
-			var name = name(ParseErrorType.EXP_ARG_NAME);
+			var name = name(ParseErrorType.EXP_PARAM_NAME);
 			consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_ARGS);
 			catchBlock = new AstTry.AstCatch(name, statementBody());
 		}
@@ -580,7 +639,7 @@ public class ParserJS implements Parser {
 					}
 				}
 
-				parameters.add(param(ParseErrorType.EXP_ARG_NAME));
+				parameters.add(param());
 			} while (ignoreComma());
 		}
 		consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_ARGS);
@@ -802,12 +861,11 @@ public class ParserJS implements Parser {
 		return call();
 	}
 
-	private AstParam param(ParseErrorMessage expName) {
-		var param = new AstParam.Simple(name(expName));
+	private AstParam param() {
+		var param = new AstParam(name(ParseErrorType.EXP_PARAM_NAME));
 
 		if (advanceIf(SymbolTokenJS.COL)) {
-			name(ParseErrorType.EXP_TYPE_NAME);
-			// param type for TS
+			param.type = type();
 		}
 
 		if (advanceIf(SymbolTokenJS.SET)) {
@@ -906,7 +964,7 @@ public class ParserJS implements Parser {
 				funcFlags |= AstFunction.MOD_ARROW;
 				var apos = current.prev;
 				var body = block(true, "");
-				return new AstFunction(new AstParam[]{new AstParam.Simple(name)}, body, funcFlags).pos(apos);
+				return new AstFunction(new AstParam[]{new AstParam(name)}, body, funcFlags).pos(apos);
 			} else {
 				//current = pos; // required to jump back because x = y statement and default param look the same
 				//advance();
