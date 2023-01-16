@@ -51,7 +51,7 @@ public class AstCall extends AstExpression {
 			throw new ScriptError("Cannot call " + function + ", " + func + " (" + cx.getPrototype(scope, func) + ")" + " is not a function");
 		}
 
-		var self = isNew ? Special.NEW : function instanceof Evaluable eval ? eval.evalSelf(cx, scope) : function;
+		var self = isNew ? Special.NEW : function instanceof Evaluable eval ? eval.evalSelf(cx, scope) : func instanceof Evaluable eval ? eval.evalSelf(cx, scope) : func;
 
 		cx.debugger.pushSelf(cx, scope, self);
 
