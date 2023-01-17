@@ -1,7 +1,6 @@
 package dev.latvian.apps.ichor.prototype;
 
 import dev.latvian.apps.ichor.Context;
-import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.js.NumberJS;
@@ -16,7 +15,7 @@ public class PrototypeBuilder implements Prototype {
 	private final String prototypeName;
 	protected Prototype parent;
 	private PrototypeConstructor constructor;
-	private Map<String, Object> members;
+	private Map<String, PrototypeProperty> members;
 	private PrototypeAsString asString;
 	private PrototypeAsNumber asNumber;
 	private PrototypeAsBoolean asBoolean;
@@ -47,7 +46,7 @@ public class PrototypeBuilder implements Prototype {
 		return this;
 	}
 
-	private PrototypeBuilder member(String name, Object member) {
+	private PrototypeBuilder member(String name, PrototypeProperty member) {
 		if (members == null) {
 			members = new HashMap<>(1);
 		}
@@ -65,7 +64,7 @@ public class PrototypeBuilder implements Prototype {
 	}
 
 	public PrototypeBuilder constant(String name, Object value) {
-		return member(name, value);
+		return member(name, new PrototypeConstant(value));
 	}
 
 	public PrototypeBuilder function(String name, PrototypeFunction value) {
@@ -111,12 +110,8 @@ public class PrototypeBuilder implements Prototype {
 		if (members != null) {
 			var m = members.get(name);
 
-			if (m instanceof PrototypeProperty p) {
-				return p.get(cx, scope, self);
-			} else if (m instanceof Evaluable e) {
-				return e.eval(cx, scope);
-			} else if (m != null) {
-				return m;
+			if (m != null) {
+				return m.get(cx, scope, self);
 			}
 		}
 
@@ -150,10 +145,8 @@ public class PrototypeBuilder implements Prototype {
 		if (members != null) {
 			var m = members.get(name);
 
-			if (m instanceof PrototypeProperty p) {
-				return p.set(cx, scope, self, value);
-			} else if (m != null) {
-				return false;
+			if (m != null) {
+				return m.set(cx, scope, self, value);
 			}
 		}
 
