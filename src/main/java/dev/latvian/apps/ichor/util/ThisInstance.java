@@ -6,7 +6,6 @@ import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.prototype.Prototype;
 
 import java.util.Collection;
-import java.util.Collections;
 
 public record ThisInstance(Scope evalScope) implements Prototype {
 	@Override
@@ -34,8 +33,8 @@ public record ThisInstance(Scope evalScope) implements Prototype {
 	public Object get(Context cx, Scope scope, Object self, String name) {
 		var s = getActualScope(scope);
 
-		var r = s.getDeclaredMember(name);
-		return r == Special.NOT_FOUND ? Special.UNDEFINED : r;
+		var slot = s.getDeclaredMember(name);
+		return slot == null ? Special.UNDEFINED : slot.value;
 	}
 
 	@Override
@@ -43,7 +42,7 @@ public record ThisInstance(Scope evalScope) implements Prototype {
 		var s = getActualScope(scope);
 
 		if (s.hasDeclaredMember(name) == AssignType.NONE) {
-			s.declareMember(name, value, AssignType.MUTABLE);
+			s.addMutable(name, value);
 		}
 
 		return true;
@@ -60,18 +59,18 @@ public record ThisInstance(Scope evalScope) implements Prototype {
 	@Override
 	public Collection<?> keys(Context cx, Scope scope, Object self) {
 		var s = getActualScope(scope);
-		return s.members == null ? Collections.emptySet() : s.members.keySet();
+		return s.members.getSlotNames();
 	}
 
 	@Override
 	public Collection<?> values(Context cx, Scope scope, Object self) {
 		var s = getActualScope(scope);
-		return s.members == null ? Collections.emptySet() : s.members.values();
+		return s.members.getSlotNames();
 	}
 
 	@Override
 	public Collection<?> entries(Context cx, Scope scope, Object self) {
 		var s = getActualScope(scope);
-		return s.members == null ? Collections.emptySet() : s.members.entrySet();
+		return s.members.getSlotNames();
 	}
 }

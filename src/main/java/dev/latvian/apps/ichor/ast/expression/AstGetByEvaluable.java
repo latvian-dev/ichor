@@ -5,7 +5,7 @@ import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.error.MemberNotFoundError;
 
 public class AstGetByEvaluable extends AstGetFrom {
 	public Object key;
@@ -45,7 +45,7 @@ public class AstGetByEvaluable extends AstGetFrom {
 		}
 
 		if (r == Special.NOT_FOUND) {
-			throw new ScriptError("Cannot find " + this + " of " + p);
+			throw new MemberNotFoundError(toString(), p);
 		}
 
 		cx.debugger.get(cx, scope, this, r);

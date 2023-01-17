@@ -6,7 +6,6 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.ast.expression.AstFunction;
 import dev.latvian.apps.ichor.js.KeywordTokenJS;
-import dev.latvian.apps.ichor.util.AssignType;
 
 public class AstFunctionDeclareStatement extends AstDeclareStatement {
 	public final AstFunction function;
@@ -18,7 +17,7 @@ public class AstFunctionDeclareStatement extends AstDeclareStatement {
 
 	@Override
 	public void interpret(Context cx, Scope scope) {
-		scope.declareMember(function.functionName, function.eval(cx, scope), AssignType.IMMUTABLE);
+		scope.addImmutable(function.functionName, function.eval(cx, scope));
 	}
 
 	@Override

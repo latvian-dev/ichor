@@ -6,6 +6,12 @@ import dev.latvian.apps.ichor.ast.expression.AstClassFunction;
 import dev.latvian.apps.ichor.error.ScriptError;
 
 public class AstSuperStatement extends AstThisStatement {
+	public static class InvalidCallError extends ScriptError {
+		public InvalidCallError() {
+			super("You can only call super() from a constructor");
+		}
+	}
+
 	public AstSuperStatement(Object[] a) {
 		super(a);
 	}
@@ -26,6 +32,6 @@ public class AstSuperStatement extends AstThisStatement {
 			}
 		}
 
-		throw new ScriptError("You can only call super() from a constructor");
+		throw new InvalidCallError();
 	}
 }

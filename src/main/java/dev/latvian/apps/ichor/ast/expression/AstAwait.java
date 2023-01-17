@@ -32,16 +32,35 @@ public class AstAwait extends AstExpression {
 			try {
 				return f.get();
 			} catch (Exception ex) {
-				throw new ScriptError(ex).pos(this);
+				throw new FutureResolveError(f, ex).pos(this);
 			}
 		}
 
-		throw new ScriptError(e + " is not a Promise/Future").pos(this);
+		throw new NotFutureError(e).pos(this);
 	}
 
 	@Override
 	public Object optimize(Parser parser) {
 		future = parser.optimize(future);
 		return this;
+	}
+
+	public static class NotFutureError extends ScriptError {
+
+		public final Object value;
+
+		public NotFutureError(Object value) {
+			super(value + " is not a Promise/Future");
+			this.value = value;
+		}
+	}
+
+	public static class FutureResolveError extends ScriptError {
+		public final Future<?> future;
+
+		public FutureResolveError(Future<?> future, Throwable ex) {
+			super(ex);
+			this.future = future;
+		}
 	}
 }

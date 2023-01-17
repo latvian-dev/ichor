@@ -4,6 +4,7 @@ import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.error.WIPFeatureError;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 
@@ -76,12 +77,21 @@ public class StringJS {
 			.function("trimStart", StringJS::unimpl)
 			.function("trimEnd", StringJS::unimpl);
 
+	public static class InvalidCodePointError extends ScriptError {
+		public final String codePoint;
+
+		public InvalidCodePointError(String codePoint) {
+			super("Invalid code point " + codePoint);
+			this.codePoint = codePoint;
+		}
+	}
+
 	private static CharSequence cs(Object self) {
 		return self instanceof CharSequence c ? c : self.toString();
 	}
 
 	private static String unimpl(Context cx, Scope scope, Object self, Object[] args) {
-		throw new ScriptError("This function is not yet implemented!");
+		throw new WIPFeatureError();
 	}
 
 	private static String fromCharCode(Context cx, Scope scope, Object[] args) {
@@ -91,7 +101,7 @@ public class StringJS {
 			return "";
 		}
 
-		char[] chars = new char[n];
+		var chars = new char[n];
 
 		for (int i = 0; i != n; ++i) {
 			chars[i] = cx.asChar(scope, args[i]);
@@ -107,13 +117,13 @@ public class StringJS {
 			return "";
 		}
 
-		int[] codePoints = new int[n];
+		var codePoints = new int[n];
 
 		for (int i = 0; i != n; i++) {
 			int codePoint = cx.asInt(scope, args[i]);
 
 			if (!Character.isValidCodePoint(codePoint)) {
-				throw new ScriptError("Invalid code point " + cx.asString(scope, args[i], true));
+				throw new InvalidCodePointError(cx.asString(scope, args[i], true));
 			}
 
 			codePoints[i] = codePoint;

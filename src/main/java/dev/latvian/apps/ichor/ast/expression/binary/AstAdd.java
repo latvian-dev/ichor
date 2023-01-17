@@ -6,6 +6,16 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.error.ScriptError;
 
 public class AstAdd extends AstBinary {
+	public static class InvalidAdditionError extends ScriptError {
+		public final Object left, right;
+
+		public InvalidAdditionError(Object left, Object right) {
+			super("Can't add " + left + " + " + right);
+			this.left = left;
+			this.right = right;
+		}
+	}
+
 	@Override
 	public void appendSymbol(StringBuilder builder) {
 		builder.append('+');
@@ -21,7 +31,7 @@ public class AstAdd extends AstBinary {
 		} else if (l instanceof Number && r instanceof Number) {
 			return ((Number) l).doubleValue() + ((Number) r).doubleValue();
 		} else {
-			throw new ScriptError("Can't add " + l + " + " + r).pos(pos);
+			throw new InvalidAdditionError(l, r).pos(pos);
 		}
 	}
 

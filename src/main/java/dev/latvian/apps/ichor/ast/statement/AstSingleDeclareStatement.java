@@ -5,7 +5,6 @@ import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.token.DeclaringToken;
-import dev.latvian.apps.ichor.util.AssignType;
 
 public class AstSingleDeclareStatement extends AstDeclareStatement {
 	public final AstDeclaration variable;
@@ -25,7 +24,7 @@ public class AstSingleDeclareStatement extends AstDeclareStatement {
 
 	@Override
 	public void interpret(Context cx, Scope scope) {
-		variable.declare(cx, scope, assignToken.isConst() ? AssignType.IMMUTABLE : AssignType.MUTABLE);
+		variable.declare(cx, scope, assignToken.isConst());
 	}
 
 	@Override

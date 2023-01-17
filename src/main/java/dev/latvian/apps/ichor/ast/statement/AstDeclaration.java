@@ -7,7 +7,6 @@ import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AppendableAst;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.ast.expression.AstType;
-import dev.latvian.apps.ichor.util.AssignType;
 
 public abstract class AstDeclaration implements AppendableAst {
 	public static class Simple extends AstDeclaration {
@@ -42,8 +41,8 @@ public abstract class AstDeclaration implements AppendableAst {
 		}
 
 		@Override
-		public void declare(Context cx, Scope scope, AssignType type) {
-			scope.declareMember(name, cx.eval(scope, defaultValue), type);
+		public void declare(Context cx, Scope scope, boolean isConst) {
+			scope.add(name, cx.eval(scope, defaultValue), isConst);
 		}
 
 		@Override
@@ -58,7 +57,7 @@ public abstract class AstDeclaration implements AppendableAst {
 		}
 
 		@Override
-		public void declare(Context cx, Scope scope, AssignType type) {
+		public void declare(Context cx, Scope scope, boolean isConst) {
 		}
 	}
 
@@ -68,11 +67,11 @@ public abstract class AstDeclaration implements AppendableAst {
 		}
 
 		@Override
-		public void declare(Context cx, Scope scope, AssignType type) {
+		public void declare(Context cx, Scope scope, boolean isConst) {
 		}
 	}
 
-	public abstract void declare(Context cx, Scope scope, AssignType type);
+	public abstract void declare(Context cx, Scope scope, boolean isConst);
 
 	public void optimize(Parser parser) {
 	}

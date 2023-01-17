@@ -1,34 +1,29 @@
 package dev.latvian.apps.ichor;
 
-import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.error.ConstantReassignError;
+import dev.latvian.apps.ichor.error.MemberNotFoundError;
+import dev.latvian.apps.ichor.error.ScopeDepthError;
 import dev.latvian.apps.ichor.prototype.Prototype;
+import dev.latvian.apps.ichor.slot.EmptySlotMap;
+import dev.latvian.apps.ichor.slot.RefValue;
+import dev.latvian.apps.ichor.slot.Slot;
+import dev.latvian.apps.ichor.slot.SlotMap;
 import dev.latvian.apps.ichor.util.AssignType;
 import dev.latvian.apps.ichor.util.ClassPrototype;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 public class Scope {
-	public static class Slot {
-		public Object value;
-		public boolean immutable;
-
-		@Override
-		public String toString() {
-			return String.valueOf(value);
-		}
-	}
-
 	public final Scope parent;
 	public RootScope root;
-	public Map<String, Slot> members;
+	public SlotMap members;
 	public Object owner;
 	private int depth;
 
 	protected Scope(Scope parent) {
 		this.parent = parent;
+		this.members = EmptySlotMap.INSTANCE;
 
 		if (this.parent != null) {
 			this.root = parent.root;
@@ -36,51 +31,82 @@ public class Scope {
 			this.depth = parent.depth + 1;
 
 			if (this.depth > this.root.maxScopeDepth) {
-				throw new ScriptError("Scope depth is > " + this.root.maxScopeDepth);
+				throw new ScopeDepthError(this.root.maxScopeDepth);
 			}
 		}
 	}
 
 	// Member Methods //
 
-	public Object getDeclaredMember(String name) {
-		var slot = members == null ? null : members.get(name);
-		return slot == null ? Special.NOT_FOUND : slot.value;
+	@Nullable
+	public Slot getDeclaredMember(String name) {
+		return members.getSlot(name);
 	}
 
-	public void declareMember(String name, @Nullable Object value, AssignType type) {
-		var slot = members == null ? null : members.get(name);
+	public void add(String name, @Nullable Object value, boolean immutable) {
+		var slot = members.getSlot(name);
 
-		if (type == AssignType.NONE) {
-			if (slot == null) {
-				throw new ScriptError("Member " + name + " not found");
-			} else if (slot.immutable) {
-				throw new ScriptError("Can't reassign constant " + name);
-			} else {
-				slot.value = value;
-				// slot.prototype = null;
-				root.context.debugger.assignSet(root.context, this, name, value);
-			}
-		} else {
-			if (slot == null) {
-				slot = new Slot();
-
-				if (members == null) {
-					members = new HashMap<>(1);
-				}
-
-				members.put(name, slot);
-			}
-
-			slot.value = value;
-			slot.immutable = type == AssignType.IMMUTABLE;
-			// slot.prototype = null;
-			root.context.debugger.assignNew(root.context, this, name, value);
+		if (slot == null) {
+			slot = new Slot();
+			members = members.upgradeSlotMap();
+			members.setSlot(name, slot);
 		}
+
+		if (value instanceof RefValue ref) {
+			slot.owner = ref.owner();
+			slot.value = ref.value();
+		} else {
+			slot.owner = null;
+			slot.value = value;
+		}
+
+		slot.immutable = immutable;
+		// slot.prototype = null;
+		root.context.debugger.assignNew(root.context, this, name, value);
+	}
+
+	public void addMutable(String name, @Nullable Object value) {
+		add(name, value, false);
+	}
+
+	public void addImmutable(String name, @Nullable Object value) {
+		add(name, value, true);
+	}
+
+	public void add(String name, Prototype prototype) {
+		addImmutable(name, prototype);
+	}
+
+	public void add(String name, Class<?> type) {
+		addImmutable(name, root.context.getClassPrototype(type));
+	}
+
+	public void setMember(String name, @Nullable Object value) {
+		Scope s = this;
+
+		do {
+			var slot = s.members.getSlot(name);
+
+			if (slot != null) {
+				if (slot.immutable) {
+					throw new ConstantReassignError(name);
+				} else {
+					slot.value = value;
+					// slot.prototype = null;
+					root.context.debugger.assignSet(root.context, this, name, value);
+					return;
+				}
+			}
+
+			s = s.parent;
+		}
+		while (s != null);
+
+		throw new MemberNotFoundError(name);
 	}
 
 	public AssignType hasDeclaredMember(String name) {
-		var slot = members == null ? null : members.get(name);
+		var slot = members.getSlot(name);
 
 		if (slot == null) {
 			return AssignType.NONE;
@@ -91,22 +117,18 @@ public class Scope {
 		}
 	}
 
-	public Object deleteDeclaredMember(String name) {
-		if (members != null && members.containsKey(name)) {
-			var v = members.remove(name);
+	public void deleteDeclaredMember(String name) {
+		var slot = members.getSlot(name);
 
-			if (members.isEmpty()) {
-				members = null;
-			}
-
-			return v;
+		if (slot == null) {
+			throw new MemberNotFoundError(name);
 		}
 
-		return Special.NOT_FOUND;
+		members.removeSlot(name);
 	}
 
 	public Set<String> getDeclaredMemberNames() {
-		return members == null ? Set.of() : members.keySet();
+		return members.getSlotNames();
 	}
 
 	public void deleteAllDeclaredMembers() {
@@ -121,10 +143,10 @@ public class Scope {
 		Scope s = this;
 
 		do {
-			var m = s.getDeclaredMember(name);
+			var slot = s.getDeclaredMember(name);
 
-			if (m != Special.NOT_FOUND) {
-				return m;
+			if (slot != null) {
+				return slot.value;
 			}
 
 			s = s.parent;
@@ -134,29 +156,21 @@ public class Scope {
 		return Special.NOT_FOUND;
 	}
 
-	public boolean setMember(String name, Object value, AssignType type) {
-		// type == NONE = replace existing member, error if not found (x = y)
-		// type == MUTABLE = create new mutable member (var x, let x)
-		// type == IMMUTABLE = create new immutable member (const x)
-
-		if (type == AssignType.MUTABLE || type == AssignType.IMMUTABLE) {
-			declareMember(name, value, type);
-			return true;
-		}
-
+	public Object getMemberOwner(String name) {
 		Scope s = this;
 
 		do {
-			if (s.hasDeclaredMember(name) != AssignType.NONE) {
-				s.declareMember(name, value, AssignType.NONE);
-				return true;
+			var slot = s.getDeclaredMember(name);
+
+			if (slot != null) {
+				return slot.owner;
 			}
 
 			s = s.parent;
 		}
 		while (s != null);
 
-		return false;
+		return Special.NOT_FOUND;
 	}
 
 	public AssignType hasMember(String name) {
@@ -174,14 +188,6 @@ public class Scope {
 		while (s != null);
 
 		return AssignType.NONE;
-	}
-
-	public void add(String name, Prototype prototype) {
-		declareMember(name, prototype, AssignType.IMMUTABLE);
-	}
-
-	public void add(String name, Class<?> type) {
-		add(name, root.context.getClassPrototype(type));
 	}
 
 	public Scope push() {

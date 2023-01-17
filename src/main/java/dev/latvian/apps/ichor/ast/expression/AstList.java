@@ -11,6 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AstList extends AstExpression {
+	public static class SpreadError extends ScriptError {
+		public SpreadError() {
+			super("Spread used on non-array");
+		}
+	}
+
 	public final List<Object> values;
 
 	public AstList(List<Object> v) {
@@ -45,7 +51,7 @@ public class AstList extends AstExpression {
 						list.add(o1);
 					}
 				} else {
-					throw new ScriptError("Spread used on non-array").pos(pos);
+					throw new SpreadError().pos(pos);
 				}
 			} else {
 				list.add(cx.eval(scope, o));

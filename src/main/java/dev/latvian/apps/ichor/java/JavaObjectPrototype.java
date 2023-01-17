@@ -68,6 +68,15 @@ public class JavaObjectPrototype extends PrototypeBuilder {
 		}
 	}
 
+	public static class ClassLoadingError extends ScriptError {
+		public final Class<?> type;
+
+		public ClassLoadingError(Class<?> type, Throwable ex) {
+			super("Failed to load class " + type.getName(), ex);
+			this.type = type;
+		}
+	}
+
 	public final Context context;
 	public final Class<?> type;
 	private boolean shouldInit;
@@ -101,7 +110,7 @@ public class JavaObjectPrototype extends PrototypeBuilder {
 					}
 				}
 			} catch (Exception ex) {
-				throw new ScriptError("Failed to load class " + type.getName(), ex);
+				throw new ClassLoadingError(type, ex);
 			}
 
 			constant("class", type);

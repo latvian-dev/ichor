@@ -8,7 +8,6 @@ import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.expression.AstFunction;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.exit.ReturnExit;
-import dev.latvian.apps.ichor.exit.ScopeExit;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -16,6 +15,17 @@ import java.lang.reflect.Proxy;
 import java.util.concurrent.CompletableFuture;
 
 public class FunctionInstance implements Callable, Adaptable, InvocationHandler {
+	public static class ArgumentCountMismatchError extends ScriptError {
+		public final int requiredCount;
+		public final int actualCount;
+
+		public ArgumentCountMismatchError(int requiredCount, int actualCount) {
+			super("Invalid number of arguments: " + actualCount + " < " + requiredCount);
+			this.requiredCount = requiredCount;
+			this.actualCount = actualCount;
+		}
+	}
+
 	public final AstFunction function;
 	public final Context evalContext;
 	public final Scope evalScope;
@@ -29,7 +39,7 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 	@Override
 	public Object call(Context cx, Scope callScope, Object self, Object[] args) {
 		if (args.length < function.requiredParams) {
-			throw new ScriptError("Invalid number of arguments: " + args.length + " < " + function.requiredParams).pos(function.pos);
+			throw new ArgumentCountMismatchError(function.requiredParams, args.length).pos(function.pos);
 		}
 
 		var s = evalScope.push(this);
@@ -48,7 +58,7 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 					value = args[i];
 				}
 
-				s.declareMember(function.params[i].name, value, AssignType.MUTABLE);
+				s.addMutable(function.params[i].name, value);
 			}
 
 			function.body.interpretSafe(evalContext, s);
@@ -58,8 +68,6 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 			}
 
 			return exit.value;
-		} catch (ScopeExit exit) {
-			throw new ScriptError(exit);
 		}
 
 		return Special.UNDEFINED;

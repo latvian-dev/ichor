@@ -8,8 +8,31 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.prototype.Prototype;
 
 public class AstCall extends AstExpression {
+	public static class FunctionNotFoundError extends ScriptError {
+		public final Object function;
+
+		public FunctionNotFoundError(Object function) {
+			super("Function " + function + " not found");
+			this.function = function;
+		}
+	}
+
+	public static class NotCallableError extends ScriptError {
+		public final Object function;
+		public final Object evalFunction;
+		public final Prototype prototype;
+
+		public NotCallableError(Object function, Object evalFunction, Prototype prototype) {
+			super("Cannot call " + function + ", " + evalFunction + " (" + prototype + ")" + " is not a function");
+			this.function = function;
+			this.evalFunction = evalFunction;
+			this.prototype = prototype;
+		}
+	}
+
 	public Object function;
 	public Object[] arguments;
 	public boolean isNew;
@@ -46,9 +69,9 @@ public class AstCall extends AstExpression {
 		var func = cx.eval(scope, function);
 
 		if (Special.isInvalid(func)) {
-			throw new ScriptError("Cannot find " + function);
+			throw new FunctionNotFoundError(function);
 		} else if (!(func instanceof Callable)) {
-			throw new ScriptError("Cannot call " + function + ", " + func + " (" + cx.getPrototype(scope, func) + ")" + " is not a function");
+			throw new NotCallableError(function, func, cx.getPrototype(scope, func));
 		}
 
 		var self = isNew ? Special.NEW : function instanceof Evaluable eval ? eval.evalSelf(cx, scope) : func instanceof Evaluable eval ? eval.evalSelf(cx, scope) : func;
@@ -60,7 +83,7 @@ public class AstCall extends AstExpression {
 		var r = ((Callable) func).call(cx, scope, self, args);
 
 		if (r == Special.NOT_FOUND) {
-			throw new ScriptError("Cannot call " + func);
+			throw new NotCallableError(function, func, cx.getPrototype(scope, func));
 		}
 
 		cx.debugger.call(cx, scope, this, func, args, r);

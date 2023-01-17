@@ -1,7 +1,7 @@
 package dev.latvian.apps.ichor;
 
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.error.CastError;
 import dev.latvian.apps.ichor.java.JavaClassPrototype;
 import dev.latvian.apps.ichor.java.JavaObjectPrototype;
 import dev.latvian.apps.ichor.js.NumberJS;
@@ -242,7 +242,7 @@ public abstract class Context {
 			return adaptable.adapt(this, toType);
 		}
 
-		throw new ScriptError("Cannot cast " + o.getClass().getName() + " to " + toType.getName());
+		throw new CastError(o.getClass().getName(), toType.getName());
 	}
 
 	public Prototype getPrototype(Scope scope, Object o) {

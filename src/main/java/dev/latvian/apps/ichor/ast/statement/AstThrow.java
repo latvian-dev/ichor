@@ -4,7 +4,7 @@ import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.error.ScriptThrowError;
 
 public class AstThrow extends AstStatement {
 	public Object exception;
@@ -25,9 +25,9 @@ public class AstThrow extends AstStatement {
 		var e = cx.eval(scope, exception);
 
 		if (e instanceof Throwable t) {
-			throw new ScriptError(t).pos(this);
+			throw new ScriptThrowError(t).pos(this);
 		} else {
-			throw new ScriptError(String.valueOf(e)).pos(this);
+			throw new ScriptThrowError(String.valueOf(e)).pos(this);
 		}
 	}
 

@@ -2,7 +2,6 @@ package dev.latvian.apps.ichor.test.js;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.RootScope;
-import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.exit.ScopeExit;
 import dev.latvian.apps.ichor.js.ContextJS;
 import dev.latvian.apps.ichor.js.NumberJS;
@@ -10,7 +9,6 @@ import dev.latvian.apps.ichor.js.ParserJS;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
 import dev.latvian.apps.ichor.test.ReflectionExample;
 import dev.latvian.apps.ichor.test.TestConsole;
-import dev.latvian.apps.ichor.util.AssignType;
 import dev.latvian.apps.ichor.util.ConsoleDebugger;
 import dev.latvian.apps.ichor.util.Empty;
 import dev.latvian.apps.ichor.util.NamedTokenSource;
@@ -51,7 +49,7 @@ public class InterpreterTests {
 		var rootScope = new RootScope(cx);
 		rootScope.addSafeClasses();
 		var console = new TestConsole(System.out);
-		rootScope.declareMember("console", console, AssignType.IMMUTABLE);
+		rootScope.addImmutable("console", console);
 		rootScopeCallback.accept(rootScope);
 
 		var tokenStream = new TokenStreamJS(cx, new NamedTokenSource(filename), input);
@@ -67,7 +65,7 @@ public class InterpreterTests {
 		try {
 			ast.interpretSafe(cx, rootScope);
 		} catch (ScopeExit ex) {
-			throw new ScriptError(ex);
+			throw ex;
 		} catch (Throwable ex) {
 			ex.printStackTrace();
 		}
@@ -381,7 +379,7 @@ public class InterpreterTests {
 				ref.soutNum('8')
 				console.log(ref.class.name)
 				console.log(ref.class.class.name)
-				""", scope -> scope.declareMember("ref", new ReflectionExample(), AssignType.IMMUTABLE), """
+				""", scope -> scope.addImmutable("ref", new ReflectionExample()), """
 				30
 				40
 				dev.latvian.apps.ichor.test.ReflectionExample
@@ -534,16 +532,22 @@ public class InterpreterTests {
 	}
 
 	@Test
-	public void callRef() {
+	public void callRef1() {
+		testInterpreter("""
+				const l = console.log
+				l('Hi')
+				""", """
+				Hi
+				""");
+	}
+
+	@Test
+	public void callRef2() {
 		testInterpreter("""
 				const c = console
-				console.log(c)
-				const a = c.log
-				console.log(a)
-				a('Hi')
+				const l = c.log
+				l('Hi')
 				""", """
-				TestConsoleImpl
-				JavaMethod[public void dev.latvian.apps.ichor.test.TestConsole.log(java.lang.String)]
 				Hi
 				""");
 	}

@@ -11,6 +11,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class AstMap extends AstExpression {
+	public static class SpreadError extends ScriptError {
+		public SpreadError() {
+			super("Spread used on non-object");
+		}
+	}
+
 	public final Map<String, Object> values;
 
 	public AstMap(Map<String, Object> values) {
@@ -75,7 +81,7 @@ public class AstMap extends AstExpression {
 				if (s instanceof Map<?, ?> map1) {
 					map.putAll(map1);
 				} else {
-					throw new ScriptError("Spread used on non-object").pos(pos);
+					throw new SpreadError().pos(pos);
 				}
 			} else {
 				map.put(entry.getKey(), cx.eval(scope, o));

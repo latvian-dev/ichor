@@ -5,7 +5,6 @@ import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.util.AssignType;
 import org.jetbrains.annotations.Nullable;
 
 public class AstTry extends AstStatement {
@@ -58,7 +57,7 @@ public class AstTry extends AstStatement {
 		} catch (Exception ex) {
 			if (catchBlock != null && catchBlock.body != null) {
 				var s = scope.push();
-				s.declareMember(catchBlock.name, ex, AssignType.MUTABLE);
+				s.addMutable(catchBlock.name, ex);
 				catchBlock.body.interpretSafe(cx, s);
 			}
 		} finally {

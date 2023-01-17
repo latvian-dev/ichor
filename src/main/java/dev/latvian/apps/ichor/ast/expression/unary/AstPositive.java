@@ -4,7 +4,6 @@ import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.error.ScriptError;
 
 public class AstPositive extends AstUnary {
 	@Override
@@ -15,11 +14,25 @@ public class AstPositive extends AstUnary {
 
 	@Override
 	public Object eval(Context cx, Scope scope) {
-		throw new ScriptError("Something didn't call optimize()");
+		return evalDouble(cx, scope);
+	}
+
+	@Override
+	public double evalDouble(Context cx, Scope scope) {
+		return cx.asDouble(scope, node);
+	}
+
+	@Override
+	public int evalInt(Context cx, Scope scope) {
+		return cx.asInt(scope, node);
 	}
 
 	@Override
 	public Object optimize(Parser parser) {
+		if (node instanceof Number) {
+			return node;
+		}
+
 		return parser.optimize(node);
 	}
 }

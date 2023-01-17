@@ -1,7 +1,7 @@
 package dev.latvian.apps.ichor;
 
 import dev.latvian.apps.ichor.error.IchorError;
-import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.error.InternalScriptError;
 import dev.latvian.apps.ichor.exit.ScopeExit;
 import dev.latvian.apps.ichor.token.TokenPos;
 import dev.latvian.apps.ichor.token.TokenPosSupplier;
@@ -23,7 +23,7 @@ public interface Interpretable {
 
 			throw pass;
 		} catch (Throwable ex) {
-			throw new ScriptError("Internal error", ex).pos(this);
+			throw new InternalScriptError(ex).pos(this);
 		}
 	}
 

@@ -4,8 +4,15 @@ import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
+import dev.latvian.apps.ichor.error.ScriptError;
 
 public class AstThisStatement extends AstStatement {
+	public static class InvalidCallError extends ScriptError {
+		public InvalidCallError() {
+			super("You can only call this() from a constructor");
+		}
+	}
+
 	public final Object[] arguments;
 
 	public AstThisStatement(Object[] a) {
@@ -34,6 +41,7 @@ public class AstThisStatement extends AstStatement {
 
 	@Override
 	public void interpret(Context cx, Scope scope) {
+		throw new InvalidCallError();
 	}
 
 	@Override

@@ -4,7 +4,7 @@ import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.error.MemberNotFoundError;
 
 public class AstGetByIndex extends AstGetFrom {
 	public final int index;
@@ -36,7 +36,7 @@ public class AstGetByIndex extends AstGetFrom {
 		var r = p.get(cx, scope, self, index);
 
 		if (r == Special.NOT_FOUND) {
-			throw new ScriptError("Cannot find " + this + " of " + p);
+			throw new MemberNotFoundError(toString(), p);
 		}
 
 		cx.debugger.get(cx, scope, this, r);

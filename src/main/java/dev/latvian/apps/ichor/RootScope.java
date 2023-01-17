@@ -1,6 +1,6 @@
 package dev.latvian.apps.ichor;
 
-import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.error.ScriptTimedOutError;
 
 public class RootScope extends Scope {
 	public final Context context;
@@ -30,7 +30,7 @@ public class RootScope extends Scope {
 
 	public void checkTimeout() {
 		if (timeoutAt > 0L && System.currentTimeMillis() >= timeoutAt) {
-			throw new ScriptError("Script timed out");
+			throw new ScriptTimedOutError();
 		}
 	}
 

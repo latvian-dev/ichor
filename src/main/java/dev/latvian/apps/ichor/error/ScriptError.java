@@ -1,6 +1,6 @@
 package dev.latvian.apps.ichor.error;
 
-public class ScriptError extends IchorError {
+public abstract class ScriptError extends IchorError {
 	public ScriptError(String message) {
 		super(message);
 	}

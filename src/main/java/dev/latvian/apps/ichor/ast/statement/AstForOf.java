@@ -8,7 +8,6 @@ import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.BreakExit;
 import dev.latvian.apps.ichor.exit.ContinueExit;
 import dev.latvian.apps.ichor.prototype.Prototype;
-import dev.latvian.apps.ichor.util.AssignType;
 
 import java.util.Collection;
 
@@ -55,7 +54,7 @@ public class AstForOf extends AstLabeledStatement {
 		for (var it : itr) {
 			try {
 				var s = scope.push();
-				s.declareMember(name, it, AssignType.MUTABLE);
+				s.addMutable(name, it);
 				body.interpretSafe(cx, s);
 			} catch (BreakExit exit) {
 				if (exit.stop == this) {
