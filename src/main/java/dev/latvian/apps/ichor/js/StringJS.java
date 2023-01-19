@@ -15,7 +15,7 @@ public class StringJS {
 
 	public static final Prototype PROTOTYPE = new PrototypeBuilder("String") {
 		@Override
-		public Object call(Context cx, Scope scope, Object self, Object[] args) {
+		public Object call(Context cx, Scope scope, Object[] args) {
 			return args.length == 0 ? "" : cx.asString(scope, args[0], false);
 		}
 

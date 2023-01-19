@@ -20,7 +20,7 @@ public interface Prototype extends PrototypeSupplier, Callable {
 	String getPrototypeName();
 
 	@Override
-	default Object call(Context cx, Scope scope, Object self, Object[] args) {
+	default Object call(Context cx, Scope scope, Object[] args) {
 		return Special.NOT_FOUND;
 	}
 

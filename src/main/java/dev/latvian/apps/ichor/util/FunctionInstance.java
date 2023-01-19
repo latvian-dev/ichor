@@ -37,7 +37,7 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 	}
 
 	@Override
-	public Object call(Context cx, Scope callScope, Object self, Object[] args) {
+	public Object call(Context cx, Scope callScope, Object[] args) {
 		if (args.length < function.requiredParams) {
 			throw new ArgumentCountMismatchError(function.requiredParams, args.length).pos(function.pos);
 		}
@@ -87,7 +87,7 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 			case "toString" -> "Proxy[" + function + "]";
 			case "hashCode" -> function.hashCode();
 			case "equals" -> proxy == args[0];
-			default -> call(evalContext, evalScope, proxy, args);
+			default -> call(evalContext, evalScope, args);
 		};
 	}
 

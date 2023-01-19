@@ -13,7 +13,7 @@ import java.util.Map;
 public class ObjectJS {
 	public static final Prototype PROTOTYPE = new PrototypeBuilder("Object") {
 		@Override
-		public Object call(Context cx, Scope scope, Object self, Object[] args) {
+		public Object call(Context cx, Scope scope, Object[] args) {
 			return new LinkedHashMap<>();
 		}
 

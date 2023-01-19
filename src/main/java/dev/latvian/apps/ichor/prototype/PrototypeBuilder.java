@@ -296,7 +296,7 @@ public class PrototypeBuilder implements Prototype {
 	}
 
 	@Override
-	public Object call(Context cx, Scope scope, Object self, Object[] args) {
+	public Object call(Context cx, Scope scope, Object[] args) {
 		initLazy();
 
 		if (constructor != null) {

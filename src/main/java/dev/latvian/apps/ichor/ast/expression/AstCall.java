@@ -2,7 +2,6 @@ package dev.latvian.apps.ichor.ast.expression;
 
 import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
-import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
@@ -74,13 +73,9 @@ public class AstCall extends AstExpression {
 			throw new NotCallableError(function, func, cx.getPrototype(scope, func));
 		}
 
-		var self = isNew ? Special.NEW : function instanceof Evaluable eval ? eval.evalSelf(cx, scope) : func instanceof Evaluable eval ? eval.evalSelf(cx, scope) : func;
-
-		cx.debugger.pushSelf(cx, scope, self);
-
 		var args = ((Callable) func).convertArgs(cx, scope, arguments);
 
-		var r = ((Callable) func).call(cx, scope, self, args);
+		var r = ((Callable) func).call(cx, scope, args);
 
 		if (r == Special.NOT_FOUND) {
 			throw new NotCallableError(function, func, cx.getPrototype(scope, func));

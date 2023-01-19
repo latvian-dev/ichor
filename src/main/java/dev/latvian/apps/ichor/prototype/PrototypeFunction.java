@@ -8,7 +8,7 @@ import dev.latvian.apps.ichor.Scope;
 public interface PrototypeFunction extends PrototypeProperty {
 	record Wrapper(Object self, Scope evalScope, PrototypeFunction function) implements Callable {
 		@Override
-		public Object call(Context cx, Scope callScope, Object callSelf, Object[] args) {
+		public Object call(Context cx, Scope callScope, Object[] args) {
 			return function.call(cx, evalScope, self, args);
 		}
 	}

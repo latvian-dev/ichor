@@ -4,7 +4,7 @@ import dev.latvian.apps.ichor.util.Empty;
 
 @FunctionalInterface
 public interface Callable {
-	Object call(Context cx, Scope scope, Object self, Object[] args);
+	Object call(Context cx, Scope scope, Object[] args);
 
 	default Object[] convertArgs(Context cx, Scope scope, Object[] arguments) {
 		if (arguments.length == 0) {
