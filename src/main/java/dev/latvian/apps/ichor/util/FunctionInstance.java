@@ -84,13 +84,11 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args) {
-		System.out.println("Invoking " + method + " of " + this);
-
 		return switch (method.getName()) {
 			case "toString" -> "Proxy[" + function + "]";
 			case "hashCode" -> function.hashCode();
-			case "equals" -> proxy == args[0];
-			default -> call(evalContext, evalScope, args, false);
+			case "equals" -> args != null && args.length >= 1 && proxy == args[0];
+			default -> call(evalContext, evalScope, args == null ? Empty.OBJECTS : args, false);
 		};
 	}
 

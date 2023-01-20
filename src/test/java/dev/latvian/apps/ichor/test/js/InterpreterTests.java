@@ -764,4 +764,29 @@ public class InterpreterTests {
 				99162322
 				""");
 	}
+
+	@Test
+	public void ifaceLater() {
+		testInterpreter("""
+				console.log('a')
+				console.later(() => {
+				  console.log('b')
+				  console.log('c')
+				})
+				""", """
+				a
+				b
+				c
+				""");
+	}
+
+	@Test
+	public void ifaceTwice() {
+		testInterpreter("""
+				console.twice(() => 'hi')
+				""", """
+				hi
+				hi
+				""");
+	}
 }

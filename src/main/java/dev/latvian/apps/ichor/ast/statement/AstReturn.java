@@ -17,7 +17,7 @@ public class AstReturn extends AstStatement {
 	@Override
 	public void append(AstStringBuilder builder) {
 		builder.append("return ");
-		builder.append(value);
+		builder.appendValue(value);
 	}
 
 	@Override
