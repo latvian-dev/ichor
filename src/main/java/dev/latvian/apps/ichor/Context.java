@@ -2,8 +2,8 @@ package dev.latvian.apps.ichor;
 
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.CastError;
+import dev.latvian.apps.ichor.java.ClassJS;
 import dev.latvian.apps.ichor.java.JavaClassPrototype;
-import dev.latvian.apps.ichor.java.JavaObjectPrototype;
 import dev.latvian.apps.ichor.js.NumberJS;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
@@ -34,7 +34,7 @@ public abstract class Context {
 	public Context() {
 		debugger = Debugger.DEFAULT;
 		safePrototypes = new ArrayList<>();
-		classPrototype = JavaClassPrototype.PROTOTYPE;
+		classPrototype = ClassJS.PROTOTYPE;
 		properties = new IdentityHashMap<>();
 	}
 
@@ -52,13 +52,13 @@ public abstract class Context {
 		return o instanceof Callable ? o : o instanceof Evaluable eval ? eval.eval(this, scope) : o;
 	}
 
-	public void asString(Scope scope, Object o, StringBuilder builder, boolean toString) {
+	public void asString(Scope scope, Object o, StringBuilder builder, boolean escape) {
 		if (o == null) {
 			builder.append("null");
 		} else if (o instanceof Number) {
 			AstStringBuilder.wrapNumber(o, builder);
 		} else if (o instanceof Character || o instanceof CharSequence) {
-			if (toString) {
+			if (escape) {
 				AstStringBuilder.wrapString(o, builder);
 			} else {
 				builder.append(o);
@@ -68,7 +68,7 @@ public abstract class Context {
 		} else if (o instanceof Evaluable eval) {
 			eval.evalString(this, scope, builder);
 		} else {
-			getPrototype(scope, o).asString(this, scope, o, builder, toString);
+			getPrototype(scope, o).asString(this, scope, o, builder, escape);
 		}
 	}
 
@@ -299,7 +299,7 @@ public abstract class Context {
 		var p = classPrototypeCache.get(c);
 
 		if (p == null) {
-			p = new JavaObjectPrototype(this, c);
+			p = new JavaClassPrototype(this, c);
 			classPrototypeCache.put(c, p);
 		}
 

@@ -133,12 +133,13 @@ public class ParserJS implements Parser {
 		int funcFlags = 0;
 
 		if (advanceIf(KeywordTokenJS.ASYNC)) {
-			funcFlags |= AstFunction.MOD_ASYNC;
+			funcFlags |= AstFunction.Mod.ASYNC;
 		}
 
 		if (advanceIf(CLASS_TOKENS)) {
 			return classDeclaration(pos);
 		} else if (advanceIf(KeywordTokenJS.FUNCTION)) {
+			funcFlags |= AstFunction.Mod.STATEMENT;
 			var name = name(ParseErrorType.EXP_FUNC_NAME);
 			var func = function(null, null, funcFlags);
 			func.functionName = name;
@@ -229,27 +230,27 @@ public class ParserJS implements Parser {
 		while (!current.is(SymbolTokenJS.RC)) {
 			var fpos = current;
 
-			int modifiers = AstFunction.MOD_CLASS;
+			int modifiers = AstFunction.Mod.CLASS;
 			var type = AstClassFunction.Type.METHOD;
 
 			if (advanceIf(KeywordTokenJS.STATIC)) {
-				modifiers |= AstFunction.MOD_STATIC;
+				modifiers |= AstFunction.Mod.STATIC;
 			}
 
 			if (advanceIf(KeywordTokenJS.GET)) {
-				modifiers |= AstFunction.MOD_GET;
+				modifiers |= AstFunction.Mod.GET;
 				type = AstClassFunction.Type.GETTER;
 			}
 
 			if (advanceIf(KeywordTokenJS.SET)) {
-				modifiers |= AstFunction.MOD_SET;
+				modifiers |= AstFunction.Mod.SET;
 				type = AstClassFunction.Type.SETTER;
 			}
 
 			var fname = name(ParseErrorType.EXP_FUNC_NAME);
 
 			if (fname.equals("constructor")) {
-				modifiers |= AstFunction.MOD_CONSTRUCTOR;
+				modifiers |= AstFunction.Mod.CONSTRUCTOR;
 				type = AstClassFunction.Type.CONSTRUCTOR;
 
 				if (astClass.constructor != null) {
@@ -625,15 +626,15 @@ public class ParserJS implements Parser {
 	}
 
 	private AstFunction function(@Nullable AstClass owner, @Nullable AstClassFunction.Type type, int modifiers) {
-		boolean isArrow = (modifiers & AstFunction.MOD_ARROW) != 0;
+		boolean isArrow = (modifiers & AstFunction.Mod.ARROW) != 0;
 
 		consume(SymbolTokenJS.LP, ParseErrorType.EXP_LP_ARGS);
 		var parameters = new ArrayList<AstParam>(1);
 		if (!current.is(SymbolTokenJS.RP)) {
 			do {
 				if (advanceIf(SymbolTokenJS.TDOT)) {
-					if ((modifiers & AstFunction.MOD_VARARGS) == 0) {
-						modifiers |= AstFunction.MOD_VARARGS;
+					if ((modifiers & AstFunction.Mod.VARARGS) == 0) {
+						modifiers |= AstFunction.Mod.VARARGS;
 					} else {
 						throw new ParseError(current.prev, ParseErrorType.MULTIPLE_VARARGS);
 					}
@@ -887,7 +888,7 @@ public class ParserJS implements Parser {
 				AstCall call = new AstCall().pos(newToken == null ? pos : newToken);
 				call.function = expr;
 				call.arguments = arguments();
-				call.isNew = newToken != null;
+				call.hasNew = newToken != null;
 				expr = call;
 			} else if (advanceIf(SymbolTokenJS.DOT)) {
 				var name = name(ParseErrorType.EXP_NAME_DOT.format(current));
@@ -948,7 +949,7 @@ public class ParserJS implements Parser {
 		int funcFlags = 0;
 
 		if (advanceIf(KeywordTokenJS.ASYNC)) {
-			funcFlags |= AstFunction.MOD_ASYNC;
+			funcFlags |= AstFunction.Mod.ASYNC;
 		}
 
 		if (advanceIf(KeywordTokenJS.SUPER)) {
@@ -961,7 +962,7 @@ public class ParserJS implements Parser {
 			var name = name(ParseErrorType.EXP_VAR_NAME);
 
 			if (advanceIf(SymbolTokenJS.ARROW)) {
-				funcFlags |= AstFunction.MOD_ARROW;
+				funcFlags |= AstFunction.Mod.ARROW;
 				var apos = current.prev;
 				var body = block(true, "");
 				return new AstFunction(new AstParam[]{new AstParam(name)}, body, funcFlags).pos(apos);
@@ -972,10 +973,10 @@ public class ParserJS implements Parser {
 			}
 		} else if (current.is(SymbolTokenJS.LP)) {
 			if (current.next.is(SymbolTokenJS.RP)) {
-				funcFlags |= AstFunction.MOD_ARROW;
+				funcFlags |= AstFunction.Mod.ARROW;
 				return function(null, null, funcFlags).pos(pos);
 			} else if (current.next.isIdentifier() && (current.next.next.is(SymbolTokenJS.RP) && current.next.next.next.is(SymbolTokenJS.ARROW) || current.next.next.is(SymbolTokenJS.COMMA))) {
-				funcFlags |= AstFunction.MOD_ARROW;
+				funcFlags |= AstFunction.Mod.ARROW;
 				return function(null, null, funcFlags).pos(pos);
 			} else {
 				advance();
@@ -1007,9 +1008,9 @@ public class ParserJS implements Parser {
 
 				if ((current.is(KeywordTokenJS.GET) || current.is(KeywordTokenJS.SET) && current.next.isIdentifier() && current.next.next.is(SymbolTokenJS.LP))) {
 					if (advanceIf(KeywordTokenJS.GET)) {
-						flags |= AstFunction.MOD_GET;
+						flags |= AstFunction.Mod.GET;
 					} else if (advanceIf(KeywordTokenJS.SET)) {
-						flags |= AstFunction.MOD_SET;
+						flags |= AstFunction.Mod.SET;
 					}
 				}
 
@@ -1066,9 +1067,9 @@ public class ParserJS implements Parser {
 
 	private Evaluable functionExpression(int flags) {
 		if (advanceIf(KeywordTokenJS.GET)) {
-			flags |= AstFunction.MOD_GET;
+			flags |= AstFunction.Mod.GET;
 		} else if (advanceIf(KeywordTokenJS.SET)) {
-			flags |= AstFunction.MOD_SET;
+			flags |= AstFunction.Mod.SET;
 		}
 
 		String funcName = null;

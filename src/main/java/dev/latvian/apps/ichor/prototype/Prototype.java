@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.prototype;
 
-import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
@@ -10,19 +9,13 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 
-public interface Prototype extends PrototypeSupplier, Callable {
-
+public interface Prototype extends PrototypeSupplier {
 	@Override
 	default Prototype getPrototype(Context cx, Scope scope) {
 		return this;
 	}
 
 	String getPrototypeName();
-
-	@Override
-	default Object call(Context cx, Scope scope, Object[] args) {
-		return Special.NOT_FOUND;
-	}
 
 	@Nullable
 	default Object get(Context cx, Scope scope, Object self, String name) {

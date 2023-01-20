@@ -15,7 +15,7 @@ public class AstClassFunction extends AstFunction {
 	public final Type type;
 
 	public AstClassFunction(AstClass owner, AstParam[] params, Interpretable body, int modifiers, Type type) {
-		super(params, body, modifiers | AstFunction.MOD_CLASS);
+		super(params, body, modifiers | AstFunction.Mod.CLASS);
 		this.owner = owner;
 		this.type = type;
 	}

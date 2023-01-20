@@ -5,7 +5,6 @@ import dev.latvian.apps.ichor.error.MemberNotFoundError;
 import dev.latvian.apps.ichor.error.ScopeDepthError;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.slot.EmptySlotMap;
-import dev.latvian.apps.ichor.slot.RefValue;
 import dev.latvian.apps.ichor.slot.Slot;
 import dev.latvian.apps.ichor.slot.SlotMap;
 import dev.latvian.apps.ichor.util.AssignType;
@@ -52,14 +51,7 @@ public class Scope {
 			members.setSlot(name, slot);
 		}
 
-		if (value instanceof RefValue ref) {
-			slot.owner = ref.owner();
-			slot.value = ref.value();
-		} else {
-			slot.owner = null;
-			slot.value = value;
-		}
-
+		slot.value = value;
 		slot.immutable = immutable;
 		// slot.prototype = null;
 		root.context.debugger.assignNew(root.context, this, name, value);
@@ -156,30 +148,13 @@ public class Scope {
 		return Special.NOT_FOUND;
 	}
 
-	public Object getMemberOwner(String name) {
-		Scope s = this;
-
-		do {
-			var slot = s.getDeclaredMember(name);
-
-			if (slot != null) {
-				return slot.owner;
-			}
-
-			s = s.parent;
-		}
-		while (s != null);
-
-		return Special.NOT_FOUND;
-	}
-
 	public AssignType hasMember(String name) {
 		Scope s = this;
 
 		do {
 			var t = s.hasDeclaredMember(name);
 
-			if (t != AssignType.NONE) {
+			if (t.isSet()) {
 				return t;
 			}
 

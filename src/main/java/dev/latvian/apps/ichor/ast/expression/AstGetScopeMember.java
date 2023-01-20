@@ -5,7 +5,6 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.MemberNotFoundError;
-import org.jetbrains.annotations.Nullable;
 
 public class AstGetScopeMember extends AstGetBase {
 	public final String name;
@@ -28,18 +27,6 @@ public class AstGetScopeMember extends AstGetBase {
 		}
 
 		cx.debugger.get(cx, scope, this, r);
-		return r;
-	}
-
-	@Override
-	@Nullable
-	public Object evalSelf(Context cx, Scope scope) {
-		var r = scope.getMemberOwner(name);
-
-		if (r == Special.NOT_FOUND) {
-			throw new MemberNotFoundError(name);
-		}
-
 		return r;
 	}
 

@@ -6,6 +6,7 @@ import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.expression.AstFunction;
+import dev.latvian.apps.ichor.error.ConstructorError;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.exit.ReturnExit;
 
@@ -37,8 +38,10 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 	}
 
 	@Override
-	public Object call(Context cx, Scope callScope, Object[] args) {
-		if (args.length < function.requiredParams) {
+	public Object call(Context cx, Scope callScope, Object[] args, boolean hasNew) {
+		if (hasNew) {
+			throw new ConstructorError(null);
+		} else if (args.length < function.requiredParams) {
 			throw new ArgumentCountMismatchError(function.requiredParams, args.length).pos(function.pos);
 		}
 
@@ -63,7 +66,7 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 
 			function.body.interpretSafe(evalContext, s);
 		} catch (ReturnExit exit) {
-			if (function.hasMod(AstFunction.MOD_ASYNC)) {
+			if (function.hasMod(AstFunction.Mod.ASYNC)) {
 				return CompletableFuture.completedFuture(exit.value);
 			}
 
@@ -87,7 +90,7 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 			case "toString" -> "Proxy[" + function + "]";
 			case "hashCode" -> function.hashCode();
 			case "equals" -> proxy == args[0];
-			default -> call(evalContext, evalScope, args);
+			default -> call(evalContext, evalScope, args, false);
 		};
 	}
 

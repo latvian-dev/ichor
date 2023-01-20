@@ -9,14 +9,17 @@ import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.util.FunctionInstance;
 
 public class AstFunction extends AstExpression implements Comparable<AstFunction> {
-	public static final int MOD_ARROW = 1;
-	public static final int MOD_CLASS = 2;
-	public static final int MOD_STATIC = 4;
-	public static final int MOD_SET = 8;
-	public static final int MOD_GET = 16;
-	public static final int MOD_CONSTRUCTOR = 32;
-	public static final int MOD_ASYNC = 64;
-	public static final int MOD_VARARGS = 128;
+	public interface Mod {
+		int ARROW = 1;
+		int CLASS = 2;
+		int STATIC = 4;
+		int SET = 8;
+		int GET = 16;
+		int CONSTRUCTOR = 32;
+		int ASYNC = 64;
+		int VARARGS = 128;
+		int STATEMENT = 256;
+	}
 
 	public final AstParam[] params;
 	public final Interpretable body;
@@ -48,11 +51,11 @@ public class AstFunction extends AstExpression implements Comparable<AstFunction
 
 	@Override
 	public void append(AstStringBuilder builder) {
-		if (hasMod(MOD_ASYNC)) {
+		if (hasMod(Mod.ASYNC)) {
 			builder.append("async ");
 		}
 
-		if (!hasMod(MOD_ARROW)) {
+		if (!hasMod(Mod.ARROW)) {
 			builder.append("function");
 
 			if (functionName != null) {
@@ -68,7 +71,7 @@ public class AstFunction extends AstExpression implements Comparable<AstFunction
 				builder.append(',');
 			}
 
-			if (i == params.length - 1 && hasMod(MOD_VARARGS)) {
+			if (i == params.length - 1 && hasMod(Mod.VARARGS)) {
 				builder.append("...");
 			}
 
@@ -77,7 +80,7 @@ public class AstFunction extends AstExpression implements Comparable<AstFunction
 
 		builder.append(")");
 
-		if (hasMod(MOD_ARROW)) {
+		if (hasMod(Mod.ARROW)) {
 			builder.append("=>");
 		}
 

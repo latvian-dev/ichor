@@ -1,8 +1,10 @@
 package dev.latvian.apps.ichor.prototype;
 
+import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
+import dev.latvian.apps.ichor.error.ConstructorError;
 import dev.latvian.apps.ichor.js.NumberJS;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,11 +13,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PrototypeBuilder implements Prototype {
+public class PrototypeBuilder implements Prototype, Callable {
 	private final String prototypeName;
 	protected Prototype parent;
 	private PrototypeConstructor constructor;
 	private Map<String, PrototypeProperty> members;
+	private Map<String, PrototypeStaticProperty> staticMembers;
 	private PrototypeAsString asString;
 	private PrototypeAsNumber asNumber;
 	private PrototypeAsBoolean asBoolean;
@@ -46,33 +49,34 @@ public class PrototypeBuilder implements Prototype {
 		return this;
 	}
 
-	private PrototypeBuilder member(String name, PrototypeProperty member) {
+	public PrototypeBuilder property(String name, PrototypeProperty property) {
 		if (members == null) {
 			members = new HashMap<>(1);
 		}
 
-		members.put(name, member);
+		members.put(name, property);
 		return this;
 	}
 
-	public PrototypeBuilder property(String name, PrototypeProperty value) {
-		return member(name, value);
-	}
-
-	public PrototypeBuilder staticProperty(String name, PrototypeStaticProperty value) {
-		return member(name, value);
-	}
-
-	public PrototypeBuilder constant(String name, Object value) {
-		return member(name, new PrototypeConstant(value));
-	}
-
 	public PrototypeBuilder function(String name, PrototypeFunction value) {
-		return member(name, value);
+		return property(name, value);
+	}
+
+	public PrototypeBuilder staticProperty(String name, PrototypeStaticProperty property) {
+		if (staticMembers == null) {
+			staticMembers = new HashMap<>(1);
+		}
+
+		staticMembers.put(name, property);
+		return this;
 	}
 
 	public PrototypeBuilder staticFunction(String name, PrototypeStaticFunction value) {
-		return member(name, value);
+		return staticProperty(name, value);
+	}
+
+	public PrototypeBuilder constant(String name, Object value) {
+		return staticProperty(name, new PrototypeConstant(value));
 	}
 
 	public PrototypeBuilder asString(PrototypeAsString value) {
@@ -107,11 +111,21 @@ public class PrototypeBuilder implements Prototype {
 	public Object get(Context cx, Scope scope, Object self, String name) {
 		initLazy();
 
-		if (members != null) {
-			var m = members.get(name);
+		if (self != null && self != this) {
+			if (members != null) {
+				var m = members.get(name);
+
+				if (m != null) {
+					return m.get(cx, scope, self);
+				}
+			}
+		}
+
+		if (staticMembers != null) {
+			var m = staticMembers.get(name);
 
 			if (m != null) {
-				return m.get(cx, scope, self);
+				return m.get(cx, scope);
 			}
 		}
 
@@ -142,11 +156,21 @@ public class PrototypeBuilder implements Prototype {
 	public boolean set(Context cx, Scope scope, Object self, String name, @Nullable Object value) {
 		initLazy();
 
-		if (members != null) {
-			var m = members.get(name);
+		if (self != null && self != this) {
+			if (members != null) {
+				var m = members.get(name);
+
+				if (m != null) {
+					return m.set(cx, scope, self, value);
+				}
+			}
+		}
+
+		if (staticMembers != null) {
+			var m = staticMembers.get(name);
 
 			if (m != null) {
-				return m.set(cx, scope, self, value);
+				return m.set(cx, scope, value);
 			}
 		}
 
@@ -296,14 +320,14 @@ public class PrototypeBuilder implements Prototype {
 	}
 
 	@Override
-	public Object call(Context cx, Scope scope, Object[] args) {
+	public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
 		initLazy();
 
 		if (constructor != null) {
 			return constructor.construct(cx, scope, args, false);
 		}
 
-		return Special.NOT_FOUND;
+		throw new ConstructorError(this);
 	}
 
 	@Override

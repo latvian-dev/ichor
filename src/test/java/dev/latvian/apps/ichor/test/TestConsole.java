@@ -32,4 +32,16 @@ public final class TestConsole {
 	public String toString() {
 		return "TestConsoleImpl";
 	}
+
+	public int getTestBean() {
+		return 30;
+	}
+
+	public String getLastLine() {
+		return lastLine;
+	}
+
+	public void setLastLine(String s) {
+		lastLine = s;
+	}
 }

@@ -249,10 +249,10 @@ public class InterpreterTests {
 				""");
 	}
 
-	// @Test
+	 @Test
 	public void classes() {
 		testInterpreter("""
-				class TestParent {
+				class TestParent { // AstClass -> ClassPrototype
 				  constructor(param) {
 				    this.param = param
 				  }
@@ -262,7 +262,7 @@ public class InterpreterTests {
 				  }
 				}
 								
-				let t1 = new TestParent(-439)
+				let t1 = new TestParent(-439) // ClassPrototype$Instance
 				t1.printTest('Hi 1')
 								
 				class Test extends TestParent {
@@ -290,11 +290,13 @@ public class InterpreterTests {
 				console.log('B')
 				console.log('C')
 				console.log(console.lastLine)
+				console.log(console.testBean === 30)
 				""", """
 				A
 				B
 				C
 				C
+				true
 				""");
 	}
 
@@ -746,6 +748,20 @@ public class InterpreterTests {
 				""", """
 				1
 				2
+				""");
+	}
+
+	@Test
+	public void specialCalls() {
+		testInterpreter("""
+				let str = "hello"
+				console.log(str.toString())
+				console.log(str.hashCode())
+				console.log(str.hashCode().toString())
+				""", """
+				hello
+				99162322
+				99162322
 				""");
 	}
 }

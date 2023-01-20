@@ -8,7 +8,7 @@ import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 public class BooleanJS {
 	public static final Prototype PROTOTYPE = new PrototypeBuilder("Boolean") {
 		@Override
-		public Object call(Context cx, Scope scope, Object[] args) {
+		public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
 			return args.length == 0 ? Boolean.FALSE : cx.asBoolean(scope, args[0]);
 		}
 

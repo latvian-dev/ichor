@@ -5,6 +5,14 @@ public enum AssignType {
 	MUTABLE,
 	IMMUTABLE;
 
+	public boolean isSet() {
+		return this != NONE;
+	}
+
+	public boolean isMutable() {
+		return this == MUTABLE;
+	}
+
 	public boolean isImmutable() {
 		return this == IMMUTABLE;
 	}
