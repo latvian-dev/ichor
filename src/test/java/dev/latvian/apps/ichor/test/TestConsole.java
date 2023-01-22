@@ -3,7 +3,6 @@ package dev.latvian.apps.ichor.test;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 public final class TestConsole {
 	private final PrintStream printStream;
@@ -44,14 +43,5 @@ public final class TestConsole {
 
 	public void setLastLine(String s) {
 		lastLine = s;
-	}
-
-	public void later(Runnable runnable) {
-		runnable.run();
-	}
-
-	public void twice(Supplier<String> supplier) {
-		log(supplier.get());
-		log(supplier.get());
 	}
 }

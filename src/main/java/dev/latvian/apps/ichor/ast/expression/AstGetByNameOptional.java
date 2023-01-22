@@ -12,7 +12,7 @@ public class AstGetByNameOptional extends AstGetByName {
 
 	@Override
 	public void append(AstStringBuilder builder) {
-		builder.append(from);
+		builder.appendValue(from);
 		builder.append("?.");
 		builder.append(name);
 	}

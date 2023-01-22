@@ -32,12 +32,12 @@ public interface KeywordTokenJS {
 	Object FALSE = cache("false", Boolean.FALSE);
 	Token IN = cache(new InKeywordJS());
 	Token INSTANCEOF = cache(new InstanceofKeywordJS());
-	// cacheKeyword(new KeywordToken("arguments")); // TODO
 
 	DeclaringToken LET = (DeclaringToken) cache(new DeclaringToken("let", false));
 	DeclaringToken CONST = (DeclaringToken) cache(new DeclaringToken("const", true));
 	DeclaringToken VAR = (DeclaringToken) cache(new DeclaringToken("var", false));
 
+	Token ARGUMENTS = cache("arguments");
 	Token AS = cache("as").literalPre(); // TODO
 	Token ASYNC = cache("async");
 	Token AWAIT = cache("await").literalPre();

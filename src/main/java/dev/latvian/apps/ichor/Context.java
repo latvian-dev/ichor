@@ -238,8 +238,8 @@ public abstract class Context {
 			return (T) Float.valueOf(asNumber(scope, o).floatValue());
 		} else if (toType == Double.class || toType == Double.TYPE) {
 			return (T) Double.valueOf(asNumber(scope, o).doubleValue());
-		} else if (o instanceof Adaptable adaptable) {
-			return adaptable.adapt(this, toType);
+		} else if (o instanceof Adaptable adaptable && adaptable.canAdapt(this, toType)) {
+			return adaptable.adapt(this, scope, toType);
 		}
 
 		throw new CastError(o.getClass().getName(), toType.getName());
@@ -309,34 +309,6 @@ public abstract class Context {
 	@Override
 	public String toString() {
 		return "Context";
-	}
-
-	@SuppressWarnings("unchecked")
-	public <T> T adapt(Object object, Class<T> interfaceClass) {
-		if (object == null) {
-			return null;
-		} else if (interfaceClass.isInstance(object)) {
-			return (T) object;
-		} else if (object instanceof Adaptable adaptable) {
-			// TODO: Try to use type wrapper before interface adapter
-			return adaptable.adapt(this, interfaceClass);
-		}
-
-		throw new IllegalArgumentException(object + " is not Adaptable");
-	}
-
-	public static boolean shallowEquals(Object l, Object r) {
-		if (l == r) {
-			return true;
-		} else if (Special.isInvalid(l)) {
-			return Special.isInvalid(r);
-		} else if (l instanceof Number && r instanceof Number || l instanceof Boolean && r instanceof Boolean) {
-			return l.equals(r);
-		} else if (l instanceof CharSequence && r instanceof CharSequence) {
-			return l.toString().equals(r.toString());
-		}
-
-		return l == r;
 	}
 
 	public boolean equals(Scope scope, Object left, Object right, boolean shallow) {

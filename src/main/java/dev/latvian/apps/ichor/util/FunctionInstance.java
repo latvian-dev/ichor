@@ -1,7 +1,5 @@
 package dev.latvian.apps.ichor.util;
 
-import dev.latvian.apps.ichor.Adaptable;
-import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
@@ -9,13 +7,11 @@ import dev.latvian.apps.ichor.ast.expression.AstFunction;
 import dev.latvian.apps.ichor.error.ConstructorError;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.exit.ReturnExit;
+import dev.latvian.apps.ichor.java.CallableAdapter;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.concurrent.CompletableFuture;
 
-public class FunctionInstance implements Callable, Adaptable, InvocationHandler {
+public class FunctionInstance implements CallableAdapter {
 	public static class ArgumentCountMismatchError extends ScriptError {
 		public final int requiredCount;
 		public final int actualCount;
@@ -48,6 +44,8 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 		var s = evalScope.push(this);
 
 		try {
+			s.scopeArguments = new Object[function.params.length];
+
 			for (int i = 0; i < function.params.length; i++) {
 				Object value;
 
@@ -55,12 +53,13 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 					if (function.params[i].defaultValue == Special.UNDEFINED) {
 						value = Special.UNDEFINED;
 					} else {
-						value = evalContext.eval(evalScope, function.params[i].defaultValue);
+						value = evalContext.eval(s, function.params[i].defaultValue);
 					}
 				} else {
 					value = args[i];
 				}
 
+				s.scopeArguments[i] = value;
 				s.addMutable(function.params[i].name, value);
 			}
 
@@ -77,23 +76,22 @@ public class FunctionInstance implements Callable, Adaptable, InvocationHandler 
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> T adapt(Context cx, Class<T> type) {
-		return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, this);
+	public Context getEvalContext() {
+		return evalContext;
 	}
 
 	@Override
-	public Object invoke(Object proxy, Method method, Object[] args) {
-		return switch (method.getName()) {
-			case "toString" -> "Proxy[" + function + "]";
-			case "hashCode" -> function.hashCode();
-			case "equals" -> args != null && args.length >= 1 && proxy == args[0];
-			default -> call(evalContext, evalScope, args == null ? Empty.OBJECTS : args, false);
-		};
+	public Scope getEvalScope() {
+		return evalScope;
 	}
 
 	@Override
 	public String toString() {
-		return function.toString();
+		return "FunctionProxy[" + function + "]";
+	}
+
+	@Override
+	public int hashCode() {
+		return function.hashCode();
 	}
 }

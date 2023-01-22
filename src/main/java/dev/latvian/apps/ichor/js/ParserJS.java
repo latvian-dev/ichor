@@ -5,6 +5,7 @@ import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.Ast;
+import dev.latvian.apps.ichor.ast.expression.AstArguments;
 import dev.latvian.apps.ichor.ast.expression.AstAwait;
 import dev.latvian.apps.ichor.ast.expression.AstCall;
 import dev.latvian.apps.ichor.ast.expression.AstClassFunction;
@@ -956,6 +957,8 @@ public class ParserJS implements Parser {
 			return new AstSuperExpression().pos(pos);
 		} else if (advanceIf(KeywordTokenJS.THIS)) {
 			return new AstThisExpression().pos(pos);
+		} else if (advanceIf(KeywordTokenJS.ARGUMENTS)) {
+			return new AstArguments().pos(pos);
 		} else if (advanceIf(KeywordTokenJS.FUNCTION)) {
 			return functionExpression(funcFlags);
 		} else if (current.isIdentifier()) { // handle all keywords before this

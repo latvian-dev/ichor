@@ -99,7 +99,7 @@ public final class JavaMembers {
 			throw new AstCall.CallError(this, this, prototype);
 		}
 
-		System.out.println("Calling method " + name + " with " + args.length + " args " + Arrays.toString(args));
+		// System.out.println("Calling method " + name + " with " + args.length + " args " + Arrays.toString(args));
 
 		try {
 			for (var m : methods) {
@@ -122,25 +122,6 @@ public final class JavaMembers {
 		} catch (Exception ex) {
 			throw new InternalScriptError(ex);
 		}
-
-		/*
-		try {
-				if (methodParams.length > 0) {
-					var args1 = new Object[methodParams.length];
-
-					for (int i = 0; i < args1.length; i++) {
-						args1[i] = i >= args.length ? null : cx.as(scope, args[i], methodParams[i]);
-					}
-
-					return method.invoke(self, args1);
-				} else {
-					return method.invoke(self, Empty.OBJECTS);
-				}
-			} catch (Exception ex) {
-				throw new RuntimeException(ex);
-				// return Special.NOT_FOUND;
-			}
-		 */
 
 		throw new AstCall.CallError(this, this, prototype);
 	}

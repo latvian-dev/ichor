@@ -34,7 +34,7 @@ public class AstSwitch extends AstStatement implements LabeledStatement {
 
 		for (AstCase c : cases) {
 			builder.append("case ");
-			builder.append(c.value);
+			builder.appendValue(c.value);
 			builder.append(':');
 			builder.append(c.body);
 		}

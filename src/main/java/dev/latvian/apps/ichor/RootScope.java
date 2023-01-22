@@ -12,7 +12,7 @@ public class RootScope extends Scope {
 		super(null);
 		context = cx;
 		root = this;
-		owner = cx;
+		scopeOwner = cx;
 		maxScopeDepth = cx.getProperty(Context.MAX_SCOPE_DEPTH);
 		interpretingTimeout = cx.getProperty(Context.INTERPRETING_TIMEOUT);
 	}

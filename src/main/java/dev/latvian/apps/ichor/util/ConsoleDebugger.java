@@ -47,7 +47,7 @@ public class ConsoleDebugger implements Debugger {
 
 	@Override
 	public void pushScope(Context cx, Scope scope) {
-		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Scope -> " + scope + " of " + asString(scope, scope.owner));
+		System.out.println("[DEBUG] " + "  ".repeat(scope.getDepth()) + "* Scope -> " + scope + " of " + asString(scope, scope.scopeOwner));
 	}
 
 	@Override

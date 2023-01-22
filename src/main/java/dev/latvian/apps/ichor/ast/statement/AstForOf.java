@@ -30,7 +30,7 @@ public class AstForOf extends AstLabeledStatement {
 		builder.append("for(");
 		builder.append(name);
 		builder.append(appendKeyword());
-		builder.append(from);
+		builder.appendValue(from);
 
 		builder.append(')');
 

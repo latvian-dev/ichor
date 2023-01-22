@@ -19,7 +19,7 @@ public class AstAwait extends AstExpression {
 	@Override
 	public void append(AstStringBuilder builder) {
 		builder.append("await ");
-		builder.append(future);
+		builder.appendValue(future);
 	}
 
 	@Override

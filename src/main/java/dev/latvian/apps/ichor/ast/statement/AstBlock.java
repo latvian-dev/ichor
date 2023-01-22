@@ -22,8 +22,8 @@ public class AstBlock extends AstLabeledStatement {
 
 		builder.append('{');
 
-		for (Interpretable value : interpretable) {
-			builder.append(value);
+		for (var statement : interpretable) {
+			builder.append(statement);
 		}
 
 		builder.append('}');

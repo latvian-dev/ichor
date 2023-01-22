@@ -23,7 +23,7 @@ public class AstDoWhile extends AstWhile {
 		}
 
 		builder.append("while (");
-		builder.append(condition);
+		builder.appendValue(condition);
 		builder.append(')');
 	}
 

@@ -23,7 +23,7 @@ public class AstGetByIndex extends AstGetFrom {
 	public void append(AstStringBuilder builder) {
 		builder.appendValue(from);
 		builder.append('[');
-		builder.append(index);
+		builder.appendValue(index);
 		builder.append(']');
 	}
 

@@ -4,14 +4,14 @@ import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
-public class AstThisExpression extends AstExpression {
+public class AstArguments extends AstExpression {
 	@Override
 	public void append(AstStringBuilder builder) {
-		builder.append("this");
+		builder.append("arguments");
 	}
 
 	@Override
 	public Object eval(Context cx, Scope scope) {
-		return scope.scopeThis;
+		return scope.scopeArguments;
 	}
 }

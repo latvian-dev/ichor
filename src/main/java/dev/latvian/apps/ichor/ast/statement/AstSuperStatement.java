@@ -23,7 +23,7 @@ public class AstSuperStatement extends AstThisStatement {
 
 	@Override
 	public void interpret(Context cx, Scope scope) {
-		if (scope.owner instanceof AstClassFunction func && func.type == AstClassFunction.Type.CONSTRUCTOR) {
+		if (scope.scopeOwner instanceof AstClassFunction func && func.type == AstClassFunction.Type.CONSTRUCTOR) {
 			var c = scope.parent.findOwnerClass();
 
 			if (c != null) {

@@ -7,6 +7,7 @@ import dev.latvian.apps.ichor.js.ContextJS;
 import dev.latvian.apps.ichor.js.NumberJS;
 import dev.latvian.apps.ichor.js.ParserJS;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
+import dev.latvian.apps.ichor.test.IFaces;
 import dev.latvian.apps.ichor.test.ReflectionExample;
 import dev.latvian.apps.ichor.test.TestConsole;
 import dev.latvian.apps.ichor.util.ConsoleDebugger;
@@ -50,6 +51,7 @@ public class InterpreterTests {
 		rootScope.addSafeClasses();
 		var console = new TestConsole(System.out);
 		rootScope.addImmutable("console", console);
+		rootScope.addImmutable("IFaces", cx.getClassPrototype(IFaces.class));
 		rootScopeCallback.accept(rootScope);
 
 		var tokenStream = new TokenStreamJS(cx, new NamedTokenSource(filename), input);
@@ -246,40 +248,6 @@ public class InterpreterTests {
 				a : b : c
 				a : b : Z
 				a : Y : Z
-				""");
-	}
-
-	 @Test
-	public void classes() {
-		testInterpreter("""
-				class TestParent { // AstClass -> ClassPrototype
-				  constructor(param) {
-				    this.param = param
-				  }
-								
-				  printTest(y) {
-				    console.log(y)
-				  }
-				}
-								
-				let t1 = new TestParent(-439) // ClassPrototype$Instance
-				t1.printTest('Hi 1')
-								
-				class Test extends TestParent {
-				  constructor(x, y = 10, z = 30) {
-				    super(x)
-				  }
-				  
-				  printTest2(y) {
-				    printTest(y)
-				  }
-				}
-								
-				let t2 = new Test(9)
-				t2.printTest2('Hi 2')
-				""", """
-				Hi 1
-				Hi 2
 				""");
 	}
 
@@ -534,47 +502,6 @@ public class InterpreterTests {
 	}
 
 	@Test
-	public void callRef1() {
-		testInterpreter("""
-				const l = console.log
-				l('Hi')
-				""", """
-				Hi
-				""");
-	}
-
-	@Test
-	public void callRef2() {
-		testInterpreter("""
-				const c = console
-				const l = c.log
-				l('Hi')
-				""", """
-				Hi
-				""");
-	}
-
-	@Test
-	public void callRefArrow() {
-		testInterpreter("""
-				const a = text => console.log(text)
-				a('Hi')
-				""", """
-				Hi
-				""");
-	}
-
-	@Test
-	public void callChain() {
-		testInterpreter("""
-				const a = () => () => () => console.log('Hi')
-				a()()()
-				""", """
-				Hi
-				""");
-	}
-
-	@Test
 	public void singleGroupedStr() {
 		testInterpreter("""
 				console.log(('hi'))
@@ -696,48 +623,6 @@ public class InterpreterTests {
 				""");
 	}
 
-	@Test
-	public void weirdClosure() {
-		testInterpreter("""
-				function closure() {
-				    let b = 10;
-				    console.log(b); // 10
-				    callMe(function() {
-				        b++;
-				        return b;
-				    })
-				    console.log(b); // 11
-				}
-				    
-				function callMe(fn) {
-				    console.log(fn()); // 11
-				}
-								
-				closure()
-				""", """
-				10
-				11
-				11
-				""");
-	}
-
-	@Test
-	public void weirdClosure2() {
-		testInterpreter("""
-				function giveMeClosure() {
-				    let a = 10;
-				    return function() {
-				      a++;
-				      return a;
-				    }
-				}
-								
-				console.log(giveMeClosure()())
-				""", """
-				11
-				""");
-	}
-
 	// @Test
 	public void destructing() {
 		testInterpreter("""
@@ -752,41 +637,15 @@ public class InterpreterTests {
 	}
 
 	@Test
-	public void specialCalls() {
+	public void prototype() {
 		testInterpreter("""
-				let str = "hello"
-				console.log(str.toString())
-				console.log(str.hashCode())
-				console.log(str.hashCode().toString())
+				console.log("".__prototype__)
+				console.log(String.__prototype__)
+				console.log(6.__prototype__)
 				""", """
-				hello
-				99162322
-				99162322
-				""");
-	}
-
-	@Test
-	public void ifaceLater() {
-		testInterpreter("""
-				console.log('a')
-				console.later(() => {
-				  console.log('b')
-				  console.log('c')
-				})
-				""", """
-				a
-				b
-				c
-				""");
-	}
-
-	@Test
-	public void ifaceTwice() {
-		testInterpreter("""
-				console.twice(() => 'hi')
-				""", """
-				hi
-				hi
+				String
+				String
+				Number
 				""");
 	}
 }

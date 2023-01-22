@@ -18,7 +18,7 @@ public class AstSet extends AstExpression {
 	public void append(AstStringBuilder builder) {
 		get.append(builder);
 		builder.append('=');
-		builder.append(value);
+		builder.appendValue(value);
 	}
 
 	@Override

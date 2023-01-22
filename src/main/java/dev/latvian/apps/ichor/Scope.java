@@ -17,8 +17,11 @@ public class Scope {
 	public final Scope parent;
 	public RootScope root;
 	public SlotMap members;
-	public Object owner;
 	private int depth;
+	public Object scopeOwner;
+	public Object scopeThis;
+	public Object scopeSuper;
+	public Object[] scopeArguments;
 
 	protected Scope(Scope parent) {
 		this.parent = parent;
@@ -26,8 +29,11 @@ public class Scope {
 
 		if (this.parent != null) {
 			this.root = parent.root;
-			this.owner = parent.owner;
 			this.depth = parent.depth + 1;
+			this.scopeOwner = parent.scopeOwner;
+			this.scopeThis = parent.scopeThis;
+			this.scopeSuper = parent.scopeSuper;
+			this.scopeArguments = parent.scopeArguments;
 
 			if (this.depth > this.root.maxScopeDepth) {
 				throw new ScopeDepthError(this.root.maxScopeDepth);
@@ -166,12 +172,12 @@ public class Scope {
 	}
 
 	public Scope push() {
-		return push(owner);
+		return push(scopeOwner);
 	}
 
 	public Scope push(Object owner) {
 		var p = new Scope(this);
-		p.owner = owner;
+		p.scopeOwner = owner;
 		root.checkTimeout();
 		root.context.debugger.pushScope(root.context, this);
 		return p;
@@ -179,7 +185,7 @@ public class Scope {
 
 	@Override
 	public String toString() {
-		if (owner instanceof ClassPrototype c) {
+		if (scopeOwner instanceof ClassPrototype c) {
 			return "Scope[" + getDepth() + ']' + getDeclaredMemberNames() + ":" + c.getPrototypeName();
 		}
 
@@ -195,7 +201,7 @@ public class Scope {
 		var s = this;
 
 		do {
-			if (s.owner instanceof ClassPrototype prototype) {
+			if (s.scopeOwner instanceof ClassPrototype prototype) {
 				return prototype;
 			}
 

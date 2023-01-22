@@ -9,6 +9,35 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class JavaClassPrototype extends PrototypeBuilder {
+	public static boolean isSingleMethodInterface(Class<?> type) {
+		if (type != null && type.isInterface()) {
+			var methods = type.getMethods();
+
+			if (methods.length == 0) {
+				return false;
+			} else if (methods.length > 1) {
+				boolean foundOne = false;
+
+				for (var method : methods) {
+					if (switch (method.getName()) {
+						case "equals", "hashCode", "toString" -> false;
+						default -> Modifier.isAbstract(method.getModifiers());
+					}) {
+						if (foundOne) {
+							return false;
+						} else {
+							foundOne = true;
+						}
+					}
+				}
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
 	public static class ClassLoadingError extends ScriptError {
 		public final Class<?> type;
 
@@ -21,6 +50,7 @@ public class JavaClassPrototype extends PrototypeBuilder {
 	public final Context context;
 	public final Class<?> type;
 	private boolean shouldInit;
+	private Boolean isSingleMethodInterface;
 
 	public JavaClassPrototype(Context cx, Class<?> type) {
 		super(type.getName());
@@ -91,6 +121,14 @@ public class JavaClassPrototype extends PrototypeBuilder {
 	@Override
 	public String toString() {
 		return type.getName();
+	}
+
+	public boolean isSingleMethodInterface() {
+		if (isSingleMethodInterface == null) {
+			isSingleMethodInterface = isSingleMethodInterface(type);
+		}
+
+		return isSingleMethodInterface;
 	}
 
 	/*

@@ -11,9 +11,9 @@ public abstract class AstBinary extends AstExpression {
 	@Override
 	public final void append(AstStringBuilder builder) {
 		builder.append('(');
-		builder.append(left);
+		builder.appendValue(left);
 		appendSymbol(builder.builder);
-		builder.append(right);
+		builder.appendValue(right);
 		builder.append(')');
 	}
 

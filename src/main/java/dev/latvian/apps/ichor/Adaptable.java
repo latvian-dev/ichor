@@ -1,6 +1,16 @@
 package dev.latvian.apps.ichor;
 
-@FunctionalInterface
+import dev.latvian.apps.ichor.java.JavaClassPrototype;
+
 public interface Adaptable {
-	<T> T adapt(Context cx, Class<T> type);
+	default <T> boolean canAdapt(Context cx, Class<T> type) {
+		if (type != null && type.isInterface()) {
+			var proto = cx.getClassPrototype(type);
+			return proto instanceof JavaClassPrototype p ? p.isSingleMethodInterface() : JavaClassPrototype.isSingleMethodInterface(type);
+		}
+
+		return false;
+	}
+
+	<T> T adapt(Context cx, Scope scope, Class<T> type);
 }
