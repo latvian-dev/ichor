@@ -1,16 +1,12 @@
-package dev.latvian.apps.ichor.java;
+package dev.latvian.apps.ichor;
 
-import dev.latvian.apps.ichor.Adaptable;
-import dev.latvian.apps.ichor.Callable;
-import dev.latvian.apps.ichor.Context;
-import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.util.Empty;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-public interface CallableAdapter extends Callable, Adaptable, InvocationHandler {
+public interface CallableTypeAdapter extends Callable, TypeAdapter, InvocationHandler {
 	Context getEvalContext();
 
 	Scope getEvalScope();

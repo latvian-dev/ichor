@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.java;
 
+import dev.latvian.apps.ichor.CallableTypeAdapter;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
@@ -9,7 +10,7 @@ import dev.latvian.apps.ichor.util.Empty;
 import org.jetbrains.annotations.Nullable;
 
 public record LocalJavaMembers(JavaMembers members) implements PrototypeProperty {
-	public record CallWrapper(Context evalContext, Scope evalScope, Object self, JavaMembers members) implements CallableAdapter {
+	public record CallWrapper(Context evalContext, Scope evalScope, Object self, JavaMembers members) implements CallableTypeAdapter {
 		@Override
 		public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
 			return members.call(cx, scope, args, self);

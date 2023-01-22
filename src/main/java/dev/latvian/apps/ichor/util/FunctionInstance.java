@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.util;
 
+import dev.latvian.apps.ichor.CallableTypeAdapter;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
@@ -7,11 +8,10 @@ import dev.latvian.apps.ichor.ast.expression.AstFunction;
 import dev.latvian.apps.ichor.error.ConstructorError;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.exit.ReturnExit;
-import dev.latvian.apps.ichor.java.CallableAdapter;
 
 import java.util.concurrent.CompletableFuture;
 
-public class FunctionInstance implements CallableAdapter {
+public class FunctionInstance implements CallableTypeAdapter {
 	public static class ArgumentCountMismatchError extends ScriptError {
 		public final int requiredCount;
 		public final int actualCount;

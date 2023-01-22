@@ -2,7 +2,7 @@ package dev.latvian.apps.ichor;
 
 import dev.latvian.apps.ichor.java.JavaClassPrototype;
 
-public interface Adaptable {
+public interface TypeAdapter {
 	default <T> boolean canAdapt(Context cx, Class<T> type) {
 		if (type != null && type.isInterface()) {
 			var proto = cx.getClassPrototype(type);

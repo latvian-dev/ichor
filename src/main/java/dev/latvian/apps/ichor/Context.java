@@ -238,8 +238,8 @@ public abstract class Context {
 			return (T) Float.valueOf(asNumber(scope, o).floatValue());
 		} else if (toType == Double.class || toType == Double.TYPE) {
 			return (T) Double.valueOf(asNumber(scope, o).doubleValue());
-		} else if (o instanceof Adaptable adaptable && adaptable.canAdapt(this, toType)) {
-			return adaptable.adapt(this, scope, toType);
+		} else if (o instanceof TypeAdapter typeAdapter && typeAdapter.canAdapt(this, toType)) {
+			return typeAdapter.adapt(this, scope, toType);
 		}
 
 		throw new CastError(o.getClass().getName(), toType.getName());
