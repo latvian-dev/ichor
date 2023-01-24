@@ -39,7 +39,7 @@ public class ArrayJS {
 		}
 	}
 			.property("length", ArrayJS::length)
-			.indexedValueHandler(ListValueHandler.INSTANCE);
+			.customMembers(ListValueHandler.INSTANCE);
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static Collection<Object> collection(Object self) {

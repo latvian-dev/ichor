@@ -22,8 +22,7 @@ public class PrototypeBuilder implements Prototype, Callable {
 	private PrototypeAsString asString;
 	private PrototypeAsNumber asNumber;
 	private PrototypeAsBoolean asBoolean;
-	private Prototype namedValueHandler;
-	private Prototype indexedValueHandler;
+	private Prototype customMembers;
 
 	public PrototypeBuilder(String n) {
 		prototypeName = n;
@@ -94,13 +93,8 @@ public class PrototypeBuilder implements Prototype, Callable {
 		return this;
 	}
 
-	public PrototypeBuilder namedValueHandler(Prototype value) {
-		namedValueHandler = value;
-		return this;
-	}
-
-	public PrototypeBuilder indexedValueHandler(Prototype value) {
-		indexedValueHandler = value;
+	public PrototypeBuilder customMembers(Prototype value) {
+		customMembers = value;
 		return this;
 	}
 
@@ -129,8 +123,8 @@ public class PrototypeBuilder implements Prototype, Callable {
 			}
 		}
 
-		if (namedValueHandler != null && self != null) {
-			var m = namedValueHandler.get(cx, scope, self, name);
+		if (customMembers != null && self != null) {
+			var m = customMembers.get(cx, scope, self, name);
 
 			if (m != Special.NOT_FOUND) {
 				return m;
@@ -174,8 +168,8 @@ public class PrototypeBuilder implements Prototype, Callable {
 			}
 		}
 
-		if (namedValueHandler != null && self != null) {
-			if (namedValueHandler.set(cx, scope, self, name, value)) {
+		if (customMembers != null && self != null) {
+			if (customMembers.set(cx, scope, self, name, value)) {
 				return true;
 			}
 		}
@@ -197,8 +191,8 @@ public class PrototypeBuilder implements Prototype, Callable {
 	public boolean delete(Context cx, Scope scope, Object self, String name) {
 		initLazy();
 
-		if (namedValueHandler != null && self != null) {
-			if (namedValueHandler.delete(cx, scope, self, name)) {
+		if (customMembers != null && self != null) {
+			if (customMembers.delete(cx, scope, self, name)) {
 				return true;
 			}
 		}
@@ -218,31 +212,22 @@ public class PrototypeBuilder implements Prototype, Callable {
 
 	@Override
 	public Collection<?> keys(Context cx, Scope scope, Object self) {
-		var h = namedValueHandler != null ? namedValueHandler : indexedValueHandler;
-		return h != null ? h.keys(cx, scope, self) : Collections.emptySet();
+		return customMembers != null ? customMembers.keys(cx, scope, self) : Collections.emptySet();
 	}
 
 	@Override
 	public Collection<?> values(Context cx, Scope scope, Object self) {
-		var h = namedValueHandler != null ? namedValueHandler : indexedValueHandler;
-		return h != null ? h.values(cx, scope, self) : Collections.emptySet();
+		return customMembers != null ? customMembers.values(cx, scope, self) : Collections.emptySet();
 	}
 
 	@Override
 	public Collection<?> entries(Context cx, Scope scope, Object self) {
-		var h = namedValueHandler != null ? namedValueHandler : indexedValueHandler;
-		return h != null ? h.entries(cx, scope, self) : Collections.emptySet();
+		return customMembers != null ? customMembers.entries(cx, scope, self) : Collections.emptySet();
 	}
 
 	@Override
 	public int getMemberCount(Context cx, Scope scope, Object self) {
-		var h = namedValueHandler != null ? namedValueHandler : indexedValueHandler;
-		return h != null ? h.getMemberCount(cx, scope, self) : 0;
-	}
-
-	@Override
-	public boolean isArrayPrototype() {
-		return indexedValueHandler != null;
+		return customMembers != null ? customMembers.getMemberCount(cx, scope, self) : 0;
 	}
 
 	@Override
@@ -250,8 +235,8 @@ public class PrototypeBuilder implements Prototype, Callable {
 	public Object get(Context cx, Scope scope, Object self, int index) {
 		initLazy();
 
-		if (indexedValueHandler != null && self != null) {
-			var m = indexedValueHandler.get(cx, scope, self, index);
+		if (customMembers != null && self != null) {
+			var m = customMembers.get(cx, scope, self, index);
 
 			if (m != Special.NOT_FOUND) {
 				return m;
@@ -277,8 +262,8 @@ public class PrototypeBuilder implements Prototype, Callable {
 	public boolean set(Context cx, Scope scope, Object self, int index, @Nullable Object value) {
 		initLazy();
 
-		if (indexedValueHandler != null && self != null) {
-			if (indexedValueHandler.set(cx, scope, self, index, value)) {
+		if (customMembers != null && self != null) {
+			if (customMembers.set(cx, scope, self, index, value)) {
 				return true;
 			}
 		}
@@ -300,8 +285,8 @@ public class PrototypeBuilder implements Prototype, Callable {
 	public boolean delete(Context cx, Scope scope, Object self, int index) {
 		initLazy();
 
-		if (indexedValueHandler != null && self != null) {
-			if (indexedValueHandler.delete(cx, scope, self, index)) {
+		if (customMembers != null && self != null) {
+			if (customMembers.delete(cx, scope, self, index)) {
 				return true;
 			}
 		}

@@ -28,7 +28,7 @@ public class TokenStreamJS implements TokenStream {
 	private int tokenCount;
 	private PositionedToken rootToken;
 	private PositionedToken currentToken;
-	private final Map<String, Double> doubleTokenCache;
+	private final Map<String, Number> numberTokenCache;
 	private final Map<String, Token> nameTokenCache;
 	private final Stack<SymbolTokenJS> depth;
 	private SymbolTokenJS currentDepth;
@@ -42,7 +42,7 @@ public class TokenStreamJS implements TokenStream {
 		pos = 0;
 		row = 1;
 		col = 1;
-		doubleTokenCache = new HashMap<>();
+		numberTokenCache = new HashMap<>();
 		nameTokenCache = new HashMap<>();
 		depth = new Stack<>();
 		currentDepth = null;
@@ -319,15 +319,29 @@ public class TokenStreamJS implements TokenStream {
 
 		var numStr = new String(input, p, len);
 
-		var num = doubleTokenCache.get(numStr);
+		var num = numberTokenCache.get(numStr);
 
 		if (num != null) {
 			return num;
 		}
 
 		try {
+			num = Integer.decode(numStr);
+			numberTokenCache.put(numStr, num);
+			return num;
+		} catch (Exception ex) {
+		}
+
+		try {
+			num = Long.decode(numStr);
+			numberTokenCache.put(numStr, num);
+			return num;
+		} catch (Exception ex) {
+		}
+
+		try {
 			num = Double.parseDouble(numStr);
-			doubleTokenCache.put(numStr, num);
+			numberTokenCache.put(numStr, num);
 			return num;
 		} catch (Exception ex) {
 			throw error("Invalid number: " + numStr);

@@ -40,7 +40,7 @@ public class ObjectJS {
 			builder.append('}');
 		}
 	}
-			.namedValueHandler(MapValueHandler.INSTANCE);
+			.customMembers(MapValueHandler.INSTANCE);
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static Map<String, Object> map(Object self) {

@@ -238,11 +238,38 @@ public class AdvancedInterpreterTests {
 	}
 
 	@Test
+	public void numberTypeClasses() {
+		InterpreterTests.testInterpreter("""
+				console.logClass(Advanced.short1)
+				console.logClass(Advanced.short2)
+				console.logClass(Advanced.short1.toLong())
+				console.logClass(10.4)
+				console.logClass(10.4.toByte())
+				console.logClass(10.4.toShort())
+				console.logClass(10.4.toInt())
+				console.logClass(10.4.toLong())
+				console.logClass(10.4.toFloat())
+				console.logClass(10.4.toDouble())
+				""", """
+				java.lang.Short
+				java.lang.Short
+				java.lang.Long
+				java.lang.Double
+				java.lang.Byte
+				java.lang.Short
+				java.lang.Integer
+				java.lang.Long
+				java.lang.Float
+				java.lang.Double
+				""");
+	}
+
+	@Test
 	public void javaMap() {
 		InterpreterTests.testInterpreter("""
 				Advanced.testMap({a: 4, b: 4.5, c: ['a', 'b', 'c']}, console)
 				""", """
-				Map: {a=4.0, b=4.5, c=[a, b, c]}
+				Map: {a=4, b=4.5, c=[a, b, c]}
 				""");
 	}
 }

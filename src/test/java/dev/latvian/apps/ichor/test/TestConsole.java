@@ -28,6 +28,10 @@ public final class TestConsole {
 		printStream.println("> " + s);
 	}
 
+	public void logClass(Object o) {
+		log(o.getClass().getName());
+	}
+
 	@Override
 	public String toString() {
 		return "TestConsoleImpl";

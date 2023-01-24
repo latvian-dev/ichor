@@ -50,7 +50,14 @@ public class NumberJS {
 			.staticFunction("parseInt", NumberJS::parseInt)
 			.function("toFixed", NumberJS::toFixed)
 			.function("toExponential", NumberJS::toExponential)
-			.function("toPrecision", NumberJS::toPrecision);
+			.function("toPrecision", NumberJS::toPrecision)
+			.function("toByte", NumberJS::toByte)
+			.function("toShort", NumberJS::toShort)
+			.function("toInt", NumberJS::toInt)
+			.function("toLong", NumberJS::toLong)
+			.function("toFloat", NumberJS::toFloat)
+			.function("toDouble", NumberJS::toDouble)
+			.function("toChar", NumberJS::toChar);
 
 	private static Object isFinite(Context cx, Scope scope, Object[] args) {
 		if (args.length == 0) {
@@ -101,5 +108,33 @@ public class NumberJS {
 
 	private static Object toPrecision(Context cx, Scope scope, Object self, Object[] args) {
 		return self.toString(); // FIXME
+	}
+
+	private static Object toByte(Context cx, Scope scope, Object self, Object[] args) {
+		return cx.asNumber(scope, self).byteValue();
+	}
+
+	private static Object toShort(Context cx, Scope scope, Object self, Object[] args) {
+		return cx.asNumber(scope, self).shortValue();
+	}
+
+	private static Object toInt(Context cx, Scope scope, Object self, Object[] args) {
+		return cx.asNumber(scope, self).intValue();
+	}
+
+	private static Object toLong(Context cx, Scope scope, Object self, Object[] args) {
+		return cx.asNumber(scope, self).longValue();
+	}
+
+	private static Object toFloat(Context cx, Scope scope, Object self, Object[] args) {
+		return cx.asNumber(scope, self).floatValue();
+	}
+
+	private static Object toDouble(Context cx, Scope scope, Object self, Object[] args) {
+		return cx.asNumber(scope, self).doubleValue();
+	}
+
+	private static Object toChar(Context cx, Scope scope, Object self, Object[] args) {
+		return (char) cx.asNumber(scope, self).intValue();
 	}
 }

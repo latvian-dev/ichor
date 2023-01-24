@@ -19,8 +19,8 @@ public class Scope {
 	public SlotMap members;
 	private int depth;
 	public Object scopeOwner;
-	public Object scopeThis;
-	public Object scopeSuper;
+	public Scope scopeThis;
+	public Scope scopeSuper;
 	public Object[] scopeArguments;
 
 	protected Scope(Scope parent) {

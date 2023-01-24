@@ -64,7 +64,7 @@ public class TokenTests {
 
 	@Test
 	public void numberInt() {
-		testTokenStream("4", 4.0);
+		testTokenStream("4", 4);
 	}
 
 	@Test
@@ -94,7 +94,7 @@ public class TokenTests {
 
 	@Test
 	public void equation() {
-		testTokenStream("-3 +   4.0 * 3.0", SUB, 3.0, ADD, 4.0, MUL, 3.0);
+		testTokenStream("-3 +   4.0 * 3.0", SUB, 3, ADD, 4.0, MUL, 3.0);
 	}
 
 	@Test
@@ -104,7 +104,7 @@ public class TokenTests {
 
 	@Test
 	public void var() {
-		testTokenStream("let x = 20;", LET, n("x"), SET, 20.0, SEMI);
+		testTokenStream("let x = 20;", LET, n("x"), SET, 20, SEMI);
 	}
 
 	@Test
@@ -122,7 +122,7 @@ public class TokenTests {
 						""",
 				LET, n("x"), SET, 4.444, SEMI,
 				WHILE, LP, true, RP, LC,
-				IF, LP, ADD1, n("x"), GTE, 10.0, RP, LC,
+				IF, LP, ADD1, n("x"), GTE, 10, RP, LC,
 				BREAK, SEMI,
 				RC,
 				n("console"), DOT, n("print"), LP, "X: ", ADD, n("x"), RP,

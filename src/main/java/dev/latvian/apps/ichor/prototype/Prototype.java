@@ -46,10 +46,6 @@ public interface Prototype extends PrototypeSupplier {
 		return 0;
 	}
 
-	default boolean isArrayPrototype() {
-		return false;
-	}
-
 	@Nullable
 	default Object get(Context cx, Scope scope, Object self, int index) {
 		return Special.NOT_FOUND;
