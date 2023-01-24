@@ -197,11 +197,11 @@ public class Scope {
 	}
 
 	@Nullable
-	public ClassPrototype findOwnerClass() {
+	public ClassPrototype.Instance findOwnerClass() {
 		var s = this;
 
 		do {
-			if (s.scopeOwner instanceof ClassPrototype prototype) {
+			if (s.scopeOwner instanceof ClassPrototype.Instance prototype) {
 				return prototype;
 			}
 

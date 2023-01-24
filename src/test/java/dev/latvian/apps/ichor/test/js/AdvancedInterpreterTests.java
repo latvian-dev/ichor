@@ -106,33 +106,40 @@ public class AdvancedInterpreterTests {
 	@Test
 	public void jsClass() {
 		InterpreterTests.testInterpreter("""
-				class Test { // AstClass -> ClassPrototype
-				  constructor(param) {
-				    this.param = param
+				class Rect { // AstClass -> ClassPrototype
+				  constructor(w, h) {
+				    this.w = w
+				    this.h = h
 				  }
 								
-				  printTest(y) {
-				    console.log(this.param + ' x ' + y)
+				  calcArea() {
+				    return w * h
+				  }
+				  
+				  printArea(extra) {
+				    console.log(extra + ': ' + calcArea())
 				  }
 				}
 								
-				let t1 = new Test(-439) // ClassPrototype$Instance
-				t1.printTest('Hi 1')
+				let r = new Rect(30, 50) // ClassPrototype$Instance
+				r.printArea('Hi 1')
 				""", """
-				-439 x Hi 1
+				Hi 1: 1500
 				""");
 	}
 
 	@Test
 	public void jsClassWithParent() {
 		InterpreterTests.testInterpreter("""
+				let cl = console.log
+								
 				class TestParent {
 				  constructor(param) {
 				    this.param = param
 				  }
 								
 				  printTest(y) {
-				    console.log(this.param + ' x ' + y)
+				    cl(this.param + ' x ' + y)
 				  }
 				}
 								
@@ -158,10 +165,10 @@ public class AdvancedInterpreterTests {
 	}
 
 	@Test
-	public void ifaceRunnable() {
+	public void ifaceRunnableArrow() {
 		InterpreterTests.testInterpreter("""
 				console.log('a')
-				IFaces.runnable(() => {
+				Advanced.runnable(() => {
 				  console.log('b')
 				  console.log('c')
 				})
@@ -173,20 +180,69 @@ public class AdvancedInterpreterTests {
 	}
 
 	@Test
-	public void ifaceSupplier() {
+	public void ifaceRunnableRef() {
 		InterpreterTests.testInterpreter("""
-				IFaces.consumer(9, txt => console.log(txt))
+				console.log('a')
+								
+				let func = () => {
+				  console.log('b')
+				  console.log('c')
+				}
+								
+				Advanced.runnable(func)
+				""", """
+				a
+				b
+				c
+				""");
+	}
+
+	@Test
+	public void ifaceConsumerArrow() {
+		InterpreterTests.testInterpreter("""
+				Advanced.consumer(9, txt => console.log(txt))
 				""", """
 				9 x hello
 				""");
 	}
 
 	@Test
-	public void ifaceSupplier2() {
+	public void ifaceConsumerRef() {
 		InterpreterTests.testInterpreter("""
-				IFaces.consumer(9, console.log)
+				Advanced.consumer(9, console.log)
 				""", """
 				9 x hello
+				""");
+	}
+
+	@Test
+	public void ifaceSupplierArrow() {
+		InterpreterTests.testInterpreter("""
+				console.log(Advanced.supplier(() => 4.4))
+				""", """
+				4.4
+				""");
+	}
+
+	@Test
+	public void numberTypeCasting() {
+		InterpreterTests.testInterpreter("""
+				Advanced.testFloat(5.3, console)
+				Advanced.testFloat(Advanced.short1, console)
+				Advanced.testFloatSupplier(() => Advanced.short2, console)
+				""", """
+				Float value: 5.3
+				Float value: 30
+				Float value: 40
+				""");
+	}
+
+	@Test
+	public void javaMap() {
+		InterpreterTests.testInterpreter("""
+				Advanced.testMap({a: 4, b: 4.5, c: ['a', 'b', 'c']}, console)
+				""", """
+				Map: {a=4.0, b=4.5, c=[a, b, c]}
 				""");
 	}
 }

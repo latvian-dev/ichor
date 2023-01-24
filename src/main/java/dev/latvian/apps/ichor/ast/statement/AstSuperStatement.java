@@ -27,7 +27,7 @@ public class AstSuperStatement extends AstThisStatement {
 			var c = scope.parent.findOwnerClass();
 
 			if (c != null) {
-				c.interpretConstructorSuper(scope, arguments);
+				c.interpretConstructorSuper(arguments);
 				return;
 			}
 		}

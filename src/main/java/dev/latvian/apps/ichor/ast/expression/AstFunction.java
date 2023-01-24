@@ -88,7 +88,7 @@ public class AstFunction extends AstExpression implements Comparable<AstFunction
 	}
 
 	@Override
-	public Object eval(Context cx, Scope scope) {
+	public FunctionInstance eval(Context cx, Scope scope) {
 		return new FunctionInstance(this, cx, scope);
 	}
 

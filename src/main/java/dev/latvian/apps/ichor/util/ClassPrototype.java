@@ -9,6 +9,8 @@ import dev.latvian.apps.ichor.error.MemberNotFoundError;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
+
 public record ClassPrototype(AstClass astClass, Scope classEvalScope) implements Prototype, Callable {
 	@Override
 	public String getPrototypeName() {
@@ -21,65 +23,33 @@ public record ClassPrototype(AstClass astClass, Scope classEvalScope) implements
 	}
 
 	@Override
-	public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-		return new Instance(this, scope);
-	}
+	public Object call(Context cx, Scope callScope, Object[] args, boolean hasNew) {
+		var instance = new Instance(cx, this);
 
-	public void interpretConstructorSuper(Scope scope, Object[] args) {
-	}
-
-	/*
-	public Instance createClass(Scope scope) {
-		var classScope = scope.push();
-		Instance inst = new Instance(this, classScope);
-		classScope.owner = inst;
-
-		for (var e : methods.entrySet()) {
-			classScope.declareMember(e.getKey(), e.getValue(), AssignType.IMMUTABLE);
+		if (astClass.constructor != null) {
+			var ctor = astClass.constructor.eval(cx, callScope);
+			ctor.call(cx, callScope, args, true);
 		}
 
-		var p0 = parent;
-
-		while (p0 != null) {
-			var p1 = p0.eval(scope);
-
-			if (!(p1 instanceof PrototypeSupplier)) {
-				throw new ScriptError("Cannot extend " + p0);
-			}
-
-			if (p1 instanceof AstClass c) {
-				for (var e : c.methods.entrySet()) {
-					if (classScope.hasMember(e.getKey()) == AssignType.NONE) {
-						classScope.declareMember(e.getKey(), e.getValue(), AssignType.IMMUTABLE);
-					}
-				}
-
-				p0 = c.parent;
-			} else {
-				throw new ScriptError("Cannot extend " + p0 + " - currently not supported");
-			}
-		}
-
-		return inst;
+		return instance;
 	}
-
-	@Override
-	public Object call(Scope scope, Object self, Evaluable[] args) {
-		return construct(scope, args);
-	}
-	 */
-
-	// public record JavaInstance
 
 	public static final class Instance implements Prototype {
 		public final ClassPrototype prototype;
-		public final Scope evalScope;
 		public final Scope members;
 
-		public Instance(ClassPrototype prototype, Scope evalScope) {
+		public Instance(Context cx, ClassPrototype prototype) {
 			this.prototype = prototype;
-			this.evalScope = evalScope.push(this);
 			this.members = prototype.classEvalScope.push(this);
+			this.members.scopeThis = this;
+
+			for (var func : prototype.astClass.methods.values()) {
+				members.add(func.functionName, new FunctionInstance(func, cx, members), false);
+			}
+		}
+
+		public void interpretConstructorSuper(Object[] args) {
+			System.out.println(Arrays.toString(args));
 		}
 
 		@Override
@@ -89,8 +59,8 @@ public record ClassPrototype(AstClass astClass, Scope classEvalScope) implements
 
 		@Override
 		@Nullable
-		public Object get(Context cx, Scope scope, Object self, String name) {
-			var r = scope.getMember(name);
+		public Object get(Context cx, Scope callScope, Object self, String name) {
+			var r = members.getMember(name);
 
 			if (r == Special.NOT_FOUND) {
 				throw new MemberNotFoundError(name);
@@ -100,8 +70,8 @@ public record ClassPrototype(AstClass astClass, Scope classEvalScope) implements
 		}
 
 		@Override
-		public boolean set(Context cx, Scope scope, Object self, String name, @Nullable Object value) {
-			scope.setMember(name, value);
+		public boolean set(Context cx, Scope callScope, Object self, String name, @Nullable Object value) {
+			members.setMember(name, value);
 			return true;
 		}
 	}

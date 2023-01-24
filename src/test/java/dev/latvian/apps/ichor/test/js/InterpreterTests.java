@@ -7,7 +7,7 @@ import dev.latvian.apps.ichor.js.ContextJS;
 import dev.latvian.apps.ichor.js.NumberJS;
 import dev.latvian.apps.ichor.js.ParserJS;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
-import dev.latvian.apps.ichor.test.IFaces;
+import dev.latvian.apps.ichor.test.AdvancedTestUtils;
 import dev.latvian.apps.ichor.test.ReflectionExample;
 import dev.latvian.apps.ichor.test.TestConsole;
 import dev.latvian.apps.ichor.util.ConsoleDebugger;
@@ -51,7 +51,7 @@ public class InterpreterTests {
 		rootScope.addSafeClasses();
 		var console = new TestConsole(System.out);
 		rootScope.addImmutable("console", console);
-		rootScope.addImmutable("IFaces", cx.getClassPrototype(IFaces.class));
+		rootScope.add("Advanced", AdvancedTestUtils.class);
 		rootScopeCallback.accept(rootScope);
 
 		var tokenStream = new TokenStreamJS(cx, new NamedTokenSource(filename), input);

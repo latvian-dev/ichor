@@ -20,4 +20,13 @@ public class ClassFunctionInstance extends FunctionInstance {
 		return functionName;
 	}
 	 */
+
+	@Override
+	public Object call(Context cx, Scope callScope, Object[] args, boolean hasNew) {
+		if (function == ((AstClassFunction) function).owner.constructor) {
+			return super.call(cx, callScope, args, false);
+		} else {
+			return super.call(cx, callScope, args, hasNew);
+		}
+	}
 }

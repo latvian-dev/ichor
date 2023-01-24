@@ -21,7 +21,7 @@ public class AstClassFunction extends AstFunction {
 	}
 
 	@Override
-	public Object eval(Context cx, Scope scope) {
+	public ClassFunctionInstance eval(Context cx, Scope scope) {
 		return new ClassFunctionInstance(this, cx, scope);
 	}
 }
