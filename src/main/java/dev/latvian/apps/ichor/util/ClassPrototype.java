@@ -41,6 +41,7 @@ public record ClassPrototype(AstClass astClass, Scope classEvalScope) implements
 		public Instance(Context cx, ClassPrototype prototype) {
 			this.prototype = prototype;
 			this.members = prototype.classEvalScope.push(this);
+			this.members.scopeSuper = this.members.scopeThis;
 			this.members.scopeThis = members;
 
 			for (var func : prototype.astClass.methods.values()) {

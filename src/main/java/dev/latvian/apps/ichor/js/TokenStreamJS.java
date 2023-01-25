@@ -325,18 +325,26 @@ public class TokenStreamJS implements TokenStream {
 			return num;
 		}
 
+		if (numStr.startsWith("3.14159")) {
+			numberTokenCache.put(numStr, Math.PI);
+			return Math.PI;
+		} else if (numStr.startsWith("2.71828")) {
+			numberTokenCache.put(numStr, Math.E);
+			return Math.E;
+		}
+
 		try {
 			num = Integer.decode(numStr);
 			numberTokenCache.put(numStr, num);
 			return num;
-		} catch (Exception ex) {
+		} catch (Exception ignored) {
 		}
 
 		try {
 			num = Long.decode(numStr);
 			numberTokenCache.put(numStr, num);
 			return num;
-		} catch (Exception ex) {
+		} catch (Exception ignored) {
 		}
 
 		try {
