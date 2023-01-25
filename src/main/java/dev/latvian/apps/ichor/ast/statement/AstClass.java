@@ -64,7 +64,7 @@ public class AstClass extends AstStatement {
 
 	@Override
 	public void interpret(Context cx, Scope scope) {
-		scope.add(name, new ClassPrototype(this, scope));
+		scope.addImmutable(name, new ClassPrototype(this, scope));
 	}
 
 	@Override

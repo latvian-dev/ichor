@@ -13,13 +13,13 @@ public class RootScope extends Scope {
 		context = cx;
 		root = this;
 		scopeOwner = cx;
-		maxScopeDepth = cx.getProperty(Context.MAX_SCOPE_DEPTH);
-		interpretingTimeout = cx.getProperty(Context.INTERPRETING_TIMEOUT);
+		maxScopeDepth = cx.getMaxScopeDepth();
+		interpretingTimeout = cx.getInterpretingTimeout();
 	}
 
-	public void addSafeClasses() {
-		for (var p : context.safePrototypes) {
-			add(p.getPrototypeName(), p);
+	public void addSafePrototypes() {
+		for (var p : context.getSafePrototypes()) {
+			addImmutable(p.getPrototypeName(), p);
 		}
 	}
 

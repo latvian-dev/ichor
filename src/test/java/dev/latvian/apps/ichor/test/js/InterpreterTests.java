@@ -1,7 +1,7 @@
 package dev.latvian.apps.ichor.test.js;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.RootScope;
+import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.ScopeExit;
 import dev.latvian.apps.ichor.js.ContextJS;
 import dev.latvian.apps.ichor.js.NumberJS;
@@ -10,7 +10,6 @@ import dev.latvian.apps.ichor.js.TokenStreamJS;
 import dev.latvian.apps.ichor.test.AdvancedTestUtils;
 import dev.latvian.apps.ichor.test.ReflectionExample;
 import dev.latvian.apps.ichor.test.TestConsole;
-import dev.latvian.apps.ichor.util.ConsoleDebugger;
 import dev.latvian.apps.ichor.util.Empty;
 import dev.latvian.apps.ichor.util.NamedTokenSource;
 import org.junit.jupiter.api.Assertions;
@@ -43,12 +42,11 @@ public class InterpreterTests {
 		System.out.println();
 
 		var cx = new ContextJS();
-		cx.debugger = ConsoleDebugger.INSTANCE;
-		cx.setProperty(Context.INTERPRETING_TIMEOUT, 1500L);
-		cx.setProperty(Context.TOKEN_STREAM_TIMEOUT, filename.isEmpty() ? 1500L : 0L);
+		cx.setInterpretingTimeout(1500L);
+		cx.setTokenStreamTimeout(filename.isEmpty() ? 1500L : 0L);
 
 		var rootScope = new RootScope(cx);
-		rootScope.addSafeClasses();
+		rootScope.addSafePrototypes();
 		var console = new TestConsole(System.out);
 		rootScope.addImmutable("console", console);
 		rootScope.add("Advanced", AdvancedTestUtils.class);
@@ -218,7 +216,7 @@ public class InterpreterTests {
 	public void numberProtoAccess() {
 		testInterpreter("""
 				console.log(Number.MAX_SAFE_INTEGER);
-				""", Double.toString(NumberJS.MAX_SAFE_INTEGER));
+				""", AstStringBuilder.wrapNumber(NumberJS.MAX_SAFE_INTEGER));
 	}
 
 	@Test

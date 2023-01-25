@@ -1,4 +1,4 @@
-package dev.latvian.apps.ichor.ast.expression;
+package dev.latvian.apps.ichor.js.ast;
 
 import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
@@ -6,6 +6,7 @@ import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
+import dev.latvian.apps.ichor.ast.expression.AstExpression;
 
 import java.math.BigInteger;
 

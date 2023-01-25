@@ -5,7 +5,6 @@ import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.Ast;
-import dev.latvian.apps.ichor.ast.expression.AstArguments;
 import dev.latvian.apps.ichor.ast.expression.AstAwait;
 import dev.latvian.apps.ichor.ast.expression.AstCall;
 import dev.latvian.apps.ichor.ast.expression.AstClassFunction;
@@ -27,14 +26,12 @@ import dev.latvian.apps.ichor.ast.expression.AstTemplateLiteral;
 import dev.latvian.apps.ichor.ast.expression.AstTernary;
 import dev.latvian.apps.ichor.ast.expression.AstThisExpression;
 import dev.latvian.apps.ichor.ast.expression.AstType;
-import dev.latvian.apps.ichor.ast.expression.AstTypeOf;
 import dev.latvian.apps.ichor.ast.expression.unary.AstAdd1R;
 import dev.latvian.apps.ichor.ast.expression.unary.AstSub1R;
 import dev.latvian.apps.ichor.ast.statement.AstBlock;
 import dev.latvian.apps.ichor.ast.statement.AstBreak;
 import dev.latvian.apps.ichor.ast.statement.AstClass;
 import dev.latvian.apps.ichor.ast.statement.AstContinue;
-import dev.latvian.apps.ichor.ast.statement.AstDebugger;
 import dev.latvian.apps.ichor.ast.statement.AstDeclaration;
 import dev.latvian.apps.ichor.ast.statement.AstDoWhile;
 import dev.latvian.apps.ichor.ast.statement.AstEmptyBlock;
@@ -59,6 +56,10 @@ import dev.latvian.apps.ichor.error.ParseError;
 import dev.latvian.apps.ichor.error.ParseErrorMessage;
 import dev.latvian.apps.ichor.error.ParseErrorType;
 import dev.latvian.apps.ichor.exit.ExitType;
+import dev.latvian.apps.ichor.js.ast.AstArguments;
+import dev.latvian.apps.ichor.js.ast.AstDebugger;
+import dev.latvian.apps.ichor.js.ast.AstPrototype;
+import dev.latvian.apps.ichor.js.ast.AstTypeOf;
 import dev.latvian.apps.ichor.token.DeclaringToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
 import dev.latvian.apps.ichor.token.Token;
@@ -893,7 +894,7 @@ public class ParserJS implements Parser {
 				expr = call;
 			} else if (advanceIf(SymbolTokenJS.DOT)) {
 				var name = name(ParseErrorType.EXP_NAME_DOT.format(current));
-				expr = new AstGetByName(expr, name).pos(pos);
+				expr = namedGet(expr, name, pos);
 			} else if (advanceIf(SymbolTokenJS.OC)) {
 				var name = name(ParseErrorType.EXP_NAME_OC);
 				expr = new AstGetByNameOptional(expr, name).pos(pos);
@@ -911,7 +912,7 @@ public class ParserJS implements Parser {
 				var keyo = expression();
 
 				if (keyo instanceof CharSequence str) {
-					expr = new AstGetByName(expr, str.toString()).pos(pos);
+					expr = namedGet(expr, str.toString(), pos);
 				} else if (keyo instanceof Number n) {
 					expr = new AstGetByIndex(expr, n.intValue()).pos(pos);
 				} else {
@@ -925,6 +926,14 @@ public class ParserJS implements Parser {
 		}
 
 		return expr;
+	}
+
+	private Object namedGet(Object expr, String name, TokenPosSupplier pos) {
+		if (name.equals("__prototype__")) {
+			return new AstPrototype(expr).pos(pos);
+		} else {
+			return new AstGetByName(expr, name).pos(pos);
+		}
 	}
 
 	private Object primary() {

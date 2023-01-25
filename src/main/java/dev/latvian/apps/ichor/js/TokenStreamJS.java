@@ -46,7 +46,7 @@ public class TokenStreamJS implements TokenStream {
 		nameTokenCache = new HashMap<>();
 		depth = new Stack<>();
 		currentDepth = null;
-		timeout = cx.getProperty(Context.TOKEN_STREAM_TIMEOUT);
+		timeout = cx.getTokenStreamTimeout();
 		timeoutTime = 0L;
 	}
 

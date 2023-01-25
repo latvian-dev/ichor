@@ -6,6 +6,10 @@ import java.util.HashMap;
 import java.util.Set;
 
 public class SlotHashMap extends HashMap<String, Slot> implements SlotMap {
+	public SlotHashMap() {
+		super(17);
+	}
+
 	@Override
 	@Nullable
 	public Slot getSlot(String name) {
@@ -13,8 +17,8 @@ public class SlotHashMap extends HashMap<String, Slot> implements SlotMap {
 	}
 
 	@Override
-	public void setSlot(String name, Slot slot) {
-		put(name, slot);
+	public void setSlot(Slot slot) {
+		put(slot.name, slot);
 	}
 
 	@Override

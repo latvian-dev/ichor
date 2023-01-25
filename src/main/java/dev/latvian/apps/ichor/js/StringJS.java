@@ -2,13 +2,14 @@ package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
+import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.error.WIPFeatureError;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 
-public class StringJS {
+public class StringJS implements WrappedObject {
 	private static String s(Object self) {
 		return self.toString();
 	}
@@ -17,29 +18,6 @@ public class StringJS {
 		@Override
 		public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
 			return args.length == 0 ? "" : cx.asString(scope, args[0], false);
-		}
-
-		@Override
-		public void asString(Context cx, Scope scope, Object self, StringBuilder builder, boolean escape) {
-			if (escape) {
-				AstStringBuilder.wrapString(self, builder);
-			} else {
-				builder.append(s(self));
-			}
-		}
-
-		@Override
-		public Number asNumber(Context cx, Scope scope, Object self) {
-			try {
-				return Double.parseDouble(s(self));
-			} catch (NumberFormatException ex) {
-				return Double.NaN;
-			}
-		}
-
-		@Override
-		public boolean asBoolean(Context cx, Scope scope, Object self) {
-			return !s(self).isEmpty();
 		}
 	}
 			.staticFunction("fromCharCode", StringJS::fromCharCode)
@@ -146,5 +124,54 @@ public class StringJS {
 
 	private static String trim(Context cx, Scope scope, Object self, Object[] args) {
 		return s(self).trim();
+	}
+
+	public final String self;
+
+	public StringJS(String self) {
+		this.self = self;
+	}
+
+	@Override
+	public Object unwrap() {
+		return self;
+	}
+
+	@Override
+	public Prototype getPrototype(Context cx, Scope scope) {
+		return PROTOTYPE;
+	}
+
+	@Override
+	public void asString(Context cx, Scope scope, StringBuilder builder, boolean escape) {
+		if (escape) {
+			AstStringBuilder.wrapString(self, builder);
+		} else {
+			builder.append(s(self));
+		}
+	}
+
+	@Override
+	public Number asNumber(Context cx, Scope scope) {
+		try {
+			return Integer.decode(self);
+		} catch (NumberFormatException ignored) {
+		}
+
+		try {
+			return Long.decode(self);
+		} catch (NumberFormatException ignored) {
+		}
+
+		try {
+			return Double.parseDouble(self);
+		} catch (NumberFormatException ex) {
+			return NumberJS.NaN;
+		}
+	}
+
+	@Override
+	public boolean asBoolean(Context cx, Scope scope) {
+		return !self.isEmpty();
 	}
 }

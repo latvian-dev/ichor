@@ -1,7 +1,8 @@
-package dev.latvian.apps.ichor.ast.expression.binary;
+package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
+import dev.latvian.apps.ichor.ast.expression.binary.AstBinaryBoolean;
 
 public class AstInstanceOf extends AstBinaryBoolean {
 	@Override

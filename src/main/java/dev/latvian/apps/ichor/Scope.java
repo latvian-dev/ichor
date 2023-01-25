@@ -1,9 +1,8 @@
 package dev.latvian.apps.ichor;
 
 import dev.latvian.apps.ichor.error.ConstantReassignError;
-import dev.latvian.apps.ichor.error.MemberNotFoundError;
+import dev.latvian.apps.ichor.error.NamedMemberNotFoundError;
 import dev.latvian.apps.ichor.error.ScopeDepthError;
-import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.slot.EmptySlotMap;
 import dev.latvian.apps.ichor.slot.Slot;
 import dev.latvian.apps.ichor.slot.SlotMap;
@@ -52,15 +51,14 @@ public class Scope {
 		var slot = members.getSlot(name);
 
 		if (slot == null) {
-			slot = new Slot();
+			slot = new Slot(name);
 			members = members.upgradeSlotMap();
-			members.setSlot(name, slot);
+			members.setSlot(slot);
 		}
 
 		slot.value = value;
 		slot.immutable = immutable;
 		// slot.prototype = null;
-		root.context.debugger.assignNew(root.context, this, name, value);
 	}
 
 	public void addMutable(String name, @Nullable Object value) {
@@ -71,12 +69,13 @@ public class Scope {
 		add(name, value, true);
 	}
 
-	public void add(String name, Prototype prototype) {
-		addImmutable(name, prototype);
-	}
-
 	public void add(String name, Class<?> type) {
 		addImmutable(name, root.context.getClassPrototype(type));
+	}
+
+	public void setScopeThis(Scope o) {
+		scopeSuper = scopeThis;
+		scopeThis = o;
 	}
 
 	public void setMember(String name, @Nullable Object value) {
@@ -91,7 +90,6 @@ public class Scope {
 				} else {
 					slot.value = value;
 					// slot.prototype = null;
-					root.context.debugger.assignSet(root.context, this, name, value);
 					return;
 				}
 			}
@@ -100,7 +98,7 @@ public class Scope {
 		}
 		while (s != null);
 
-		throw new MemberNotFoundError(name);
+		throw new NamedMemberNotFoundError(name);
 	}
 
 	public AssignType hasDeclaredMember(String name) {
@@ -119,7 +117,7 @@ public class Scope {
 		var slot = members.getSlot(name);
 
 		if (slot == null) {
-			throw new MemberNotFoundError(name);
+			throw new NamedMemberNotFoundError(name);
 		}
 
 		members.removeSlot(name);
@@ -151,7 +149,7 @@ public class Scope {
 		}
 		while (s != null);
 
-		return Special.NOT_FOUND;
+		throw new NamedMemberNotFoundError(name);
 	}
 
 	public AssignType hasMember(String name) {
@@ -179,7 +177,6 @@ public class Scope {
 		var p = new Scope(this);
 		p.scopeOwner = owner;
 		root.checkTimeout();
-		root.context.debugger.pushScope(root.context, this);
 		return p;
 	}
 
@@ -194,21 +191,5 @@ public class Scope {
 
 	public int getDepth() {
 		return depth;
-	}
-
-	@Nullable
-	public ClassPrototype.Instance findOwnerClass() {
-		var s = this;
-
-		do {
-			if (s.scopeOwner instanceof ClassPrototype.Instance prototype) {
-				return prototype;
-			}
-
-			s = s.parent;
-		}
-		while (s != null);
-
-		return null;
 	}
 }

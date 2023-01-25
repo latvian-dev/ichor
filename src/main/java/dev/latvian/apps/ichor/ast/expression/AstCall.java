@@ -83,7 +83,6 @@ public class AstCall extends AstExpression {
 			throw new CallError(function, func, cx.getPrototype(scope, func));
 		}
 
-		cx.debugger.call(cx, scope, this, func, args, r);
 		return r;
 	}
 

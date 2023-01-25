@@ -7,7 +7,6 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.BreakExit;
 import dev.latvian.apps.ichor.exit.ContinueExit;
-import dev.latvian.apps.ichor.prototype.Prototype;
 
 import java.util.Collection;
 
@@ -44,8 +43,7 @@ public class AstForOf extends AstLabeledStatement {
 	@Override
 	public void interpret(Context cx, Scope scope) {
 		var f = cx.eval(scope, from);
-		var p = cx.getPrototype(scope, f);
-		var itr = getIterable(cx, scope, p, f);
+		var itr = getIterable(cx, scope, f);
 
 		if (itr.isEmpty()) {
 			return;
@@ -70,8 +68,12 @@ public class AstForOf extends AstLabeledStatement {
 		}
 	}
 
-	protected Collection<?> getIterable(Context cx, Scope scope, Prototype prototype, Object from) {
-		return prototype.values(cx, scope, from);
+	protected Collection<?> getIterable(Context cx, Scope scope, Object from) {
+		if (from instanceof Collection<?>) {
+			return (Collection<?>) from;
+		}
+
+		return cx.wrap(scope, from).values(cx, scope);
 	}
 
 	@Override

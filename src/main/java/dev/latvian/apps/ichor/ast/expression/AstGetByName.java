@@ -5,7 +5,8 @@ import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.error.MemberNotFoundError;
+import dev.latvian.apps.ichor.error.NamedMemberNotFoundError;
+import dev.latvian.apps.ichor.js.ast.AstPrototype;
 
 import java.util.regex.Pattern;
 
@@ -40,37 +41,25 @@ public class AstGetByName extends AstGetFrom {
 
 	@Override
 	public Object eval(Context cx, Scope scope) {
-		var self = evalSelf(cx, scope);
-		var p = cx.getPrototype(scope, self);
-		cx.debugger.pushSelf(cx, scope, self);
-
-		var r = p.get(cx, scope, self, name);
+		var r = cx.wrap(scope, evalSelf(cx, scope)).get(cx, scope, name);
 
 		if (r == Special.NOT_FOUND) {
-			throw new MemberNotFoundError(toString(), p);
+			throw new NamedMemberNotFoundError(name).pos(this);
 		}
 
-		cx.debugger.get(cx, scope, this, r);
 		return r;
 	}
 
 	@Override
 	public void set(Context cx, Scope scope, Object value) {
-		var self = evalSelf(cx, scope);
-		var p = cx.getPrototype(scope, self);
-		cx.debugger.pushSelf(cx, scope, self);
-		p.set(cx, scope, self, name, value);
-		cx.debugger.set(cx, scope, this, value);
+		if (!cx.wrap(scope, evalSelf(cx, scope)).set(cx, scope, name, value)) {
+			throw new NamedMemberNotFoundError(name).pos(this);
+		}
 	}
 
 	@Override
 	public boolean delete(Context cx, Scope scope) {
-		var self = evalSelf(cx, scope);
-		var p = cx.getPrototype(scope, self);
-		cx.debugger.pushSelf(cx, scope, self);
-		p.delete(cx, scope, self, name);
-		cx.debugger.delete(cx, scope, this);
-		return true;
+		return cx.wrap(scope, evalSelf(cx, scope)).delete(cx, scope, name);
 	}
 
 	@Override
@@ -82,24 +71,5 @@ public class AstGetByName extends AstGetFrom {
 		}
 
 		return this;
-	}
-
-	public static class AstPrototype extends AstExpression {
-		public final Object from;
-
-		public AstPrototype(Object from) {
-			this.from = from;
-		}
-
-		@Override
-		public Object eval(Context cx, Scope scope) {
-			return cx.getPrototype(scope, cx.eval(scope, from));
-		}
-
-		@Override
-		public void append(AstStringBuilder builder) {
-			builder.appendValue(from);
-			builder.append(".__prototype__");
-		}
 	}
 }

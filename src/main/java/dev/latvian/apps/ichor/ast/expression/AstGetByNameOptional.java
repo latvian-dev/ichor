@@ -19,18 +19,12 @@ public class AstGetByNameOptional extends AstGetByName {
 
 	@Override
 	public Object eval(Context cx, Scope scope) {
-		var self = evalSelf(cx, scope);
-		var p = cx.getPrototype(scope, self);
-		cx.debugger.pushSelf(cx, scope, self);
-
-		var r = p.get(cx, scope, self, name);
+		var r = cx.wrap(scope, evalSelf(cx, scope)).get(cx, scope, name);
 
 		if (Special.isInvalid(r)) {
-			cx.debugger.get(cx, scope, this, "undefined");
 			return Special.UNDEFINED;
 		}
 
-		cx.debugger.get(cx, scope, this, r);
 		return r;
 	}
 }

@@ -17,7 +17,7 @@ public class AstFunctionDeclareStatement extends AstDeclareStatement {
 
 	@Override
 	public void interpret(Context cx, Scope scope) {
-		scope.addImmutable(function.functionName, function.eval(cx, scope));
+		scope.addImmutable(function.functionName, cx.eval(scope, function));
 	}
 
 	@Override

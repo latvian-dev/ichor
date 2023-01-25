@@ -1,8 +1,9 @@
-package dev.latvian.apps.ichor.ast.expression;
+package dev.latvian.apps.ichor.js.ast;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
+import dev.latvian.apps.ichor.ast.expression.AstExpression;
 
 public class AstArguments extends AstExpression {
 	@Override

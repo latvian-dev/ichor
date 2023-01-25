@@ -8,7 +8,7 @@ public interface SlotMap {
 	@Nullable
 	Slot getSlot(String name);
 
-	void setSlot(String name, Slot slot);
+	void setSlot(Slot slot);
 
 	void removeSlot(String name);
 

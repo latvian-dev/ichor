@@ -63,8 +63,9 @@ public final class JavaMembers {
 		if (methods == null) {
 			methods = new SigMethod[1];
 		} else {
-			methods = new SigMethod[methods.length + 1];
-			System.arraycopy(methods, 0, methods, 1, methods.length - 1);
+			var methods1 = new SigMethod[methods.length + 1];
+			System.arraycopy(methods, 0, methods1, 0, methods.length);
+			methods = methods1;
 		}
 
 		methods[methods.length - 1] = new SigMethod(signature, m);

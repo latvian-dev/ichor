@@ -14,7 +14,7 @@ public class EmptySlotMap implements SlotMap {
 	}
 
 	@Override
-	public void setSlot(String name, Slot slot) {
+	public void setSlot(Slot slot) {
 	}
 
 	@Override
@@ -28,6 +28,6 @@ public class EmptySlotMap implements SlotMap {
 
 	@Override
 	public SlotMap upgradeSlotMap() {
-		return new SlotHashMap();
+		return new SlotArrayMap();
 	}
 }

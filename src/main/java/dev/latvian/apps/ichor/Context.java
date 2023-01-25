@@ -2,13 +2,12 @@ package dev.latvian.apps.ichor;
 
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.CastError;
-import dev.latvian.apps.ichor.java.ClassJS;
 import dev.latvian.apps.ichor.java.JavaClassPrototype;
+import dev.latvian.apps.ichor.js.JavaObjectJS;
 import dev.latvian.apps.ichor.js.NumberJS;
 import dev.latvian.apps.ichor.prototype.Prototype;
-import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -16,26 +15,23 @@ import java.util.Map;
 import java.util.Objects;
 
 public abstract class Context {
-	public static final ContextProperty<Integer> MAX_SCOPE_DEPTH = new ContextProperty<>("maxScopeDepth", 1000);
-	public static final ContextProperty<Long> INTERPRETING_TIMEOUT = new ContextProperty<>("interpretingTimeout", 30000L);
-	public static final ContextProperty<Long> TOKEN_STREAM_TIMEOUT = new ContextProperty<>("tokenStreamTimeout", 5000L);
-
-	public Debugger debugger;
-	public final List<Prototype> safePrototypes;
-	public Prototype stringPrototype;
-	public Prototype numberPrototype;
-	public Prototype booleanPrototype;
-	public Prototype listPrototype;
-	public Prototype mapPrototype;
-	public Prototype classPrototype;
-	private Map<Class<?>, Prototype> classPrototypeCache;
+	private Map<Class<?>, JavaClassPrototype> classPrototypeCache;
 	private final Map<ContextProperty<?>, Object> properties;
+	private int maxScopeDepth;
+	private long interpretingTimeout;
+	private long tokenStreamTimeout;
+	private Object environment;
 
 	public Context() {
-		debugger = Debugger.DEFAULT;
-		safePrototypes = new ArrayList<>();
-		classPrototype = ClassJS.PROTOTYPE;
 		properties = new IdentityHashMap<>();
+		maxScopeDepth = 1000;
+		interpretingTimeout = 30000L;
+		tokenStreamTimeout = 5000L;
+		environment = Special.NOT_FOUND;
+	}
+
+	public List<Prototype> getSafePrototypes() {
+		return Collections.emptyList();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -48,8 +44,58 @@ public abstract class Context {
 		properties.put(property, value);
 	}
 
+	public int getMaxScopeDepth() {
+		return maxScopeDepth;
+	}
+
+	public void setMaxScopeDepth(int maxScopeDepth) {
+		this.maxScopeDepth = maxScopeDepth;
+	}
+
+	public long getInterpretingTimeout() {
+		return interpretingTimeout;
+	}
+
+	public void setInterpretingTimeout(long interpretingTimeout) {
+		this.interpretingTimeout = interpretingTimeout;
+	}
+
+	public long getTokenStreamTimeout() {
+		return tokenStreamTimeout;
+	}
+
+	public void setTokenStreamTimeout(long tokenStreamTimeout) {
+		this.tokenStreamTimeout = tokenStreamTimeout;
+	}
+
+	public Object getEnvironment() {
+		return environment;
+	}
+
+	public void setEnvironment(Object environment) {
+		this.environment = environment;
+	}
+
 	public Object eval(Scope scope, Object o) {
-		return o instanceof Callable ? o : o instanceof Evaluable eval ? eval.eval(this, scope) : o;
+		if (o instanceof WrappedObject wrapped) {
+			return wrapped.unwrap();
+		} else if (o instanceof Callable) {
+			return o;
+		} else if (o instanceof Evaluable eval) {
+			return eval.eval(this, scope);
+		} else {
+			return o;
+		}
+	}
+
+	public WrappedObject wrap(Scope scope, Object o) {
+		if (o == null) {
+			return Special.NULL;
+		} else if (o instanceof WrappedObject w) {
+			return w;
+		} else {
+			return new JavaObjectJS<>(o, getClassPrototype0(o.getClass()));
+		}
 	}
 
 	public void asString(Scope scope, Object o, StringBuilder builder, boolean escape) {
@@ -68,7 +114,7 @@ public abstract class Context {
 		} else if (o instanceof Evaluable eval) {
 			eval.evalString(this, scope, builder);
 		} else {
-			getPrototype(scope, o).asString(this, scope, o, builder, escape);
+			wrap(scope, o).asString(this, scope, builder, escape);
 		}
 	}
 
@@ -93,7 +139,7 @@ public abstract class Context {
 			return builder.toString();
 		} else {
 			var builder = new StringBuilder();
-			getPrototype(scope, o).asString(this, scope, o, builder, escape);
+			wrap(scope, o).asString(this, scope, builder, escape);
 			return builder.toString();
 		}
 	}
@@ -116,7 +162,7 @@ public abstract class Context {
 			return ((Evaluable) o).evalDouble(this, scope);
 		}
 
-		return getPrototype(scope, o).asNumber(this, scope, o);
+		return wrap(scope, o).asNumber(this, scope);
 	}
 
 	public double asDouble(Scope scope, Object o) {
@@ -127,10 +173,22 @@ public abstract class Context {
 		} else if (o instanceof Boolean) {
 			return (Boolean) o ? 1D : 0D;
 		} else if (o instanceof CharSequence) {
+			var str = o.toString();
+
+			try {
+				return Integer.decode(str);
+			} catch (Exception ignored) {
+			}
+
+			try {
+				return Long.decode(str);
+			} catch (Exception ignored) {
+			}
+
 			try {
 				return Double.parseDouble(o.toString());
 			} catch (Exception ex) {
-				return 0;
+				return Double.NaN;
 			}
 		} else if (o instanceof Evaluable) {
 			return ((Evaluable) o).evalDouble(this, scope);
@@ -193,7 +251,7 @@ public abstract class Context {
 			return ((Evaluable) o).evalBoolean(this, scope);
 		}
 
-		return getPrototype(scope, o).asBoolean(this, scope, o);
+		return wrap(scope, o).asBoolean(this, scope);
 	}
 
 	public char asChar(Scope scope, Object o) {
@@ -246,52 +304,14 @@ public abstract class Context {
 	}
 
 	public Prototype getPrototype(Scope scope, Object o) {
-		if (o == null) {
-			return Special.NULL.prototype;
-		} else if (o instanceof CharSequence) {
-			return stringPrototype;
-		} else if (o instanceof Number) {
-			return numberPrototype;
-		} else if (o instanceof Boolean) {
-			return booleanPrototype;
-		} else if (o instanceof PrototypeSupplier s) {
-			return s.getPrototype(this, scope);
-		} else if (o instanceof Class) {
-			return classPrototype;
-		} else if (o instanceof Map<?, ?>) {
-			return mapPrototype;
-		} else if (o instanceof Iterable<?> || o.getClass().isArray()) {
-			return listPrototype;
-		}
-
 		return getClassPrototype0(o.getClass());
 	}
 
 	public Prototype getClassPrototype(Class<?> c) {
-		if (c == null || c == Void.class || c == Void.TYPE) {
-			return Special.NULL.prototype;
-		} else if (c == String.class || c == Character.class || c == Character.TYPE) {
-			return stringPrototype;
-		} else if (c == Boolean.class || c == Boolean.TYPE) {
-			return booleanPrototype;
-		} else if (c.isPrimitive()) {
-			return numberPrototype;
-		} else if (c == Class.class) {
-			return classPrototype;
-		} else if (Number.class.isAssignableFrom(c)) {
-			return numberPrototype;
-		} else if (CharSequence.class.isAssignableFrom(c)) {
-			return stringPrototype;
-		} else if (Map.class.isAssignableFrom(c)) {
-			return mapPrototype;
-		} else if (Iterable.class.isAssignableFrom(c) || c.isArray()) {
-			return listPrototype;
-		}
-
 		return getClassPrototype0(c);
 	}
 
-	private Prototype getClassPrototype0(Class<?> c) {
+	protected JavaClassPrototype getClassPrototype0(Class<?> c) {
 		if (classPrototypeCache == null) {
 			classPrototypeCache = new HashMap<>();
 		}
@@ -318,18 +338,18 @@ public abstract class Context {
 			return Math.abs(l.doubleValue() - r.doubleValue()) < 0.00001D;
 		} else if (left instanceof CharSequence || left instanceof Character || right instanceof CharSequence || right instanceof Character) {
 			return asString(scope, left, false).equals(asString(scope, right, false));
+		} else {
+			return wrap(scope, left).equals(this, scope, right, shallow);
 		}
-
-		return Objects.equals(left, right); // prototype equals
 	}
 
 	public int compareTo(Scope scope, Object left, Object right) {
 		if (left == right || Objects.equals(left, right)) {
 			return 0;
 		} else if (left instanceof Number l && right instanceof Number r) {
-			return Double.compare(l.doubleValue(), r.doubleValue());
+			return Math.abs(l.doubleValue() - r.doubleValue()) < 0.00001D ? 0 : Double.compare(l.doubleValue(), r.doubleValue());
 		} else {
-			return 0; // prototype compare
+			return wrap(scope, left).compareTo(this, scope, right);
 		}
 	}
 }

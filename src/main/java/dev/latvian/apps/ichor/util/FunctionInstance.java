@@ -47,8 +47,7 @@ public class FunctionInstance implements CallableTypeAdapter {
 			s.scopeArguments = new Object[function.params.length];
 
 			if (!(function.hasMod(AstFunction.Mod.ARROW) || function.hasMod(AstFunction.Mod.CLASS))) {
-				s.scopeSuper = s.scopeThis;
-				s.scopeThis = s;
+				s.setScopeThis(s);
 			}
 
 			for (int i = 0; i < function.params.length; i++) {

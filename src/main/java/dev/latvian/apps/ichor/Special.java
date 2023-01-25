@@ -6,7 +6,7 @@ import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.token.TokenPos;
 import org.jetbrains.annotations.Nullable;
 
-public class Special implements Token, Evaluable {
+public class Special implements Token, Evaluable, WrappedObject {
 	public static final Special NOT_FOUND = new Special("<not found>"); // Internal use only
 	public static final Special NULL = new Special("null");
 	public static final Special UNDEFINED = new Special("undefined");
@@ -66,5 +66,10 @@ public class Special implements Token, Evaluable {
 	@Override
 	public Evaluable toEvaluable(Parser parser, TokenPos pos) {
 		return this;
+	}
+
+	@Override
+	public Object unwrap() {
+		return null;
 	}
 }

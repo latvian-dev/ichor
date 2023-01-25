@@ -4,24 +4,18 @@ import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
+import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.error.ConstructorError;
-import dev.latvian.apps.ichor.js.NumberJS;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PrototypeBuilder implements Prototype, Callable {
+public class PrototypeBuilder implements Prototype, WrappedObject, Callable {
 	private final String prototypeName;
-	protected Prototype parent;
 	private PrototypeConstructor constructor;
 	private Map<String, PrototypeProperty> members;
 	private Map<String, PrototypeStaticProperty> staticMembers;
-	private PrototypeAsString asString;
-	private PrototypeAsNumber asNumber;
-	private PrototypeAsBoolean asBoolean;
 	private Prototype customMembers;
 
 	public PrototypeBuilder(String n) {
@@ -78,27 +72,29 @@ public class PrototypeBuilder implements Prototype, Callable {
 		return staticProperty(name, new PrototypeConstant(value));
 	}
 
-	public PrototypeBuilder asString(PrototypeAsString value) {
-		asString = value;
-		return this;
-	}
-
-	public PrototypeBuilder asNumber(PrototypeAsNumber value) {
-		asNumber = value;
-		return this;
-	}
-
-	public PrototypeBuilder asBoolean(PrototypeAsBoolean value) {
-		asBoolean = value;
-		return this;
-	}
-
 	public PrototypeBuilder customMembers(Prototype value) {
 		customMembers = value;
 		return this;
 	}
 
 	// Impl //
+
+
+	@Override
+	@Nullable
+	public Object get(Context cx, Scope scope, String name) {
+		initLazy();
+
+		if (staticMembers != null) {
+			var m = staticMembers.get(name);
+
+			if (m != null) {
+				return m.get(cx, scope);
+			}
+		}
+
+		return Special.NOT_FOUND;
+	}
 
 	@Override
 	@Nullable
@@ -115,35 +111,26 @@ public class PrototypeBuilder implements Prototype, Callable {
 			}
 		}
 
+		if (customMembers != null && self != null) {
+			return customMembers.get(cx, scope, self, name);
+		}
+
+		return Special.NOT_FOUND;
+	}
+
+	@Override
+	public boolean set(Context cx, Scope scope, String name, @Nullable Object value) {
+		initLazy();
+
 		if (staticMembers != null) {
 			var m = staticMembers.get(name);
 
 			if (m != null) {
-				return m.get(cx, scope);
+				return m.set(cx, scope, value);
 			}
 		}
 
-		if (customMembers != null && self != null) {
-			var m = customMembers.get(cx, scope, self, name);
-
-			if (m != Special.NOT_FOUND) {
-				return m;
-			}
-		}
-
-		var parent0 = parent;
-
-		while (parent0 != null) {
-			var v = parent0.get(cx, scope, self, name);
-
-			if (v != Special.NOT_FOUND) {
-				return v;
-			}
-
-			parent0 = parent0.getPrototype(cx, scope);
-		}
-
-		return Special.NOT_FOUND;
+		return false;
 	}
 
 	@Override
@@ -160,28 +147,8 @@ public class PrototypeBuilder implements Prototype, Callable {
 			}
 		}
 
-		if (staticMembers != null) {
-			var m = staticMembers.get(name);
-
-			if (m != null) {
-				return m.set(cx, scope, value);
-			}
-		}
-
 		if (customMembers != null && self != null) {
-			if (customMembers.set(cx, scope, self, name, value)) {
-				return true;
-			}
-		}
-
-		var parent0 = parent;
-
-		while (parent0 != null) {
-			if (parent0.set(cx, scope, self, name, value)) {
-				return true;
-			}
-
-			parent0 = parent0.getPrototype(cx, scope);
+			return customMembers.set(cx, scope, self, name, value);
 		}
 
 		return false;
@@ -192,42 +159,10 @@ public class PrototypeBuilder implements Prototype, Callable {
 		initLazy();
 
 		if (customMembers != null && self != null) {
-			if (customMembers.delete(cx, scope, self, name)) {
-				return true;
-			}
-		}
-
-		var parent0 = parent;
-
-		while (parent0 != null) {
-			if (parent0.delete(cx, scope, self, name)) {
-				return true;
-			}
-
-			parent0 = parent0.getPrototype(cx, scope);
+			return customMembers.delete(cx, scope, self, name);
 		}
 
 		return false;
-	}
-
-	@Override
-	public Collection<?> keys(Context cx, Scope scope, Object self) {
-		return customMembers != null ? customMembers.keys(cx, scope, self) : Collections.emptySet();
-	}
-
-	@Override
-	public Collection<?> values(Context cx, Scope scope, Object self) {
-		return customMembers != null ? customMembers.values(cx, scope, self) : Collections.emptySet();
-	}
-
-	@Override
-	public Collection<?> entries(Context cx, Scope scope, Object self) {
-		return customMembers != null ? customMembers.entries(cx, scope, self) : Collections.emptySet();
-	}
-
-	@Override
-	public int getMemberCount(Context cx, Scope scope, Object self) {
-		return customMembers != null ? customMembers.getMemberCount(cx, scope, self) : 0;
 	}
 
 	@Override
@@ -236,23 +171,7 @@ public class PrototypeBuilder implements Prototype, Callable {
 		initLazy();
 
 		if (customMembers != null && self != null) {
-			var m = customMembers.get(cx, scope, self, index);
-
-			if (m != Special.NOT_FOUND) {
-				return m;
-			}
-		}
-
-		var parent0 = parent;
-
-		while (parent0 != null) {
-			var v = parent0.get(cx, scope, self, index);
-
-			if (v != Special.NOT_FOUND) {
-				return v;
-			}
-
-			parent0 = parent0.getPrototype(cx, scope);
+			return customMembers.get(cx, scope, self, index);
 		}
 
 		return Special.NOT_FOUND;
@@ -263,19 +182,7 @@ public class PrototypeBuilder implements Prototype, Callable {
 		initLazy();
 
 		if (customMembers != null && self != null) {
-			if (customMembers.set(cx, scope, self, index, value)) {
-				return true;
-			}
-		}
-
-		var parent0 = parent;
-
-		while (parent0 != null) {
-			if (parent0.set(cx, scope, self, index, value)) {
-				return true;
-			}
-
-			parent0 = parent0.getPrototype(cx, scope);
+			return customMembers.set(cx, scope, self, index, value);
 		}
 
 		return false;
@@ -286,19 +193,7 @@ public class PrototypeBuilder implements Prototype, Callable {
 		initLazy();
 
 		if (customMembers != null && self != null) {
-			if (customMembers.delete(cx, scope, self, index)) {
-				return true;
-			}
-		}
-
-		var parent0 = parent;
-
-		while (parent0 != null) {
-			if (parent0.delete(cx, scope, self, index)) {
-				return true;
-			}
-
-			parent0 = parent0.getPrototype(cx, scope);
+			return customMembers.delete(cx, scope, self, index);
 		}
 
 		return false;
@@ -313,32 +208,5 @@ public class PrototypeBuilder implements Prototype, Callable {
 		}
 
 		throw new ConstructorError(this);
-	}
-
-	@Override
-	public void asString(Context cx, Scope scope, Object self, StringBuilder builder, boolean escape) {
-		if (asString != null) {
-			asString.asString(cx, scope, self, builder, escape);
-		} else {
-			builder.append(self);
-		}
-	}
-
-	@Override
-	public Number asNumber(Context cx, Scope scope, Object self) {
-		if (asNumber != null) {
-			return asNumber.asNumber(cx, scope, self);
-		}
-
-		return NumberJS.ONE;
-	}
-
-	@Override
-	public boolean asBoolean(Context cx, Scope scope, Object self) {
-		if (asBoolean != null) {
-			return asBoolean.asBoolean(cx, scope, self);
-		}
-
-		return true;
 	}
 }

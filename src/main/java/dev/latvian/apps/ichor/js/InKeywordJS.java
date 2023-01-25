@@ -1,7 +1,6 @@
 package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.ast.expression.binary.AstBinary;
-import dev.latvian.apps.ichor.ast.expression.binary.AstIn;
 import dev.latvian.apps.ichor.token.KeywordToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
 
