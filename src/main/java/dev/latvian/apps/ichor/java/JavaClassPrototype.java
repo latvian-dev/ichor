@@ -1,12 +1,21 @@
 package dev.latvian.apps.ichor.java;
 
 import dev.latvian.apps.ichor.Context;
+import dev.latvian.apps.ichor.Scope;
+import dev.latvian.apps.ichor.Special;
+import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
+import dev.latvian.apps.ichor.prototype.PrototypeProperty;
+import dev.latvian.apps.ichor.prototype.PrototypeStaticProperty;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class JavaClassPrototype extends PrototypeBuilder {
 	public static boolean isSingleMethodInterface(Class<?> type) {
@@ -51,6 +60,9 @@ public class JavaClassPrototype extends PrototypeBuilder {
 	public final Class<?> type;
 	private boolean shouldInit;
 	private Boolean isSingleMethodInterface;
+	private Prototype[] parents;
+	private Map<String, PrototypeProperty> localMembers;
+	private Map<String, PrototypeStaticProperty> staticMembers;
 
 	public JavaClassPrototype(Context cx, Class<?> type) {
 		super(type.getName());
@@ -59,63 +71,81 @@ public class JavaClassPrototype extends PrototypeBuilder {
 		this.shouldInit = true;
 	}
 
-	@Override
 	protected void initLazy() {
 		if (shouldInit) {
 			shouldInit = false;
-
-			var localMap = new HashMap<String, JavaMembers>();
-			var staticMap = new HashMap<String, JavaMembers>();
-
-			try {
-				for (var f : type.getDeclaredFields()) {
-					int mod = f.getModifiers();
-					var map = Modifier.isStatic(mod) ? staticMap : localMap;
-					var name = f.getName();
-
-					var members = map.computeIfAbsent(name, JavaMembers::new);
-
-					if (Modifier.isPublic(mod) && !Modifier.isTransient(mod)) {
-						members.addField(f);
-					}
-				}
-
-				for (var m : type.getDeclaredMethods()) {
-					int mod = m.getModifiers();
-					var map = Modifier.isStatic(mod) ? staticMap : localMap;
-					var name = m.getName();
-
-					var members = map.computeIfAbsent(name, JavaMembers::new);
-
-					if (Modifier.isPublic(mod)) {
-						members.addMethod(m, map);
-					}
-				}
-			} catch (Exception ex) {
-				throw new ClassLoadingError(type, ex);
-			}
-
-			for (var e : new ArrayList<>(localMap.values())) {
-				e.addFieldAccessors(localMap);
-			}
-
-			for (var e : new ArrayList<>(staticMap.values())) {
-				e.addFieldAccessors(staticMap);
-			}
-
-			for (var e : localMap.values()) {
-				e.prepare(this);
-				property(e.name, new LocalJavaMembers(e));
-			}
-
-			for (var e : staticMap.values()) {
-				e.prepare(this);
-				staticProperty(e.name, new StaticJavaMembers(e));
-			}
-
-			property("class", (cx, scope, self) -> self.getClass());
-			constant("class", type);
+			initLazy0();
 		}
+	}
+
+	protected void initLazy0() {
+		var localMap = new HashMap<String, JavaMembers>();
+		var staticMap = new HashMap<String, JavaMembers>();
+
+		try {
+			for (var f : type.getDeclaredFields()) {
+				int mod = f.getModifiers();
+				var map = Modifier.isStatic(mod) ? staticMap : localMap;
+				var name = f.getName();
+
+				var members = map.computeIfAbsent(name, JavaMembers::new);
+
+				if (Modifier.isPublic(mod) && !Modifier.isTransient(mod)) {
+					members.addField(f);
+				}
+			}
+
+			for (var m : type.getDeclaredMethods()) {
+				int mod = m.getModifiers();
+				var map = Modifier.isStatic(mod) ? staticMap : localMap;
+				var name = m.getName();
+
+				var members = map.computeIfAbsent(name, JavaMembers::new);
+
+				if (Modifier.isPublic(mod)) {
+					members.addMethod(m, map);
+				}
+			}
+		} catch (Exception ex) {
+			throw new ClassLoadingError(type, ex);
+		}
+
+		for (var e : new ArrayList<>(localMap.values())) {
+			e.addFieldAccessors(localMap);
+		}
+
+		for (var e : new ArrayList<>(staticMap.values())) {
+			e.addFieldAccessors(staticMap);
+		}
+
+		localMembers = localMap.isEmpty() ? Map.of() : new HashMap<>(localMap.size());
+		staticMembers = staticMap.isEmpty() ? Map.of() : new HashMap<>(staticMap.size());
+
+		for (var e : localMap.values()) {
+			e.prepare(this);
+			localMembers.put(e.name, new LocalJavaMembers(e));
+		}
+
+		for (var e : staticMap.values()) {
+			e.prepare(this);
+			staticMembers.put(e.name, new StaticJavaMembers(e));
+		}
+
+		var p = new ArrayList<Prototype>();
+
+		var s = type.getSuperclass();
+
+		if (s != null && s != Object.class) {
+			p.add(context.getClassPrototype(s));
+		}
+
+		for (var i : type.getInterfaces()) {
+			if (i != Serializable.class && i != Cloneable.class && i != Comparable.class) {
+				p.add(context.getClassPrototype(i));
+			}
+		}
+
+		parents = p.toArray(new Prototype[0]);
 	}
 
 	@Override
@@ -123,6 +153,7 @@ public class JavaClassPrototype extends PrototypeBuilder {
 		return type.getName();
 	}
 
+	@Override
 	public boolean isSingleMethodInterface() {
 		if (isSingleMethodInterface == null) {
 			isSingleMethodInterface = isSingleMethodInterface(type);
@@ -131,62 +162,97 @@ public class JavaClassPrototype extends PrototypeBuilder {
 		return isSingleMethodInterface;
 	}
 
-	/*
 	@Override
-	public Ref getParentRef() {
-		if (parent == null) {
-			var set = new ArrayList<Ref>();
+	@Nullable
+	public Object get(Context cx, Scope scope, String name) {
+		initLazy();
 
-			if (!type.isPrimitive()) {
-				var s = type.getSuperclass();
+		var m = staticMembers.get(name);
 
-				if (s != null && s != Object.class) {
-					set.add(context.getClassPrototype(s));
-				}
+		if (m != null) {
+			var r = m.get(cx, scope);
 
-				for (var iface : type.getInterfaces()) {
-					set.add(context.getClassPrototype(iface));
-				}
+			if (r != Special.NOT_FOUND) {
+				return r;
 			}
-
-			parent = RefArray.of(set);
 		}
 
-		return parent;
+		for (var p : parents) {
+			if (p instanceof WrappedObject w) {
+				var r = w.get(cx, scope, name);
+
+				if (r != Special.NOT_FOUND) {
+					return r;
+				}
+			}
+		}
+
+		return name.equals("class") ? type : super.get(cx, scope, name);
 	}
 
 	@Override
-	public Object construct(Context cx, Object[] args, boolean hasNew) {
-		if (!hasNew) {
-			if (args.length == 1) {
-				return cx.as(args[0], type);
-			}
+	public boolean set(Context cx, Scope scope, String name, @Nullable Object value) {
+		initLazy();
 
-			return Special.NOT_FOUND;
+		var m = staticMembers.get(name);
+
+		if (m != null && m.set(cx, scope, value)) {
+			return true;
 		}
 
-		if (constructors == null) {
-			synchronized (this) {
-				var carr = type.getDeclaredConstructors();
-				var list = new ArrayList<SigConstructor>(carr.length);
-
-				for (var c : carr) {
-					if (Modifier.isPublic(c.getModifiers()) && !c.isAnnotationPresent(HideFromJS.class)) {
-						list.add(new SigConstructor(Signature.of(c), c));
-					}
+		for (var p : parents) {
+			if (p instanceof WrappedObject w) {
+				if (w.set(cx, scope, name, value)) {
+					return true;
 				}
-
-				constructors = list.toArray(new SigConstructor[0]);
 			}
 		}
 
-		for (var c : constructors) {
-			if (c.signature.types.length == args.length) {
-
-			}
-		}
-
-		return Special.NOT_FOUND;
+		return !name.equals("class") && super.set(cx, scope, name, value);
 	}
-	 */
+
+	@Override
+	@Nullable
+	public Object get(Context cx, Scope scope, Object self, String name) {
+		initLazy();
+
+		var m = localMembers.get(name);
+
+		if (m != null) {
+			var r = m.get(cx, scope, self);
+
+			if (r != Special.NOT_FOUND) {
+				return r;
+			}
+		}
+
+		for (var p : parents) {
+			var r = p.get(cx, scope, self, name);
+
+			if (r != Special.NOT_FOUND) {
+				return r;
+			}
+		}
+
+		return name.equals("class") ? self.getClass() : super.get(cx, scope, self, name);
+	}
+
+	@Override
+	public boolean set(Context cx, Scope scope, Object self, String name, @Nullable Object value) {
+		initLazy();
+
+		var m = localMembers.get(name);
+
+		if (m != null && m.set(cx, scope, self, value)) {
+			return true;
+		}
+
+		for (var p : parents) {
+			if (p.set(cx, scope, self, name, value)) {
+				return true;
+			}
+		}
+
+		return !name.equals("class") && super.set(cx, scope, self, name, value);
+	}
 }

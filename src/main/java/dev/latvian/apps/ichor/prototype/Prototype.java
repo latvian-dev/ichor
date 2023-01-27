@@ -13,6 +13,10 @@ public interface Prototype extends PrototypeSupplier {
 
 	String getPrototypeName();
 
+	default boolean isSingleMethodInterface() {
+		return false;
+	}
+
 	@Nullable
 	default Object get(Context cx, Scope scope, Object self, String name) {
 		return Special.NOT_FOUND;

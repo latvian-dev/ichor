@@ -3,25 +3,15 @@ package dev.latvian.apps.ichor.js;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.java.JavaClassPrototype;
 import dev.latvian.apps.ichor.prototype.Prototype;
-import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class MapJS extends JavaObjectJS<Map<String, ?>> {
-	public static final Prototype PROTOTYPE = new PrototypeBuilder("Object") {
-		@Override
-		public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-			return new LinkedHashMap<>();
-		}
-	};
-
-	public MapJS(Map<String, ?> object, JavaClassPrototype prototype) {
+	public MapJS(Map<String, ?> object, Prototype prototype) {
 		super(object, prototype);
 	}
 

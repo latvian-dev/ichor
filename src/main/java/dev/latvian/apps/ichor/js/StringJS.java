@@ -1,59 +1,21 @@
 package dev.latvian.apps.ichor.js;
 
+import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
-import dev.latvian.apps.ichor.error.WIPFeatureError;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
+import dev.latvian.apps.ichor.util.Functions;
+import dev.latvian.apps.ichor.util.NativeArrayList;
+import org.jetbrains.annotations.Nullable;
 
 public class StringJS implements WrappedObject {
 	private static String s(Object self) {
 		return self.toString();
 	}
-
-	public static final Prototype PROTOTYPE = new PrototypeBuilder("String") {
-		@Override
-		public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-			return args.length == 0 ? "" : cx.asString(scope, args[0], false);
-		}
-	}
-			.staticFunction("fromCharCode", StringJS::fromCharCode)
-			.staticFunction("fromCodePoint", StringJS::fromCodePoint)
-			.staticFunction("raw", StringJS::raw)
-			.property("length", StringJS::length)
-			.function("charAt", StringJS::charAt)
-			.function("charCodeAt", StringJS::unimpl)
-			.function("indexOf", StringJS::unimpl)
-			.function("lastIndexOf", StringJS::unimpl)
-			.function("split", StringJS::unimpl)
-			.function("substring", StringJS::unimpl)
-			.function("toLowerCase", StringJS::unimpl)
-			.function("toUpperCase", StringJS::unimpl)
-			.function("substr", StringJS::unimpl)
-			.function("concat", StringJS::unimpl)
-			.function("slice", StringJS::unimpl)
-			.function("equalsIgnoreCase", StringJS::unimpl)
-			.function("match", StringJS::unimpl)
-			.function("search", StringJS::unimpl)
-			.function("replace", StringJS::unimpl)
-			.function("localeCompare", StringJS::unimpl)
-			.function("toLocaleLowerCase", StringJS::unimpl)
-			.function("trim", StringJS::trim)
-			.function("trimLeft", StringJS::unimpl)
-			.function("trimRight", StringJS::unimpl)
-			.function("includes", StringJS::unimpl)
-			.function("startsWith", StringJS::unimpl)
-			.function("endsWith", StringJS::unimpl)
-			.function("normalize", StringJS::unimpl)
-			.function("repeat", StringJS::unimpl)
-			.function("codePointAt", StringJS::unimpl)
-			.function("padStart", StringJS::unimpl)
-			.function("padEnd", StringJS::unimpl)
-			.function("trimStart", StringJS::unimpl)
-			.function("trimEnd", StringJS::unimpl);
 
 	public static class InvalidCodePointError extends ScriptError {
 		public final String codePoint;
@@ -64,15 +26,17 @@ public class StringJS implements WrappedObject {
 		}
 	}
 
-	private static CharSequence cs(Object self) {
-		return self instanceof CharSequence c ? c : self.toString();
-	}
+	private static final Callable RAW = Functions.ofN((cx, scope, args) -> {
+		var sb = new StringBuilder();
 
-	private static String unimpl(Context cx, Scope scope, Object self, Object[] args) {
-		throw new WIPFeatureError();
-	}
+		for (var o : NativeArrayList.of(args[0])) {
+			sb.append(cx.asString(scope, o, false));
+		}
 
-	private static String fromCharCode(Context cx, Scope scope, Object[] args) {
+		return sb.toString();
+	});
+
+	private static final Callable FROM_CHAR_CODE = Functions.ofN((cx, scope, args) -> {
 		int n = args.length;
 
 		if (n < 1) {
@@ -86,9 +50,9 @@ public class StringJS implements WrappedObject {
 		}
 
 		return new String(chars);
-	}
+	});
 
-	private static String fromCodePoint(Context cx, Scope scope, Object[] args) {
+	private static final Callable FROM_CODE_POINT = Functions.ofN((cx, scope, args) -> {
 		int n = args.length;
 
 		if (n < 1) {
@@ -108,23 +72,28 @@ public class StringJS implements WrappedObject {
 		}
 
 		return new String(codePoints, 0, n);
-	}
+	});
 
-	private static String raw(Context cx, Scope scope, Object[] args) {
-		return cx.asString(scope, args[0], false);
-	}
+	private static final Functions.Bound<String> CHAR_AT = (cx, scope, str, args) -> str.charAt(cx.asInt(scope, args[0]));
+	private static final Functions.Bound<String> TRIM = (cx, scope, str, args) -> str.trim();
 
-	private static Object length(Context cx, Scope scope, Object self) {
-		return cs(self).length();
-	}
+	public static final Prototype PROTOTYPE = new PrototypeBuilder("String") {
+		@Override
+		public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
+			return args.length == 0 ? "" : cx.asString(scope, args[0], false);
+		}
 
-	private static Object charAt(Context cx, Scope scope, Object self, Object[] args) {
-		return cs(self).charAt(cx.asInt(scope, args[0]));
-	}
-
-	private static String trim(Context cx, Scope scope, Object self, Object[] args) {
-		return s(self).trim();
-	}
+		@Override
+		@Nullable
+		public Object get(Context cx, Scope scope, String name) {
+			return switch (name) {
+				case "raw" -> RAW;
+				case "fromCharCode" -> FROM_CHAR_CODE;
+				case "fromCodePoint" -> FROM_CODE_POINT;
+				default -> super.get(cx, scope, name);
+			};
+		}
+	};
 
 	public final String self;
 
@@ -143,6 +112,46 @@ public class StringJS implements WrappedObject {
 	}
 
 	@Override
+	@Nullable
+	@SuppressWarnings("DuplicateBranchesInSwitch")
+	public Object get(Context cx, Scope scope, String name) {
+		return switch (name) {
+			case "length" -> self.length();
+			case "charAt" -> Functions.bound(self, CHAR_AT);
+			case "charCodeAt" -> Functions.WIP;
+			case "indexOf" -> Functions.WIP;
+			case "lastIndexOf" -> Functions.WIP;
+			case "split" -> Functions.WIP;
+			case "substring" -> Functions.WIP;
+			case "toLowerCase" -> Functions.WIP;
+			case "toUpperCase" -> Functions.WIP;
+			case "substr" -> Functions.WIP;
+			case "concat" -> Functions.WIP;
+			case "slice" -> Functions.WIP;
+			case "equalsIgnoreCase" -> Functions.WIP;
+			case "match" -> Functions.WIP;
+			case "search" -> Functions.WIP;
+			case "replace" -> Functions.WIP;
+			case "localeCompare" -> Functions.WIP;
+			case "toLocaleLowerCase" -> Functions.WIP;
+			case "trim" -> Functions.bound(self, TRIM);
+			case "trimLeft" -> Functions.WIP;
+			case "trimRight" -> Functions.WIP;
+			case "includes" -> Functions.WIP;
+			case "startsWith" -> Functions.WIP;
+			case "endsWith" -> Functions.WIP;
+			case "normalize" -> Functions.WIP;
+			case "repeat" -> Functions.WIP;
+			case "codePointAt" -> Functions.WIP;
+			case "padStart" -> Functions.WIP;
+			case "padEnd" -> Functions.WIP;
+			case "trimStart" -> Functions.WIP;
+			case "trimEnd" -> Functions.WIP;
+			default -> PROTOTYPE.get(cx, scope, this, name);
+		};
+	}
+
+	@Override
 	public void asString(Context cx, Scope scope, StringBuilder builder, boolean escape) {
 		if (escape) {
 			AstStringBuilder.wrapString(self, builder);
@@ -154,17 +163,7 @@ public class StringJS implements WrappedObject {
 	@Override
 	public Number asNumber(Context cx, Scope scope) {
 		try {
-			return Integer.decode(self);
-		} catch (NumberFormatException ignored) {
-		}
-
-		try {
-			return Long.decode(self);
-		} catch (NumberFormatException ignored) {
-		}
-
-		try {
-			return Double.parseDouble(self);
+			return TokenStreamJS.parseNumber(self);
 		} catch (NumberFormatException ex) {
 			return NumberJS.NaN;
 		}

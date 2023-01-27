@@ -920,6 +920,10 @@ public class ParserJS implements Parser {
 				}
 
 				consume(SymbolTokenJS.RS, ParseErrorType.EXP_RS_KEY);
+			} else if (advanceIf(SymbolTokenJS.TEMPLATE_LITERAL)) {
+				var templateLiteral = templateLiteral(pos);
+				templateLiteral.tag = expr;
+				expr = templateLiteral;
 			} else {
 				break;
 			}
@@ -1051,30 +1055,34 @@ public class ParserJS implements Parser {
 				return "";
 			}
 
-			var parts = new ArrayList<>();
-
-			while (true) {
-				if (advanceIf(SymbolTokenJS.TEMPLATE_LITERAL)) {
-					break;
-				} else if (advanceIf(SymbolTokenJS.TEMPLATE_LITERAL_VAR)) {
-					parts.add(expression());
-					consume(SymbolTokenJS.RC, ParseErrorType.EXP_RC_TEMPLATE_LITERAL);
-				} else {
-					var nextEval = current.token instanceof Token tk ? tk.toEvaluable(this, current.pos) : current.token;
-
-					if (nextEval != null) {
-						parts.add(nextEval);
-						advance();
-					} else {
-						throw new ParseError(current, ParseErrorType.EXP_EXPR.format(current.token));
-					}
-				}
-			}
-
-			return new AstTemplateLiteral(parts.toArray(Empty.OBJECTS)).pos(pos);
+			return templateLiteral(pos);
 		}
 
 		throw new ParseError(pos, ParseErrorType.EXP_EXPR.format(pos.token));
+	}
+
+	private AstTemplateLiteral templateLiteral(TokenPosSupplier pos) {
+		var parts = new ArrayList<>(3);
+
+		while (true) {
+			if (advanceIf(SymbolTokenJS.TEMPLATE_LITERAL)) {
+				break;
+			} else if (advanceIf(SymbolTokenJS.TEMPLATE_LITERAL_VAR)) {
+				parts.add(expression());
+				consume(SymbolTokenJS.RC, ParseErrorType.EXP_RC_TEMPLATE_LITERAL);
+			} else {
+				var nextEval = current.token instanceof Token tk ? tk.toEvaluable(this, current.pos) : current.token;
+
+				if (nextEval != null) {
+					parts.add(nextEval);
+					advance();
+				} else {
+					throw new ParseError(current, ParseErrorType.EXP_EXPR.format(current.token));
+				}
+			}
+		}
+
+		return new AstTemplateLiteral(parts.toArray(Empty.OBJECTS)).pos(pos);
 	}
 
 	private Evaluable functionExpression(int flags) {

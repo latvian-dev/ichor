@@ -3,7 +3,7 @@ package dev.latvian.apps.ichor.js;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
-import dev.latvian.apps.ichor.java.JavaClassPrototype;
+import dev.latvian.apps.ichor.prototype.Prototype;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -12,7 +12,7 @@ import java.util.List;
 
 @SuppressWarnings("rawtypes")
 public class CollectionJS<T extends Collection> extends IterableJS<T> {
-	public CollectionJS(T self, JavaClassPrototype prototype) {
+	public CollectionJS(T self, Prototype prototype) {
 		super(self, prototype);
 	}
 

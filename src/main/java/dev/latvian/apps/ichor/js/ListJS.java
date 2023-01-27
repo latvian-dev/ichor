@@ -3,14 +3,14 @@ package dev.latvian.apps.ichor.js;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
-import dev.latvian.apps.ichor.java.JavaClassPrototype;
+import dev.latvian.apps.ichor.prototype.Prototype;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 @SuppressWarnings("rawtypes")
 public class ListJS<T extends List> extends CollectionJS<T> {
-	public ListJS(T self, JavaClassPrototype prototype) {
+	public ListJS(T self, Prototype prototype) {
 		super(self, prototype);
 	}
 

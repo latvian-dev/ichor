@@ -32,9 +32,6 @@ public class PrototypeBuilder implements Prototype, WrappedObject, Callable {
 		return prototypeName;
 	}
 
-	protected void initLazy() {
-	}
-
 	// Builder //
 
 	public PrototypeBuilder constructor(PrototypeConstructor c) {
@@ -83,8 +80,6 @@ public class PrototypeBuilder implements Prototype, WrappedObject, Callable {
 	@Override
 	@Nullable
 	public Object get(Context cx, Scope scope, String name) {
-		initLazy();
-
 		if (staticMembers != null) {
 			var m = staticMembers.get(name);
 
@@ -99,8 +94,6 @@ public class PrototypeBuilder implements Prototype, WrappedObject, Callable {
 	@Override
 	@Nullable
 	public Object get(Context cx, Scope scope, Object self, String name) {
-		initLazy();
-
 		if (self != null && self != this) {
 			if (members != null) {
 				var m = members.get(name);
@@ -120,8 +113,6 @@ public class PrototypeBuilder implements Prototype, WrappedObject, Callable {
 
 	@Override
 	public boolean set(Context cx, Scope scope, String name, @Nullable Object value) {
-		initLazy();
-
 		if (staticMembers != null) {
 			var m = staticMembers.get(name);
 
@@ -135,8 +126,6 @@ public class PrototypeBuilder implements Prototype, WrappedObject, Callable {
 
 	@Override
 	public boolean set(Context cx, Scope scope, Object self, String name, @Nullable Object value) {
-		initLazy();
-
 		if (self != null && self != this) {
 			if (members != null) {
 				var m = members.get(name);
@@ -156,8 +145,6 @@ public class PrototypeBuilder implements Prototype, WrappedObject, Callable {
 
 	@Override
 	public boolean delete(Context cx, Scope scope, Object self, String name) {
-		initLazy();
-
 		if (customMembers != null && self != null) {
 			return customMembers.delete(cx, scope, self, name);
 		}
@@ -168,8 +155,6 @@ public class PrototypeBuilder implements Prototype, WrappedObject, Callable {
 	@Override
 	@Nullable
 	public Object get(Context cx, Scope scope, Object self, int index) {
-		initLazy();
-
 		if (customMembers != null && self != null) {
 			return customMembers.get(cx, scope, self, index);
 		}
@@ -179,8 +164,6 @@ public class PrototypeBuilder implements Prototype, WrappedObject, Callable {
 
 	@Override
 	public boolean set(Context cx, Scope scope, Object self, int index, @Nullable Object value) {
-		initLazy();
-
 		if (customMembers != null && self != null) {
 			return customMembers.set(cx, scope, self, index, value);
 		}
@@ -190,8 +173,6 @@ public class PrototypeBuilder implements Prototype, WrappedObject, Callable {
 
 	@Override
 	public boolean delete(Context cx, Scope scope, Object self, int index) {
-		initLazy();
-
 		if (customMembers != null && self != null) {
 			return customMembers.delete(cx, scope, self, index);
 		}
@@ -201,8 +182,6 @@ public class PrototypeBuilder implements Prototype, WrappedObject, Callable {
 
 	@Override
 	public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-		initLazy();
-
 		if (constructor != null) {
 			return constructor.construct(cx, scope, args, false);
 		}

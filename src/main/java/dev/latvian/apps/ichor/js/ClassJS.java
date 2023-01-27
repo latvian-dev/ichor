@@ -1,4 +1,4 @@
-package dev.latvian.apps.ichor.java;
+package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
@@ -6,29 +6,20 @@ import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
-import dev.latvian.apps.ichor.util.SimpleFunction;
+import dev.latvian.apps.ichor.util.Functions;
 import org.jetbrains.annotations.Nullable;
 
 public class ClassJS implements WrappedObject {
-	public static final Prototype PROTOTYPE = new PrototypeBuilder("JavaClass")
-			.constant("class", Class.class)
-			.function("isInstance", ClassJS::isInstance)
-			.function("isAssignableFrom", ClassJS::isAssignableFrom);
+	private static final Functions.Bound<Class<?>> IS_INSTANCE = (cx, scope, cl, args) -> cl.isInstance(args[0]);
+	private static final Functions.Bound<Class<?>> IS_ASSIGNABLE_FROM = (cx, scope, cl, args) -> cl.isAssignableFrom(cx.as(scope, args[0], Class.class));
 
-	private static Class<?> c(Object self) {
-		return (Class<?>) self;
-	}
-
-	private static Object isInstance(Context cx, Scope scope, Object self, Object[] args) {
-		return c(self).isInstance(args[0]);
-	}
-
-	private static Object isAssignableFrom(Context cx, Scope scope, Object self, Object[] args) {
-		return c(self).isAssignableFrom(cx.as(scope, args[0], Class.class));
-	}
-
-	private static final SimpleFunction.Callback<Class<?>> IS_INSTANCE = (cx, scope, cl, args) -> cl.isInstance(args[0]);
-	private static final SimpleFunction.Callback<Class<?>> IS_ASSIGNABLE_FROM = (cx, scope, cl, args) -> cl.isAssignableFrom(cx.as(scope, args[0], Class.class));
+	public static final Prototype PROTOTYPE = new PrototypeBuilder("JavaClass") {
+		@Override
+		@Nullable
+		public Object get(Context cx, Scope scope, String name) {
+			return name.equals("class") ? Class.class : super.get(cx, scope, name);
+		}
+	};
 
 	public final Class<?> self;
 
@@ -74,8 +65,8 @@ public class ClassJS implements WrappedObject {
 			case "componentType" -> self.getComponentType();
 			case "canonicalName" -> self.getCanonicalName();
 			case "typeName" -> self.getTypeName();
-			case "isInstance" -> SimpleFunction.of(self, IS_INSTANCE);
-			case "isAssignableFrom" -> SimpleFunction.of(self, IS_ASSIGNABLE_FROM);
+			case "isInstance" -> Functions.bound(self, IS_INSTANCE);
+			case "isAssignableFrom" -> Functions.bound(self, IS_ASSIGNABLE_FROM);
 			default -> Special.NOT_FOUND;
 		};
 	}

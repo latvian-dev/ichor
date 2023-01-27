@@ -635,7 +635,7 @@ public class InterpreterTests {
 	}
 
 	@Test
-	public void prototype() {
+	public void prototypeProperty() {
 		testInterpreter("""
 				console.log("".__prototype__)
 				console.log(String.__prototype__)
@@ -644,6 +644,15 @@ public class InterpreterTests {
 				String
 				String
 				Number
+				""");
+	}
+
+	@Test
+	public void templateLiteralTag() {
+		testInterpreter("""
+				console.log(String.raw`Hi`)
+				""", """
+				Hi
 				""");
 	}
 }

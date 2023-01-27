@@ -2,7 +2,7 @@ package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.java.JavaClassPrototype;
+import dev.latvian.apps.ichor.prototype.Prototype;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -11,7 +11,7 @@ import java.util.List;
 
 @SuppressWarnings("rawtypes")
 public class IterableJS<T extends Iterable> extends JavaObjectJS<T> {
-	public IterableJS(T self, JavaClassPrototype prototype) {
+	public IterableJS(T self, Prototype prototype) {
 		super(self, prototype);
 	}
 

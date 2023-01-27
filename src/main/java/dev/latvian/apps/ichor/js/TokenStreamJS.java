@@ -321,39 +321,38 @@ public class TokenStreamJS implements TokenStream {
 
 		var num = numberTokenCache.get(numStr);
 
-		if (num != null) {
-			return num;
+		if (num == null) {
+			try {
+				num = parseNumber(numStr);
+			} catch (NumberFormatException ex) {
+				throw error("Invalid number: " + numStr);
+			}
+
+			numberTokenCache.put(numStr, num);
 		}
 
+		return num;
+	}
+
+	public static Number parseNumber(String numStr) {
 		if (numStr.startsWith("3.14159")) {
-			numberTokenCache.put(numStr, Math.PI);
-			return Math.PI;
+			return MathJS.PI;
 		} else if (numStr.startsWith("2.71828")) {
-			numberTokenCache.put(numStr, Math.E);
-			return Math.E;
+			return MathJS.E;
 		}
 
 		try {
-			num = Integer.decode(numStr);
-			numberTokenCache.put(numStr, num);
-			return num;
+			return Integer.decode(numStr);
 		} catch (Exception ignored) {
 		}
 
 		try {
-			num = Long.decode(numStr);
-			numberTokenCache.put(numStr, num);
-			return num;
+			return Long.decode(numStr);
 		} catch (Exception ignored) {
 		}
 
-		try {
-			num = Double.parseDouble(numStr);
-			numberTokenCache.put(numStr, num);
-			return num;
-		} catch (Exception ex) {
-			throw error("Invalid number: " + numStr);
-		}
+		var d = Double.parseDouble(numStr);
+		return d == 0D ? NumberJS.ZERO : d == 1D ? NumberJS.ONE : d;
 	}
 
 	private char readUnicode() {

@@ -5,13 +5,16 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.WrappedObjectFactory;
-import dev.latvian.apps.ichor.java.ClassJS;
 import dev.latvian.apps.ichor.prototype.Prototype;
+import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
+import dev.latvian.apps.ichor.util.NativeArrayList;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -19,12 +22,34 @@ import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
 public class ContextJS extends Context {
+	public static final Prototype OBJECT_PROTOTYPE = new PrototypeBuilder("Object") {
+		@Override
+		public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
+			return new LinkedHashMap<>();
+		}
+	};
+
+	public static final Prototype ARRAY_PROTOTYPE = new PrototypeBuilder("Array") {
+		@Override
+		public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
+			return args.length == 0 ? new ArrayList<>() : new ArrayList<>(Arrays.asList(args));
+		}
+	};
+
 	private Executor timeoutExecutor, timeoutExecutorAfter;
 	private Consumer<Scope> debuggerCallback;
+
+	private final Prototype listPrototype, collectionPrototype, iterablePrototype, mapPrototype, arrayPrototype;
 
 	public ContextJS() {
 		timeoutExecutor = null;
 		timeoutExecutorAfter = null;
+
+		listPrototype = getClassPrototype(List.class);
+		collectionPrototype = getClassPrototype(Collection.class);
+		iterablePrototype = getClassPrototype(Iterable.class);
+		mapPrototype = getClassPrototype(Map.class);
+		arrayPrototype = getClassPrototype(Object[].class);
 	}
 
 	@Override
@@ -33,8 +58,9 @@ public class ContextJS extends Context {
 				StringJS.PROTOTYPE,
 				NumberJS.PROTOTYPE,
 				BooleanJS.PROTOTYPE,
-				ArrayJS.PROTOTYPE,
-				MapJS.PROTOTYPE
+				OBJECT_PROTOTYPE,
+				ARRAY_PROTOTYPE,
+				MathJS.PROTOTYPE
 		);
 	}
 
@@ -83,24 +109,24 @@ public class ContextJS extends Context {
 			return new NumberJS(n);
 		} else if (o instanceof CharSequence) {
 			return new StringJS(o.toString());
+		} else if (o instanceof PrototypeSupplier proto) {
+			return new JavaObjectJS<>(o, proto.getPrototype(this, scope));
 		}
 
 		var c = o.getClass();
 
 		if (o instanceof List list) {
-			return new ListJS<>(list, getClassPrototype0(c));
+			return new ListJS<>(list, listPrototype);
 		} else if (o instanceof Collection collection) {
-			return new CollectionJS<>(collection, getClassPrototype0(c));
+			return new CollectionJS<>(collection, collectionPrototype);
 		} else if (o instanceof Iterable iterable) {
-			return new IterableJS<>(iterable, getClassPrototype0(c));
+			return new IterableJS<>(iterable, iterablePrototype);
 		} else if (o instanceof Map map) {
-			return new MapJS(map, getClassPrototype0(c));
-		} else if (c == Object[].class) {
-			return new ListJS<>(Arrays.asList((Object[]) o), getClassPrototype0(Object[].class));
+			return new MapJS(map, mapPrototype);
 		} else if (c.isArray()) {
-			return new ArrayJS(o);
+			return new ListJS<>(NativeArrayList.of(o), arrayPrototype);
 		} else {
-			return new JavaObjectJS<>(o, getClassPrototype0(c));
+			return new JavaObjectJS<>(o, getClassPrototype(c));
 		}
 	}
 
@@ -119,30 +145,7 @@ public class ContextJS extends Context {
 		} else if (o instanceof Class) {
 			return ClassJS.PROTOTYPE;
 		} else {
-			return getClassPrototype0(o.getClass());
-		}
-	}
-
-	@Override
-	public Prototype getClassPrototype(Class<?> c) {
-		if (c == null || c == Void.class || c == Void.TYPE) {
-			return Special.NULL.prototype;
-		} else if (c == String.class || c == Character.class || c == Character.TYPE) {
-			return StringJS.PROTOTYPE;
-		} else if (c == Boolean.class || c == Boolean.TYPE) {
-			return BooleanJS.PROTOTYPE;
-		} else if (c.isPrimitive()) {
-			return NumberJS.PROTOTYPE;
-		} else if (c == Class.class) {
-			return ClassJS.PROTOTYPE;
-		} else if (Number.class.isAssignableFrom(c)) {
-			return NumberJS.PROTOTYPE;
-		} else if (CharSequence.class.isAssignableFrom(c)) {
-			return StringJS.PROTOTYPE;
-		} else if (c.isArray()) {
-			return ArrayJS.PROTOTYPE;
-		} else {
-			return getClassPrototype0(c);
+			return getClassPrototype(o.getClass());
 		}
 	}
 }

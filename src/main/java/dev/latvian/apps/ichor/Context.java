@@ -2,9 +2,11 @@ package dev.latvian.apps.ichor;
 
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.CastError;
+import dev.latvian.apps.ichor.error.InternalScriptError;
 import dev.latvian.apps.ichor.java.JavaClassPrototype;
 import dev.latvian.apps.ichor.js.JavaObjectJS;
 import dev.latvian.apps.ichor.js.NumberJS;
+import dev.latvian.apps.ichor.js.TokenStreamJS;
 import dev.latvian.apps.ichor.prototype.Prototype;
 
 import java.util.Collections;
@@ -15,7 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public abstract class Context {
-	private Map<Class<?>, JavaClassPrototype> classPrototypeCache;
+	private Map<Class<?>, Prototype> classPrototypeCache;
 	private final Map<ContextProperty<?>, Object> properties;
 	private int maxScopeDepth;
 	private long interpretingTimeout;
@@ -94,7 +96,7 @@ public abstract class Context {
 		} else if (o instanceof WrappedObject w) {
 			return w;
 		} else {
-			return new JavaObjectJS<>(o, getClassPrototype0(o.getClass()));
+			return new JavaObjectJS<>(o, getClassPrototype(o.getClass()));
 		}
 	}
 
@@ -153,8 +155,7 @@ public abstract class Context {
 			return (Boolean) o ? NumberJS.ONE : NumberJS.ZERO;
 		} else if (o instanceof CharSequence) {
 			try {
-				var d = Double.parseDouble(o.toString());
-				return d == 0D ? NumberJS.ZERO : d == 1D ? NumberJS.ONE : d;
+				return TokenStreamJS.parseNumber(o.toString());
 			} catch (Exception ex) {
 				return NumberJS.NaN;
 			}
@@ -173,20 +174,8 @@ public abstract class Context {
 		} else if (o instanceof Boolean) {
 			return (Boolean) o ? 1D : 0D;
 		} else if (o instanceof CharSequence) {
-			var str = o.toString();
-
 			try {
-				return Integer.decode(str);
-			} catch (Exception ignored) {
-			}
-
-			try {
-				return Long.decode(str);
-			} catch (Exception ignored) {
-			}
-
-			try {
-				return Double.parseDouble(o.toString());
+				return TokenStreamJS.parseNumber(o.toString()).doubleValue();
 			} catch (Exception ex) {
 				return Double.NaN;
 			}
@@ -206,9 +195,9 @@ public abstract class Context {
 			return (Boolean) o ? 1 : 0;
 		} else if (o instanceof CharSequence) {
 			try {
-				return (int) Long.parseLong(o.toString());
+				return TokenStreamJS.parseNumber(o.toString()).intValue();
 			} catch (Exception ex) {
-				return 0;
+				throw new InternalScriptError(ex);
 			}
 		} else if (o instanceof Evaluable) {
 			return ((Evaluable) o).evalInt(this, scope);
@@ -226,9 +215,9 @@ public abstract class Context {
 			return (Boolean) o ? 1L : 0L;
 		} else if (o instanceof CharSequence) {
 			try {
-				return Long.parseLong(o.toString());
+				return TokenStreamJS.parseNumber(o.toString()).longValue();
 			} catch (Exception ex) {
-				return 0L;
+				throw new InternalScriptError(ex);
 			}
 		} else if (o instanceof Evaluable) {
 			// add evalLong
@@ -304,14 +293,10 @@ public abstract class Context {
 	}
 
 	public Prototype getPrototype(Scope scope, Object o) {
-		return getClassPrototype0(o.getClass());
+		return getClassPrototype(o.getClass());
 	}
 
 	public Prototype getClassPrototype(Class<?> c) {
-		return getClassPrototype0(c);
-	}
-
-	protected JavaClassPrototype getClassPrototype0(Class<?> c) {
 		if (classPrototypeCache == null) {
 			classPrototypeCache = new HashMap<>();
 		}
