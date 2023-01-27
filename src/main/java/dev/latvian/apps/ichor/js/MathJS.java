@@ -4,6 +4,7 @@ import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
+import dev.latvian.apps.ichor.util.Functions;
 import org.jetbrains.annotations.Nullable;
 
 public class MathJS {
@@ -17,6 +18,7 @@ public class MathJS {
 	public static final Double SQRT2 = Math.sqrt(2D);
 
 	public static final Prototype PROTOTYPE = new PrototypeBuilder("Math") {
+		@SuppressWarnings("DuplicateBranchesInSwitch")
 		@Override
 		@Nullable
 		public Object get(Context cx, Scope scope, String name) {
@@ -29,6 +31,41 @@ public class MathJS {
 				case "LOG10E" -> LOG10E;
 				case "SQRT1_2" -> SQRT1_2;
 				case "SQRT2" -> SQRT2;
+				case "abs" -> Functions.WIP;
+				case "acos" -> Functions.WIP;
+				case "asin" -> Functions.WIP;
+				case "atan" -> Functions.WIP;
+				case "atan2" -> Functions.WIP;
+				case "ceil" -> Functions.WIP;
+				case "cos" -> Functions.WIP;
+				case "exp" -> Functions.WIP;
+				case "floor" -> Functions.WIP;
+				case "log" -> Functions.WIP;
+				case "max" -> Functions.WIP;
+				case "min" -> Functions.WIP;
+				case "pow" -> Functions.WIP;
+				case "random" -> Functions.WIP;
+				case "round" -> Functions.WIP;
+				case "sin" -> Functions.WIP;
+				case "sqrt" -> Functions.WIP;
+				case "tan" -> Functions.WIP;
+				case "cbrt" -> Functions.WIP;
+				case "cosh" -> Functions.WIP;
+				case "expm1" -> Functions.WIP;
+				case "hypot" -> Functions.WIP;
+				case "log1p" -> Functions.WIP;
+				case "log10" -> Functions.WIP;
+				case "sinh" -> Functions.WIP;
+				case "tanh" -> Functions.WIP;
+				case "imul" -> Functions.WIP;
+				case "trunc" -> Functions.WIP;
+				case "acosh" -> Functions.WIP;
+				case "asinh" -> Functions.WIP;
+				case "atanh" -> Functions.WIP;
+				case "sign" -> Functions.WIP;
+				case "log2" -> Functions.WIP;
+				case "fround" -> Functions.WIP;
+				case "clz32" -> Functions.WIP;
 				default -> super.get(cx, scope, name);
 			};
 		}
