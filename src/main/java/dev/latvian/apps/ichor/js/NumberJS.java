@@ -6,13 +6,12 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.prototype.Prototype;
-import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 import dev.latvian.apps.ichor.util.Functions;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 
-public class NumberJS implements WrappedObject {
+public record NumberJS(Number self) implements WrappedObject {
 	public static final Double ZERO = 0D;
 	public static final Double ONE = 1D;
 	public static final Double NaN = Double.NaN;
@@ -55,39 +54,35 @@ public class NumberJS implements WrappedObject {
 	private static final Functions.Bound<Number> TO_DOUBLE = (cx, scope, num, args) -> num.doubleValue();
 	private static final Functions.Bound<Number> TO_CHAR = (cx, scope, num, args) -> (char) num.intValue();
 
-	public static final Prototype PROTOTYPE = new PrototypeBuilder("Number") {
-		@Override
-		public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-			return args.length == 0 ? NaN : cx.asNumber(scope, args[0]);
-		}
+	public static Prototype createDefaultPrototype() {
+		return new Prototype("Number") {
+			@Override
+			public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
+				return args.length == 0 ? NaN : cx.asNumber(scope, args[0]);
+			}
 
-		@Override
-		@Nullable
-		public Object get(Context cx, Scope scope, String name) {
-			return switch (name) {
-				case "NaN" -> NaN;
-				case "POSITIVE_INFINITY" -> POSITIVE_INFINITY;
-				case "NEGATIVE_INFINITY" -> NEGATIVE_INFINITY;
-				case "MAX_VALUE" -> MAX_VALUE;
-				case "MIN_VALUE" -> MIN_VALUE;
-				case "MAX_SAFE_INTEGER" -> MAX_SAFE_INTEGER;
-				case "MIN_SAFE_INTEGER" -> MIN_SAFE_INTEGER;
-				case "EPSILON" -> EPSILON;
-				case "isFinite" -> IS_FINITE;
-				case "isNaN" -> IS_NAN;
-				case "isInteger" -> IS_INTEGER;
-				case "isSafeInteger" -> IS_SAFE_INTEGER;
-				case "parseFloat" -> PARSE_FLOAT;
-				case "parseInt" -> PARSE_INT;
-				default -> super.get(cx, scope, name);
-			};
-		}
-	};
-
-	public final Number self;
-
-	public NumberJS(Number self) {
-		this.self = self;
+			@Override
+			@Nullable
+			public Object get(Context cx, Scope scope, String name) {
+				return switch (name) {
+					case "NaN" -> NaN;
+					case "POSITIVE_INFINITY" -> POSITIVE_INFINITY;
+					case "NEGATIVE_INFINITY" -> NEGATIVE_INFINITY;
+					case "MAX_VALUE" -> MAX_VALUE;
+					case "MIN_VALUE" -> MIN_VALUE;
+					case "MAX_SAFE_INTEGER" -> MAX_SAFE_INTEGER;
+					case "MIN_SAFE_INTEGER" -> MIN_SAFE_INTEGER;
+					case "EPSILON" -> EPSILON;
+					case "isFinite" -> IS_FINITE;
+					case "isNaN" -> IS_NAN;
+					case "isInteger" -> IS_INTEGER;
+					case "isSafeInteger" -> IS_SAFE_INTEGER;
+					case "parseFloat" -> PARSE_FLOAT;
+					case "parseInt" -> PARSE_INT;
+					default -> super.get(cx, scope, name);
+				};
+			}
+		};
 	}
 
 	@Override
@@ -97,7 +92,7 @@ public class NumberJS implements WrappedObject {
 
 	@Override
 	public Prototype getPrototype(Context cx, Scope scope) {
-		return PROTOTYPE;
+		return ((ContextJS) cx).numberPrototype;
 	}
 
 	@Override
@@ -139,7 +134,7 @@ public class NumberJS implements WrappedObject {
 			case "toFloat" -> Functions.bound(self, TO_FLOAT);
 			case "toDouble" -> Functions.bound(self, TO_DOUBLE);
 			case "toChar" -> Functions.bound(self, TO_CHAR);
-			default -> PROTOTYPE.get(cx, scope, self, name);
+			default -> ((ContextJS) cx).numberPrototype.get(cx, scope, self, name);
 		};
 	}
 }

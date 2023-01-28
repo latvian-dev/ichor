@@ -4,25 +4,26 @@ import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.prototype.Prototype;
-import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 
 public class BooleanJS implements WrappedObject {
-	public static final Prototype PROTOTYPE = new PrototypeBuilder("Boolean") {
-		@Override
-		public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-			return args.length == 0 ? Boolean.FALSE : cx.asBoolean(scope, args[0]);
-		}
-	};
+	public static final BooleanJS TRUE = new BooleanJS(true, Boolean.TRUE);
+	public static final BooleanJS FALSE = new BooleanJS(false, Boolean.FALSE);
 
-	public static final BooleanJS TRUE = new BooleanJS(true);
-	public static final BooleanJS FALSE = new BooleanJS(false);
+	public static Prototype createDefaultPrototype() {
+		return new Prototype("Boolean") {
+			@Override
+			public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
+				return args.length == 0 ? Boolean.FALSE : cx.asBoolean(scope, args[0]);
+			}
+		};
+	}
 
 	public final boolean self;
 	public final Boolean selfObj;
 
-	private BooleanJS(boolean self) {
+	private BooleanJS(boolean self, Boolean selfObj) {
 		this.self = self;
-		this.selfObj = self;
+		this.selfObj = selfObj;
 	}
 
 	@Override
@@ -32,7 +33,7 @@ public class BooleanJS implements WrappedObject {
 
 	@Override
 	public Prototype getPrototype(Context cx, Scope scope) {
-		return PROTOTYPE;
+		return ((ContextJS) cx).booleanPrototype;
 	}
 
 	@Override

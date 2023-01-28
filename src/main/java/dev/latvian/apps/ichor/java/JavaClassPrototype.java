@@ -3,10 +3,8 @@ package dev.latvian.apps.ichor.java;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
-import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.prototype.Prototype;
-import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 import dev.latvian.apps.ichor.prototype.PrototypeProperty;
 import dev.latvian.apps.ichor.prototype.PrototypeStaticProperty;
 import org.jetbrains.annotations.Nullable;
@@ -17,7 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class JavaClassPrototype extends PrototypeBuilder {
+public class JavaClassPrototype extends Prototype {
 	public static boolean isSingleMethodInterface(Class<?> type) {
 		if (type != null && type.isInterface()) {
 			var methods = type.getMethods();
@@ -178,12 +176,10 @@ public class JavaClassPrototype extends PrototypeBuilder {
 		}
 
 		for (var p : parents) {
-			if (p instanceof WrappedObject w) {
-				var r = w.get(cx, scope, name);
+			var r = p.get(cx, scope, name);
 
 				if (r != Special.NOT_FOUND) {
 					return r;
-				}
 			}
 		}
 
@@ -201,10 +197,8 @@ public class JavaClassPrototype extends PrototypeBuilder {
 		}
 
 		for (var p : parents) {
-			if (p instanceof WrappedObject w) {
-				if (w.set(cx, scope, name, value)) {
-					return true;
-				}
+			if (p.set(cx, scope, name, value)) {
+				return true;
 			}
 		}
 

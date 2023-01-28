@@ -183,7 +183,7 @@ public class Scope {
 	@Override
 	public String toString() {
 		if (scopeOwner instanceof ClassPrototype c) {
-			return "Scope[" + getDepth() + ']' + getDeclaredMemberNames() + ":" + c.getPrototypeName();
+			return "Scope[" + getDepth() + ']' + getDeclaredMemberNames() + ":" + c.astClass().name;
 		}
 
 		return "Scope[" + getDepth() + ']' + getDeclaredMemberNames();

@@ -4,16 +4,10 @@ import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.statement.AstClass;
-import dev.latvian.apps.ichor.prototype.Prototype;
 
 import java.util.Arrays;
 
-public record ClassPrototype(AstClass astClass, Scope classEvalScope) implements Prototype, Callable {
-	@Override
-	public String getPrototypeName() {
-		return astClass.name;
-	}
-
+public record ClassPrototype(AstClass astClass, Scope classEvalScope) implements Callable {
 	@Override
 	public String toString() {
 		return astClass.name;

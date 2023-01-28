@@ -6,7 +6,6 @@ import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.WrappedObjectFactory;
 import dev.latvian.apps.ichor.prototype.Prototype;
-import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
 import dev.latvian.apps.ichor.util.NativeArrayList;
 import org.jetbrains.annotations.Nullable;
@@ -22,28 +21,47 @@ import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
 public class ContextJS extends Context {
-	public static final Prototype OBJECT_PROTOTYPE = new PrototypeBuilder("Object") {
-		@Override
-		public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-			return new LinkedHashMap<>();
-		}
-	};
-
-	public static final Prototype ARRAY_PROTOTYPE = new PrototypeBuilder("Array") {
-		@Override
-		public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-			return args.length == 0 ? new ArrayList<>() : new ArrayList<>(Arrays.asList(args));
-		}
-	};
-
 	private Executor timeoutExecutor, timeoutExecutorAfter;
 	private Consumer<Scope> debuggerCallback;
 
-	private final Prototype listPrototype, collectionPrototype, iterablePrototype, mapPrototype, arrayPrototype;
+	public final Prototype classPrototype;
+	public final Prototype stringPrototype;
+	public final Prototype numberPrototype;
+	public final Prototype booleanPrototype;
+	public final Prototype jsObjectPrototype;
+	public final Prototype jsArrayPrototype;
+	public final Prototype jsMathPrototype;
+
+	public final Prototype listPrototype;
+	public final Prototype collectionPrototype;
+	public final Prototype iterablePrototype;
+	public final Prototype mapPrototype;
+	public final Prototype arrayPrototype;
 
 	public ContextJS() {
 		timeoutExecutor = null;
 		timeoutExecutorAfter = null;
+
+		classPrototype = ClassJS.createDefaultPrototype();
+		stringPrototype = StringJS.createDefaultPrototype();
+		numberPrototype = NumberJS.createDefaultPrototype();
+		booleanPrototype = BooleanJS.createDefaultPrototype();
+
+		jsObjectPrototype = new Prototype("Object") {
+			@Override
+			public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
+				return new LinkedHashMap<>();
+			}
+		};
+
+		jsArrayPrototype = new Prototype("Array") {
+			@Override
+			public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
+				return args.length == 0 ? new ArrayList<>() : new ArrayList<>(Arrays.asList(args));
+			}
+		};
+
+		jsMathPrototype = MathJS.createDefaultPrototype();
 
 		listPrototype = getClassPrototype(List.class);
 		collectionPrototype = getClassPrototype(Collection.class);
@@ -55,12 +73,12 @@ public class ContextJS extends Context {
 	@Override
 	public List<Prototype> getSafePrototypes() {
 		return List.of(
-				StringJS.PROTOTYPE,
-				NumberJS.PROTOTYPE,
-				BooleanJS.PROTOTYPE,
-				OBJECT_PROTOTYPE,
-				ARRAY_PROTOTYPE,
-				MathJS.PROTOTYPE
+				stringPrototype,
+				numberPrototype,
+				booleanPrototype,
+				jsObjectPrototype,
+				jsArrayPrototype,
+				jsMathPrototype
 		);
 	}
 
@@ -125,6 +143,8 @@ public class ContextJS extends Context {
 			return new MapJS(map, mapPrototype);
 		} else if (c.isArray()) {
 			return new ListJS<>(NativeArrayList.of(o), arrayPrototype);
+		} else if (c == Class.class) {
+			return new ClassJS((Class<?>) o);
 		} else {
 			return new JavaObjectJS<>(o, getClassPrototype(c));
 		}
@@ -135,17 +155,26 @@ public class ContextJS extends Context {
 		if (o == null) {
 			return Special.NULL.prototype;
 		} else if (o instanceof CharSequence) {
-			return StringJS.PROTOTYPE;
+			return stringPrototype;
 		} else if (o instanceof Number) {
-			return NumberJS.PROTOTYPE;
+			return numberPrototype;
 		} else if (o instanceof Boolean) {
-			return BooleanJS.PROTOTYPE;
+			return booleanPrototype;
 		} else if (o instanceof PrototypeSupplier s) {
 			return s.getPrototype(this, scope);
 		} else if (o instanceof Class) {
-			return ClassJS.PROTOTYPE;
+			return classPrototype;
 		} else {
 			return getClassPrototype(o.getClass());
 		}
+	}
+
+	@Override
+	public Prototype getClassPrototype(Class<?> c) {
+		if (c == Class.class) {
+			return classPrototype;
+		}
+
+		return super.getClassPrototype(c);
 	}
 }

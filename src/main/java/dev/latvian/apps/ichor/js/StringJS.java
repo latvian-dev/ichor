@@ -7,16 +7,11 @@ import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.prototype.Prototype;
-import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 import dev.latvian.apps.ichor.util.Functions;
 import dev.latvian.apps.ichor.util.NativeArrayList;
 import org.jetbrains.annotations.Nullable;
 
-public class StringJS implements WrappedObject {
-	private static String s(Object self) {
-		return self.toString();
-	}
-
+public record StringJS(String self) implements WrappedObject {
 	public static class InvalidCodePointError extends ScriptError {
 		public final String codePoint;
 
@@ -77,28 +72,24 @@ public class StringJS implements WrappedObject {
 	private static final Functions.Bound<String> CHAR_AT = (cx, scope, str, args) -> str.charAt(cx.asInt(scope, args[0]));
 	private static final Functions.Bound<String> TRIM = (cx, scope, str, args) -> str.trim();
 
-	public static final Prototype PROTOTYPE = new PrototypeBuilder("String") {
-		@Override
-		public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-			return args.length == 0 ? "" : cx.asString(scope, args[0], false);
-		}
+	public static Prototype createDefaultPrototype() {
+		return new Prototype("String") {
+			@Override
+			public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
+				return args.length == 0 ? "" : cx.asString(scope, args[0], false);
+			}
 
-		@Override
-		@Nullable
-		public Object get(Context cx, Scope scope, String name) {
-			return switch (name) {
-				case "raw" -> RAW;
-				case "fromCharCode" -> FROM_CHAR_CODE;
-				case "fromCodePoint" -> FROM_CODE_POINT;
-				default -> super.get(cx, scope, name);
-			};
-		}
-	};
-
-	public final String self;
-
-	public StringJS(String self) {
-		this.self = self;
+			@Override
+			@Nullable
+			public Object get(Context cx, Scope scope, String name) {
+				return switch (name) {
+					case "raw" -> RAW;
+					case "fromCharCode" -> FROM_CHAR_CODE;
+					case "fromCodePoint" -> FROM_CODE_POINT;
+					default -> super.get(cx, scope, name);
+				};
+			}
+		};
 	}
 
 	@Override
@@ -108,7 +99,7 @@ public class StringJS implements WrappedObject {
 
 	@Override
 	public Prototype getPrototype(Context cx, Scope scope) {
-		return PROTOTYPE;
+		return ((ContextJS) cx).stringPrototype;
 	}
 
 	@Override
@@ -147,7 +138,7 @@ public class StringJS implements WrappedObject {
 			case "padEnd" -> Functions.WIP;
 			case "trimStart" -> Functions.WIP;
 			case "trimEnd" -> Functions.WIP;
-			default -> PROTOTYPE.get(cx, scope, this, name);
+			default -> ((ContextJS) cx).stringPrototype.get(cx, scope, this, name);
 		};
 	}
 
@@ -156,7 +147,7 @@ public class StringJS implements WrappedObject {
 		if (escape) {
 			AstStringBuilder.wrapString(self, builder);
 		} else {
-			builder.append(s(self));
+			builder.append(self);
 		}
 	}
 

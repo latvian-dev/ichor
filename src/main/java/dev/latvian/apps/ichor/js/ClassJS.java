@@ -2,29 +2,23 @@ package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.prototype.Prototype;
-import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 import dev.latvian.apps.ichor.util.Functions;
 import org.jetbrains.annotations.Nullable;
 
-public class ClassJS implements WrappedObject {
+public record ClassJS(Class<?> self) implements WrappedObject {
 	private static final Functions.Bound<Class<?>> IS_INSTANCE = (cx, scope, cl, args) -> cl.isInstance(args[0]);
 	private static final Functions.Bound<Class<?>> IS_ASSIGNABLE_FROM = (cx, scope, cl, args) -> cl.isAssignableFrom(cx.as(scope, args[0], Class.class));
 
-	public static final Prototype PROTOTYPE = new PrototypeBuilder("JavaClass") {
-		@Override
-		@Nullable
-		public Object get(Context cx, Scope scope, String name) {
-			return name.equals("class") ? Class.class : super.get(cx, scope, name);
-		}
-	};
-
-	public final Class<?> self;
-
-	public ClassJS(Class<?> self) {
-		this.self = self;
+	public static Prototype createDefaultPrototype() {
+		return new Prototype("JavaClass") {
+			@Override
+			@Nullable
+			public Object get(Context cx, Scope scope, String name) {
+				return name.equals("class") ? Class.class : super.get(cx, scope, name);
+			}
+		};
 	}
 
 	@Override
@@ -34,7 +28,7 @@ public class ClassJS implements WrappedObject {
 
 	@Override
 	public Prototype getPrototype(Context cx, Scope scope) {
-		return PROTOTYPE;
+		return ((ContextJS) cx).classPrototype;
 	}
 
 	@Override
@@ -67,7 +61,7 @@ public class ClassJS implements WrappedObject {
 			case "typeName" -> self.getTypeName();
 			case "isInstance" -> Functions.bound(self, IS_INSTANCE);
 			case "isAssignableFrom" -> Functions.bound(self, IS_ASSIGNABLE_FROM);
-			default -> Special.NOT_FOUND;
+			default -> ((ContextJS) cx).classPrototype.get(cx, scope, name);
 		};
 	}
 }

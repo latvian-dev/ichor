@@ -1,7 +1,6 @@
 package dev.latvian.apps.ichor;
 
 import dev.latvian.apps.ichor.prototype.Prototype;
-import dev.latvian.apps.ichor.prototype.PrototypeBuilder;
 import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.token.TokenPos;
 import org.jetbrains.annotations.Nullable;
@@ -20,7 +19,7 @@ public class Special implements Token, Evaluable, WrappedObject {
 	public final Prototype prototype;
 
 	private Special(String name) {
-		prototype = new PrototypeBuilder(name);
+		prototype = new Prototype(name);
 	}
 
 	@Override
