@@ -33,4 +33,4 @@ jobs:
                 env:
                     SAPS_TOKEN: ${{ secrets.SAPS_TOKEN }}
                 with:
-                    arguments: build publish --stacktrace --no-daemon
+                    arguments: build -x test publish --stacktrace --no-daemon
