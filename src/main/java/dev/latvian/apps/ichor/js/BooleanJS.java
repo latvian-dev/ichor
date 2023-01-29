@@ -2,10 +2,11 @@ package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.prototype.Prototype;
+import dev.latvian.apps.ichor.prototype.PrototypeWrappedObject;
+import org.jetbrains.annotations.Nullable;
 
-public class BooleanJS implements WrappedObject {
+public class BooleanJS implements PrototypeWrappedObject {
 	public static final BooleanJS TRUE = new BooleanJS(true, Boolean.TRUE);
 	public static final BooleanJS FALSE = new BooleanJS(false, Boolean.FALSE);
 
@@ -54,5 +55,15 @@ public class BooleanJS implements WrappedObject {
 	@Override
 	public boolean asBoolean(Context cx, Scope scope) {
 		return self;
+	}
+
+	@Override
+	@Nullable
+	public Object get(Context cx, Scope scope, String name) {
+		return switch (name) {
+			case "class" -> Boolean.class;
+			case "__prototype__" -> getPrototype(cx, scope);
+			default -> PrototypeWrappedObject.super.get(cx, scope, name);
+		};
 	}
 }

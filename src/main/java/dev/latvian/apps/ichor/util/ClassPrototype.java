@@ -1,16 +1,20 @@
 package dev.latvian.apps.ichor.util;
 
-import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.statement.AstClass;
+import dev.latvian.apps.ichor.prototype.Prototype;
 
 import java.util.Arrays;
 
-public record ClassPrototype(AstClass astClass, Scope classEvalScope) implements Callable {
-	@Override
-	public String toString() {
-		return astClass.name;
+public final class ClassPrototype extends Prototype {
+	public final AstClass astClass;
+	public final Scope classEvalScope;
+
+	public ClassPrototype(AstClass astClass, Scope classEvalScope) {
+		super(astClass.name);
+		this.astClass = astClass;
+		this.classEvalScope = classEvalScope;
 	}
 
 	@Override
@@ -34,7 +38,7 @@ public record ClassPrototype(AstClass astClass, Scope classEvalScope) implements
 			this.prototype = prototype;
 
 			for (var func : prototype.astClass.methods.values()) {
-				add(func.functionName, new FunctionInstance(func, cx, this), false);
+				add(func.functionName, new ClassFunctionInstance(func, cx, this), false);
 			}
 		}
 

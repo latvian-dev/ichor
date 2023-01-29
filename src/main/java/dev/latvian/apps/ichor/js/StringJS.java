@@ -3,15 +3,15 @@ package dev.latvian.apps.ichor.js;
 import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.prototype.Prototype;
+import dev.latvian.apps.ichor.prototype.PrototypeWrappedObject;
 import dev.latvian.apps.ichor.util.Functions;
 import dev.latvian.apps.ichor.util.NativeArrayList;
 import org.jetbrains.annotations.Nullable;
 
-public record StringJS(String self) implements WrappedObject {
+public record StringJS(String self) implements PrototypeWrappedObject {
 	public static class InvalidCodePointError extends ScriptError {
 		public final String codePoint;
 
@@ -138,7 +138,7 @@ public record StringJS(String self) implements WrappedObject {
 			case "padEnd" -> Functions.WIP;
 			case "trimStart" -> Functions.WIP;
 			case "trimEnd" -> Functions.WIP;
-			default -> ((ContextJS) cx).stringPrototype.get(cx, scope, this, name);
+			default -> PrototypeWrappedObject.super.get(cx, scope, name);
 		};
 	}
 

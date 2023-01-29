@@ -12,14 +12,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
 
-public class Scope {
+public class Scope implements WrappedObject {
 	public final Scope parent;
 	public RootScope root;
 	public SlotMap members;
 	private int depth;
 	public Object scopeOwner;
-	public Scope scopeThis;
-	public Scope scopeSuper;
+	public WrappedObject scopeThis;
+	public WrappedObject scopeSuper;
 	public Object[] scopeArguments;
 
 	protected Scope(Scope parent) {
@@ -78,19 +78,19 @@ public class Scope {
 		scopeThis = o;
 	}
 
-	public void setMember(String name, @Nullable Object value) {
+	public boolean setMember(String name, @Nullable Object value) {
 		Scope s = this;
 
 		do {
 			var slot = s.members.getSlot(name);
 
 			if (slot != null) {
-				if (slot.immutable) {
+				if (slot.immutable && slot.value != Special.UNDEFINED) {
 					throw new ConstantReassignError(name);
 				} else {
 					slot.value = value;
 					// slot.prototype = null;
-					return;
+					return true;
 				}
 			}
 
@@ -183,7 +183,7 @@ public class Scope {
 	@Override
 	public String toString() {
 		if (scopeOwner instanceof ClassPrototype c) {
-			return "Scope[" + getDepth() + ']' + getDeclaredMemberNames() + ":" + c.astClass().name;
+			return "Scope[" + getDepth() + ']' + getDeclaredMemberNames() + ":" + c.astClass.name;
 		}
 
 		return "Scope[" + getDepth() + ']' + getDeclaredMemberNames();
@@ -191,5 +191,22 @@ public class Scope {
 
 	public int getDepth() {
 		return depth;
+	}
+
+	@Override
+	@Nullable
+	public Object get(Context cx, Scope scope, String name) {
+		var slot = getDeclaredMember(name);
+		return slot == null ? Special.NOT_FOUND : slot.value;
+	}
+
+	@Override
+	public boolean set(Context cx, Scope scope, String name, @Nullable Object value) {
+		if (getDeclaredMember(name) == null) {
+			add(name, value, false);
+			return true;
+		} else {
+			return setMember(name, value);
+		}
 	}
 }

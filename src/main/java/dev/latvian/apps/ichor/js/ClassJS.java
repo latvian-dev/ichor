@@ -2,12 +2,12 @@ package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.prototype.Prototype;
+import dev.latvian.apps.ichor.prototype.PrototypeWrappedObject;
 import dev.latvian.apps.ichor.util.Functions;
 import org.jetbrains.annotations.Nullable;
 
-public record ClassJS(Class<?> self) implements WrappedObject {
+public record ClassJS(Class<?> self) implements PrototypeWrappedObject {
 	private static final Functions.Bound<Class<?>> IS_INSTANCE = (cx, scope, cl, args) -> cl.isInstance(args[0]);
 	private static final Functions.Bound<Class<?>> IS_ASSIGNABLE_FROM = (cx, scope, cl, args) -> cl.isAssignableFrom(cx.as(scope, args[0], Class.class));
 
@@ -61,7 +61,9 @@ public record ClassJS(Class<?> self) implements WrappedObject {
 			case "typeName" -> self.getTypeName();
 			case "isInstance" -> Functions.bound(self, IS_INSTANCE);
 			case "isAssignableFrom" -> Functions.bound(self, IS_ASSIGNABLE_FROM);
-			default -> ((ContextJS) cx).classPrototype.get(cx, scope, name);
+			case "class" -> Class.class;
+			case "__prototype__" -> cx.getClassPrototype(self);
+			default -> PrototypeWrappedObject.super.get(cx, scope, name);
 		};
 	}
 }

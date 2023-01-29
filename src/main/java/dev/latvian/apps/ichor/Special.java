@@ -6,11 +6,9 @@ import dev.latvian.apps.ichor.token.TokenPos;
 import org.jetbrains.annotations.Nullable;
 
 public class Special implements Token, Evaluable, WrappedObject {
-	public static final Special NOT_FOUND = new Special("<not found>"); // Internal use only
+	public static final Object NOT_FOUND = new Object(); // Internal use only
 	public static final Special NULL = new Special("null");
 	public static final Special UNDEFINED = new Special("undefined");
-	public static final Special IMMUTABLE = new Special("<immutable>");
-	public static final Special NEW = new Special("<new>");
 
 	public static boolean isInvalid(@Nullable Object o) {
 		return o == null || o instanceof Special;

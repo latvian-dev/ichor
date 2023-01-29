@@ -3,15 +3,15 @@ package dev.latvian.apps.ichor.js;
 import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.prototype.Prototype;
+import dev.latvian.apps.ichor.prototype.PrototypeWrappedObject;
 import dev.latvian.apps.ichor.util.Functions;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 
-public record NumberJS(Number self) implements WrappedObject {
+public record NumberJS(Number self) implements PrototypeWrappedObject {
 	public static final Double ZERO = 0D;
 	public static final Double ONE = 1D;
 	public static final Double NaN = Double.NaN;
@@ -134,7 +134,7 @@ public record NumberJS(Number self) implements WrappedObject {
 			case "toFloat" -> Functions.bound(self, TO_FLOAT);
 			case "toDouble" -> Functions.bound(self, TO_DOUBLE);
 			case "toChar" -> Functions.bound(self, TO_CHAR);
-			default -> ((ContextJS) cx).numberPrototype.get(cx, scope, self, name);
+			default -> PrototypeWrappedObject.super.get(cx, scope, name);
 		};
 	}
 }

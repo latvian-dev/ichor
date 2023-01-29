@@ -1,14 +1,13 @@
 package dev.latvian.apps.ichor;
 
 import dev.latvian.apps.ichor.js.NumberJS;
-import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 
-public interface WrappedObject extends PrototypeSupplier, WrappedObjectFactory {
+public interface WrappedObject extends WrappedObjectFactory {
 	default Object unwrap() {
 		return this;
 	}
@@ -20,28 +19,28 @@ public interface WrappedObject extends PrototypeSupplier, WrappedObjectFactory {
 
 	@Nullable
 	default Object get(Context cx, Scope scope, String name) {
-		return getPrototype(cx, scope).get(cx, scope, unwrap(), name);
+		return Special.NOT_FOUND;
 	}
 
 	default boolean set(Context cx, Scope scope, String name, @Nullable Object value) {
-		return getPrototype(cx, scope).set(cx, scope, unwrap(), name, value);
+		return false;
 	}
 
 	default boolean delete(Context cx, Scope scope, String name) {
-		return getPrototype(cx, scope).delete(cx, scope, unwrap(), name);
+		return false;
 	}
 
 	@Nullable
 	default Object get(Context cx, Scope scope, int index) {
-		return getPrototype(cx, scope).get(cx, scope, unwrap(), index);
+		return Special.NOT_FOUND;
 	}
 
 	default boolean set(Context cx, Scope scope, int index, @Nullable Object value) {
-		return getPrototype(cx, scope).set(cx, scope, unwrap(), index, value);
+		return false;
 	}
 
 	default boolean delete(Context cx, Scope scope, int index) {
-		return getPrototype(cx, scope).delete(cx, scope, unwrap(), index);
+		return false;
 	}
 
 	default Collection<?> keys(Context cx, Scope scope) {

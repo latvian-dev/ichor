@@ -7,10 +7,20 @@ import dev.latvian.apps.ichor.prototype.Prototype;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class MapJS extends JavaObjectJS<Map<String, ?>> {
+	public static Prototype createDefaultObjectPrototype() {
+		return new Prototype("Object") {
+			@Override
+			public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
+				return new LinkedHashMap<>();
+			}
+		};
+	}
+
 	public MapJS(Map<String, ?> object, Prototype prototype) {
 		super(object, prototype);
 	}

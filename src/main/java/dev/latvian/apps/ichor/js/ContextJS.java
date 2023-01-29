@@ -10,10 +10,7 @@ import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
 import dev.latvian.apps.ichor.util.NativeArrayList;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -46,21 +43,8 @@ public class ContextJS extends Context {
 		stringPrototype = StringJS.createDefaultPrototype();
 		numberPrototype = NumberJS.createDefaultPrototype();
 		booleanPrototype = BooleanJS.createDefaultPrototype();
-
-		jsObjectPrototype = new Prototype("Object") {
-			@Override
-			public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-				return new LinkedHashMap<>();
-			}
-		};
-
-		jsArrayPrototype = new Prototype("Array") {
-			@Override
-			public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-				return args.length == 0 ? new ArrayList<>() : new ArrayList<>(Arrays.asList(args));
-			}
-		};
-
+		jsObjectPrototype = MapJS.createDefaultObjectPrototype();
+		jsArrayPrototype = ListJS.createDefaultArrayPrototype();
 		jsMathPrototype = MathJS.createDefaultPrototype();
 
 		listPrototype = getClassPrototype(List.class);

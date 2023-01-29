@@ -2,10 +2,10 @@ package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.prototype.Prototype;
+import dev.latvian.apps.ichor.prototype.PrototypeWrappedObject;
 
-public class JavaObjectJS<T> implements WrappedObject {
+public class JavaObjectJS<T> implements PrototypeWrappedObject {
 	public final T self;
 	public final Prototype prototype;
 

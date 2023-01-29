@@ -1,13 +1,15 @@
 plugins {
 	id 'java'
+	id 'maven-publish'
 }
-
-group 'dev.latvian.apps'
-version '1.0.0'
-archivesBaseName = 'ichor'
 
 sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
+
+def ENV = System.getenv()
+version = "${project_version}.${ENV.GITHUB_RUN_NUMBER ?: '9999'}"
+archivesBaseName = 'ichor'
+group = 'dev.latvian.apps'
 
 compileJava.options.encoding = 'UTF-8'
 
@@ -15,19 +17,12 @@ tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
 }
 
-allprojects {
-	configurations.all {
-		resolutionStrategy.cacheChangingModulesFor 60, 'seconds'
-	}
-}
-
 repositories {
 	mavenCentral()
 }
 
 dependencies {
-	implementation('com.google.code.gson:gson:2.9.0')
-	implementation('org.jetbrains:annotations:23.0.0')
+	compileOnly('org.jetbrains:annotations:23.0.0')
 	testImplementation('org.junit.jupiter:junit-jupiter-api:5.9.0')
 	testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.9.0')
 }
@@ -42,4 +37,30 @@ processResources {
 
 test {
 	useJUnitPlatform()
+}
+
+task sourceJar(type: Jar) {
+	archiveClassifier = "sources"
+}
+
+publishing {
+	publications {
+		mavenIchor(MavenPublication) {
+			artifactId = 'ichor'
+			from components.java
+			artifact sourceJar
+		}
+	}
+
+	repositories {
+		if (ENV.SAPS_TOKEN) {
+			maven {
+				url "https://maven.saps.dev/minecraft"
+				credentials {
+					username = "latvian"
+					password = "${ENV.SAPS_TOKEN}"
+				}
+			}
+		}
+	}
 }
