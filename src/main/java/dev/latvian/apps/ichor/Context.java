@@ -3,7 +3,7 @@ package dev.latvian.apps.ichor;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.CastError;
 import dev.latvian.apps.ichor.error.InternalScriptError;
-import dev.latvian.apps.ichor.java.JavaClassPrototype;
+import dev.latvian.apps.ichor.java.JavaTypePrototype;
 import dev.latvian.apps.ichor.js.JavaObjectJS;
 import dev.latvian.apps.ichor.js.NumberJS;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
@@ -304,7 +304,7 @@ public abstract class Context {
 		var p = classPrototypeCache.get(c);
 
 		if (p == null) {
-			p = new JavaClassPrototype(this, c);
+			p = new JavaTypePrototype(this, c);
 			classPrototypeCache.put(c, p);
 		}
 

@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class JavaClassPrototype extends Prototype {
+public class JavaTypePrototype extends Prototype {
 	public static boolean isSingleMethodInterface(Class<?> type) {
 		if (type != null && type.isInterface()) {
 			var methods = type.getMethods();
@@ -58,11 +58,11 @@ public class JavaClassPrototype extends Prototype {
 	public final Class<?> type;
 	private boolean shouldInit;
 	private Boolean isSingleMethodInterface;
-	private Prototype[] parents;
-	private Map<String, PrototypeProperty> localMembers;
-	private Map<String, PrototypeStaticProperty> staticMembers;
+	protected Prototype[] parents;
+	protected Map<String, PrototypeProperty> localMembers;
+	protected Map<String, PrototypeStaticProperty> staticMembers;
 
-	public JavaClassPrototype(Context cx, Class<?> type) {
+	public JavaTypePrototype(Context cx, Class<?> type) {
 		super(type.getName());
 		this.context = cx;
 		this.type = type;
@@ -72,11 +72,12 @@ public class JavaClassPrototype extends Prototype {
 	protected void initLazy() {
 		if (shouldInit) {
 			shouldInit = false;
-			initLazy0();
+			initMembers();
+			initParents();
 		}
 	}
 
-	protected void initLazy0() {
+	protected void initMembers() {
 		var localMap = new HashMap<String, JavaMembers>();
 		var staticMap = new HashMap<String, JavaMembers>();
 
@@ -128,7 +129,9 @@ public class JavaClassPrototype extends Prototype {
 			e.prepare(this);
 			staticMembers.put(e.name, new StaticJavaMembers(e));
 		}
+	}
 
+	protected void initParents() {
 		var p = new ArrayList<Prototype>();
 
 		var s = type.getSuperclass();

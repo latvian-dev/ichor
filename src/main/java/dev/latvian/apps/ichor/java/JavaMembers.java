@@ -23,7 +23,7 @@ public final class JavaMembers {
 	}
 
 	public final String name;
-	public JavaClassPrototype prototype;
+	public JavaTypePrototype prototype;
 	public Field field;
 	public SigMethod[] methods;
 	public Method beanGet;
@@ -34,7 +34,7 @@ public final class JavaMembers {
 		this.name = name;
 	}
 
-	public void prepare(JavaClassPrototype p) {
+	public void prepare(JavaTypePrototype p) {
 		prototype = p;
 
 		if (methods != null && methods.length >= 2) {

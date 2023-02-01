@@ -10,6 +10,10 @@ import org.jetbrains.annotations.Nullable;
 public record ClassJS(Class<?> self) implements PrototypeWrappedObject {
 	private static final Functions.Bound<Class<?>> IS_INSTANCE = (cx, scope, cl, args) -> cl.isInstance(args[0]);
 	private static final Functions.Bound<Class<?>> IS_ASSIGNABLE_FROM = (cx, scope, cl, args) -> cl.isAssignableFrom(cx.as(scope, args[0], Class.class));
+	private static final Functions.Bound<Class<?>> GET_ANNOTATION = (cx, scope, cl, args) -> cl.getAnnotation(cx.as(scope, args[0], Class.class));
+	private static final Functions.Bound<Class<?>> GET_DECLARED_ANNOTATION = (cx, scope, cl, args) -> cl.getDeclaredAnnotation(cx.as(scope, args[0], Class.class));
+	private static final Functions.Bound<Class<?>> GET_ANNOTATIONS_BY_TYPE = (cx, scope, cl, args) -> cl.getAnnotationsByType(cx.as(scope, args[0], Class.class));
+	private static final Functions.Bound<Class<?>> GET_DECLARED_ANNOTATIONS_BY_TYPE = (cx, scope, cl, args) -> cl.getDeclaredAnnotationsByType(cx.as(scope, args[0], Class.class));
 
 	public static Prototype createDefaultPrototype() {
 		return new Prototype("JavaClass") {
@@ -59,8 +63,19 @@ public record ClassJS(Class<?> self) implements PrototypeWrappedObject {
 			case "componentType" -> self.getComponentType();
 			case "canonicalName" -> self.getCanonicalName();
 			case "typeName" -> self.getTypeName();
+			case "interfaces" -> self.getInterfaces();
+			case "modifiers" -> self.getModifiers();
+			case "annotations" -> self.getAnnotations();
+			case "declaredAnnotations" -> self.getDeclaredAnnotations();
+			case "declaredClasses" -> self.getDeclaredClasses();
+			case "declaringClass" -> self.getDeclaringClass();
+			case "enclosingClass" -> self.getEnclosingClass();
 			case "isInstance" -> IS_INSTANCE.with(self);
 			case "isAssignableFrom" -> IS_ASSIGNABLE_FROM.with(self);
+			case "getAnnotation" -> GET_ANNOTATION.with(self);
+			case "getDeclaredAnnotation" -> GET_DECLARED_ANNOTATION.with(self);
+			case "getAnnotationsByType" -> GET_ANNOTATIONS_BY_TYPE.with(self);
+			case "getDeclaredAnnotationsByType" -> GET_DECLARED_ANNOTATIONS_BY_TYPE.with(self);
 			case "class" -> Class.class;
 			default -> PrototypeWrappedObject.super.get(cx, scope, name);
 		};
