@@ -228,8 +228,8 @@ public class AdvancedInterpreterTests {
 	public void numberTypeCasting() {
 		InterpreterTests.testInterpreter("""
 				Advanced.testFloat(5.3, console)
-				Advanced.testFloat(Advanced.short1, console)
-				Advanced.testFloatSupplier(() => Advanced.short2, console)
+				Advanced.testFloat(Advanced.short1)
+				Advanced.testFloatSupplier(() => Advanced.short2)
 				""", """
 				Float value: 5.3
 				Float value: 30

@@ -6,35 +6,40 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class AdvancedTestUtils {
+public final class AdvancedTestUtils {
+	private final TestConsole console;
+	public final Short short1 = 30;
+	public final short short2 = 40;
+
+	public AdvancedTestUtils(TestConsole console) {
+		this.console = console;
+	}
+
 	public interface FloatSupplier {
 		Float supplyFloat();
 	}
 
-	public static final Short short1 = 30;
-	public static final short short2 = 40;
-
-	public static void runnable(Runnable runnable) {
+	public void runnable(Runnable runnable) {
 		runnable.run();
 	}
 
-	public static void consumer(float x, Consumer<String> consumer) {
+	public void consumer(float x, Consumer<String> consumer) {
 		consumer.accept(AstStringBuilder.wrapNumber(x) + " x hello");
 	}
 
-	public static double supplier(Supplier<Number> supplier) {
+	public double supplier(Supplier<Number> supplier) {
 		return supplier.get().doubleValue();
 	}
 
-	public static void testFloat(float value, TestConsole console) {
+	public void testFloat(float value) {
 		console.log("Float value: " + AstStringBuilder.wrapNumber(value));
 	}
 
-	public static void testFloatSupplier(FloatSupplier func, TestConsole console) {
+	public void testFloatSupplier(FloatSupplier func) {
 		console.log("Float value: " + AstStringBuilder.wrapNumber(func.supplyFloat()));
 	}
 
-	public static void testMap(Map<String, Object> map, TestConsole console) {
+	public void testMap(Map<String, Object> map) {
 		console.log("Map: " + map);
 	}
 }

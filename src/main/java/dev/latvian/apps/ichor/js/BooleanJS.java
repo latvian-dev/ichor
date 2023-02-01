@@ -60,10 +60,6 @@ public class BooleanJS implements PrototypeWrappedObject {
 	@Override
 	@Nullable
 	public Object get(Context cx, Scope scope, String name) {
-		return switch (name) {
-			case "class" -> Boolean.class;
-			case "__prototype__" -> getPrototype(cx, scope);
-			default -> PrototypeWrappedObject.super.get(cx, scope, name);
-		};
+		return name.equals("class") ? Boolean.class : PrototypeWrappedObject.super.get(cx, scope, name);
 	}
 }

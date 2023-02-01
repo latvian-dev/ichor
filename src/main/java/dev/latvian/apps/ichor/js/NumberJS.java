@@ -124,16 +124,17 @@ public record NumberJS(Number self) implements PrototypeWrappedObject {
 			case "minutes", "m" -> Duration.ofMinutes(self.longValue());
 			case "hours", "h" -> Duration.ofHours(self.longValue());
 			case "days", "d" -> Duration.ofDays(self.longValue());
-			case "toFixed" -> Functions.bound(self, TO_FIXED);
-			case "toExponential" -> Functions.bound(self, TO_EXPONENTIAL);
-			case "toPrecision" -> Functions.bound(self, TO_PRECISION);
-			case "toByte" -> Functions.bound(self, TO_BYTE);
-			case "toShort" -> Functions.bound(self, TO_SHORT);
-			case "toInt" -> Functions.bound(self, TO_INT);
-			case "toLong" -> Functions.bound(self, TO_LONG);
-			case "toFloat" -> Functions.bound(self, TO_FLOAT);
-			case "toDouble" -> Functions.bound(self, TO_DOUBLE);
-			case "toChar" -> Functions.bound(self, TO_CHAR);
+			case "toFixed" -> TO_FIXED.with(self);
+			case "toExponential" -> TO_EXPONENTIAL.with(self);
+			case "toPrecision" -> TO_PRECISION.with(self);
+			case "toByte" -> TO_BYTE.with(self);
+			case "toShort" -> TO_SHORT.with(self);
+			case "toInt" -> TO_INT.with(self);
+			case "toLong" -> TO_LONG.with(self);
+			case "toFloat" -> TO_FLOAT.with(self);
+			case "toDouble" -> TO_DOUBLE.with(self);
+			case "toChar" -> TO_CHAR.with(self);
+			case "class" -> self.getClass();
 			default -> PrototypeWrappedObject.super.get(cx, scope, name);
 		};
 	}

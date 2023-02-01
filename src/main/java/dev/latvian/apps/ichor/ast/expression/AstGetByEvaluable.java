@@ -17,11 +17,6 @@ public class AstGetByEvaluable extends AstGetFrom {
 	}
 
 	@Override
-	public Object evalKey(Context cx, Scope scope) {
-		return cx.eval(scope, key);
-	}
-
-	@Override
 	public void append(AstStringBuilder builder) {
 		builder.appendValue(from);
 		builder.append('[');
@@ -31,23 +26,24 @@ public class AstGetByEvaluable extends AstGetFrom {
 
 	@Override
 	public Object eval(Context cx, Scope scope) {
-		var k = evalKey(cx, scope);
+		var k = cx.eval(scope, key);
+		var self = evalSelf(cx, scope);
 
 		Object r;
 
 		if (k instanceof Number n) {
 			var ki = n.intValue();
-			r = cx.wrap(scope, evalSelf(cx, scope)).get(cx, scope, ki);
+			r = cx.wrap(scope, self).get(cx, scope, ki);
 
 			if (r == Special.NOT_FOUND) {
-				throw new IndexedMemberNotFoundError(ki).pos(this);
+				throw new IndexedMemberNotFoundError(ki, self).pos(this);
 			}
 		} else {
 			var ks = cx.asString(scope, k, false);
-			r = cx.wrap(scope, evalSelf(cx, scope)).get(cx, scope, ks);
+			r = cx.wrap(scope, self).get(cx, scope, ks);
 
 			if (r == Special.NOT_FOUND) {
-				throw new NamedMemberNotFoundError(ks).pos(this);
+				throw new NamedMemberNotFoundError(ks, self).pos(this);
 			}
 		}
 
@@ -56,26 +52,27 @@ public class AstGetByEvaluable extends AstGetFrom {
 
 	@Override
 	public void set(Context cx, Scope scope, Object value) {
-		var k = evalKey(cx, scope);
+		var k = cx.eval(scope, key);
+		var self = evalSelf(cx, scope);
 
 		if (k instanceof Number n) {
 			var ki = n.intValue();
 
-			if (!cx.wrap(scope, evalSelf(cx, scope)).set(cx, scope, ki, value)) {
-				throw new IndexedMemberNotFoundError(ki).pos(this);
+			if (!cx.wrap(scope, self).set(cx, scope, ki, value)) {
+				throw new IndexedMemberNotFoundError(ki, self).pos(this);
 			}
 		} else {
 			var ks = cx.asString(scope, k, false);
 
-			if (!cx.wrap(scope, evalSelf(cx, scope)).set(cx, scope, ks, value)) {
-				throw new NamedMemberNotFoundError(ks).pos(this);
+			if (!cx.wrap(scope, self).set(cx, scope, ks, value)) {
+				throw new NamedMemberNotFoundError(ks, self).pos(this);
 			}
 		}
 	}
 
 	@Override
 	public boolean delete(Context cx, Scope scope) {
-		var k = evalKey(cx, scope);
+		var k = cx.eval(scope, key);
 
 		if (k instanceof Number n) {
 			var ki = n.intValue();

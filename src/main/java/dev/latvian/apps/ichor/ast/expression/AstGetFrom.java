@@ -12,8 +12,6 @@ public abstract class AstGetFrom extends AstGetBase {
 		this.from = from;
 	}
 
-	public abstract Object evalKey(Context cx, Scope scope);
-
 	@Override
 	@Nullable
 	public Object evalSelf(Context cx, Scope scope) {

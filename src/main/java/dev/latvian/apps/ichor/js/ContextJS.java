@@ -7,7 +7,6 @@ import dev.latvian.apps.ichor.WrappedObject;
 import dev.latvian.apps.ichor.WrappedObjectFactory;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
-import dev.latvian.apps.ichor.util.NativeArrayList;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -113,20 +112,22 @@ public class ContextJS extends Context {
 			return new StringJS(o.toString());
 		} else if (o instanceof PrototypeSupplier proto) {
 			return new JavaObjectJS<>(o, proto.getPrototype(this, scope));
-		}
-
-		var c = o.getClass();
-
-		if (o instanceof List list) {
+		} else if (o instanceof Map map) {
+			return new MapJS(map, mapPrototype);
+		} else if (o instanceof List list) {
 			return new ListJS<>(list, listPrototype);
 		} else if (o instanceof Collection collection) {
 			return new CollectionJS<>(collection, collectionPrototype);
 		} else if (o instanceof Iterable iterable) {
 			return new IterableJS<>(iterable, iterablePrototype);
-		} else if (o instanceof Map map) {
-			return new MapJS(map, mapPrototype);
-		} else if (c.isArray()) {
-			return new ListJS<>(NativeArrayList.of(o), arrayPrototype);
+		} else if (o instanceof Object[] array) {
+			return new IndexedArrayJS(array, arrayPrototype);
+		}
+
+		var c = o.getClass();
+
+		if (c.isArray()) {
+			return new ArrayJS(o, arrayPrototype);
 		} else if (c == Class.class) {
 			return new ClassJS((Class<?>) o);
 		} else {
@@ -138,16 +139,26 @@ public class ContextJS extends Context {
 	public Prototype getPrototype(Scope scope, Object o) {
 		if (o == null) {
 			return Special.NULL.prototype;
-		} else if (o instanceof CharSequence) {
-			return stringPrototype;
-		} else if (o instanceof Number) {
-			return numberPrototype;
 		} else if (o instanceof Boolean) {
 			return booleanPrototype;
+		} else if (o instanceof Number) {
+			return numberPrototype;
+		} else if (o instanceof CharSequence) {
+			return stringPrototype;
 		} else if (o instanceof PrototypeSupplier s) {
 			return s.getPrototype(this, scope);
 		} else if (o instanceof Class) {
 			return classPrototype;
+		} else if (o instanceof Map) {
+			return mapPrototype;
+		} else if (o instanceof List) {
+			return listPrototype;
+		} else if (o instanceof Collection) {
+			return collectionPrototype;
+		} else if (o instanceof Iterable) {
+			return iterablePrototype;
+		} else if (o.getClass().isArray()) {
+			return arrayPrototype;
 		} else {
 			return getClassPrototype(o.getClass());
 		}
@@ -155,8 +166,24 @@ public class ContextJS extends Context {
 
 	@Override
 	public Prototype getClassPrototype(Class<?> c) {
-		if (c == Class.class) {
+		if (c == Boolean.class) {
+			return booleanPrototype;
+		} else if (Number.class.isAssignableFrom(c)) {
+			return numberPrototype;
+		} else if (CharSequence.class.isAssignableFrom(c)) {
+			return stringPrototype;
+		} else if (c == Class.class) {
 			return classPrototype;
+		} else if (Map.class.isAssignableFrom(c)) {
+			return mapPrototype;
+		} else if (List.class.isAssignableFrom(c)) {
+			return listPrototype;
+		} else if (Collection.class.isAssignableFrom(c)) {
+			return collectionPrototype;
+		} else if (Iterable.class.isAssignableFrom(c)) {
+			return iterablePrototype;
+		} else if (c.isArray()) {
+			return arrayPrototype;
 		}
 
 		return super.getClassPrototype(c);

@@ -98,7 +98,7 @@ public class Scope implements WrappedObject {
 		}
 		while (s != null);
 
-		throw new NamedMemberNotFoundError(name);
+		throw new NamedMemberNotFoundError(name, this);
 	}
 
 	public AssignType hasDeclaredMember(String name) {
@@ -117,7 +117,7 @@ public class Scope implements WrappedObject {
 		var slot = members.getSlot(name);
 
 		if (slot == null) {
-			throw new NamedMemberNotFoundError(name);
+			throw new NamedMemberNotFoundError(name, this);
 		}
 
 		members.removeSlot(name);
@@ -149,7 +149,7 @@ public class Scope implements WrappedObject {
 		}
 		while (s != null);
 
-		throw new NamedMemberNotFoundError(name);
+		throw new NamedMemberNotFoundError(name, this);
 	}
 
 	public AssignType hasMember(String name) {

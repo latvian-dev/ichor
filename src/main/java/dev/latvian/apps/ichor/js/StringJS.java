@@ -108,7 +108,7 @@ public record StringJS(String self) implements PrototypeWrappedObject {
 	public Object get(Context cx, Scope scope, String name) {
 		return switch (name) {
 			case "length" -> self.length();
-			case "charAt" -> Functions.bound(self, CHAR_AT);
+			case "charAt" -> CHAR_AT.with(self);
 			case "charCodeAt" -> Functions.WIP;
 			case "indexOf" -> Functions.WIP;
 			case "lastIndexOf" -> Functions.WIP;
@@ -125,7 +125,7 @@ public record StringJS(String self) implements PrototypeWrappedObject {
 			case "replace" -> Functions.WIP;
 			case "localeCompare" -> Functions.WIP;
 			case "toLocaleLowerCase" -> Functions.WIP;
-			case "trim" -> Functions.bound(self, TRIM);
+			case "trim" -> TRIM.with(self);
 			case "trimLeft" -> Functions.WIP;
 			case "trimRight" -> Functions.WIP;
 			case "includes" -> Functions.WIP;
@@ -138,6 +138,7 @@ public record StringJS(String self) implements PrototypeWrappedObject {
 			case "padEnd" -> Functions.WIP;
 			case "trimStart" -> Functions.WIP;
 			case "trimEnd" -> Functions.WIP;
+			case "class" -> self.getClass();
 			default -> PrototypeWrappedObject.super.get(cx, scope, name);
 		};
 	}

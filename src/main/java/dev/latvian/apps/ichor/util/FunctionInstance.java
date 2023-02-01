@@ -16,9 +16,9 @@ public class FunctionInstance implements CallableTypeAdapter {
 		public final int requiredCount;
 		public final int actualCount;
 
-		public ArgumentCountMismatchError(int requiredCount, int actualCount) {
-			super("Invalid number of arguments: " + actualCount + " < " + requiredCount);
-			this.requiredCount = requiredCount;
+		public ArgumentCountMismatchError(int expectedCount, int actualCount) {
+			super("Invalid number of arguments: Expected " + expectedCount + ", got " + actualCount);
+			this.requiredCount = expectedCount;
 			this.actualCount = actualCount;
 		}
 	}

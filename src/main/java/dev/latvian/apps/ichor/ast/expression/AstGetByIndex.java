@@ -15,11 +15,6 @@ public class AstGetByIndex extends AstGetFrom {
 	}
 
 	@Override
-	public Object evalKey(Context cx, Scope scope) {
-		return index;
-	}
-
-	@Override
 	public void append(AstStringBuilder builder) {
 		builder.appendValue(from);
 		builder.append('[');
@@ -29,10 +24,11 @@ public class AstGetByIndex extends AstGetFrom {
 
 	@Override
 	public Object eval(Context cx, Scope scope) {
-		var r = cx.wrap(scope, evalSelf(cx, scope)).get(cx, scope, index);
+		var self = evalSelf(cx, scope);
+		var r = cx.wrap(scope, self).get(cx, scope, index);
 
 		if (r == Special.NOT_FOUND) {
-			throw new IndexedMemberNotFoundError(index).pos(this);
+			throw new IndexedMemberNotFoundError(index, self).pos(this);
 		}
 
 		return r;
@@ -40,8 +36,9 @@ public class AstGetByIndex extends AstGetFrom {
 
 	@Override
 	public void set(Context cx, Scope scope, Object value) {
-		if (!cx.wrap(scope, evalSelf(cx, scope)).set(cx, scope, index, value)) {
-			throw new IndexedMemberNotFoundError(index).pos(this);
+		var self = evalSelf(cx, scope);
+		if (!cx.wrap(scope, self).set(cx, scope, index, value)) {
+			throw new IndexedMemberNotFoundError(index, self).pos(this);
 		}
 	}
 

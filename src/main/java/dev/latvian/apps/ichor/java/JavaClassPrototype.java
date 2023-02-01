@@ -148,7 +148,23 @@ public class JavaClassPrototype extends Prototype {
 
 	@Override
 	public String toString() {
-		return type.getName();
+		var sb = new StringBuilder("[JavaClass ");
+		var parts = type.getName().split("\\.");
+
+		for (int i = 0; i < parts.length - 1; i++) {
+			if (parts[i].length() > 4) {
+				sb.append(parts[i], 0, 3);
+				sb.append('…');
+			} else {
+				sb.append(parts[i]);
+			}
+
+			sb.append('.');
+		}
+
+		sb.append(parts[parts.length - 1]);
+		sb.append(']');
+		return sb.toString();
 	}
 
 	@Override

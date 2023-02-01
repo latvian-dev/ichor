@@ -10,10 +10,6 @@ public class Functions {
 		throw new WIPFeatureError();
 	};
 
-	public static <T> Callable bound(T self, Bound<T> function) {
-		return new BoundCallable<>(self, function);
-	}
-
 	public static Callable ofN(ArgN function) {
 		return function;
 	}
@@ -33,6 +29,10 @@ public class Functions {
 	@FunctionalInterface
 	public interface Bound<T> {
 		Object call(Context cx, Scope scope, T self, Object[] args);
+
+		default Callable with(T self) {
+			return new BoundCallable<>(self, this);
+		}
 	}
 
 	public record BoundCallable<T>(T self, Bound<T> function) implements Callable {

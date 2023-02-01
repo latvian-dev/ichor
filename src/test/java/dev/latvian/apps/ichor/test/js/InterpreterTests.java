@@ -49,7 +49,7 @@ public class InterpreterTests {
 		rootScope.addSafePrototypes();
 		var console = new TestConsole(System.out);
 		rootScope.addImmutable("console", console);
-		rootScope.add("Advanced", AdvancedTestUtils.class);
+		rootScope.addImmutable("Advanced", new AdvancedTestUtils(console));
 		rootScopeCallback.accept(rootScope);
 
 		var tokenStream = new TokenStreamJS(cx, new NamedTokenSource(filename), input);
@@ -637,9 +637,9 @@ public class InterpreterTests {
 	@Test
 	public void prototypeProperty() {
 		testInterpreter("""
-				console.log("".__prototype__)
-				console.log(String.__prototype__)
-				console.log(6.__prototype__)
+				console.log("".__proto__)
+				console.log(String.prototype)
+				console.log(6.__proto__)
 				""", """
 				String
 				String
@@ -653,6 +653,54 @@ public class InterpreterTests {
 				console.log(String.raw`Hi`)
 				""", """
 				Hi
+				""");
+	}
+
+	@Test
+	public void arrPush() {
+		testInterpreter("""
+				const arr = ['a', 'b', 'c']
+				arr.push('d')
+				console.log(arr)
+				""", """
+				['a', 'b', 'c', 'd']
+				""");
+	}
+
+	@Test
+	public void arrPop() {
+		testInterpreter("""
+				const arr = ['a', 'b', 'c']
+				const last = arr.pop()
+				console.log(arr)
+				console.log(last)
+				""", """
+				['a', 'b']
+				c
+				""");
+	}
+
+	@Test
+	public void arrUnshift() {
+		testInterpreter("""
+				const arr = ['a', 'b', 'c']
+				arr.unshift('d')
+				console.log(arr)
+				""", """
+				['d', 'a', 'b', 'c']
+				""");
+	}
+
+	@Test
+	public void arrShift() {
+		testInterpreter("""
+				const arr = ['a', 'b', 'c']
+				const first = arr.shift()
+				console.log(arr)
+				console.log(first)
+				""", """
+				['b', 'c']
+				a
 				""");
 	}
 }

@@ -57,8 +57,9 @@ import dev.latvian.apps.ichor.error.ParseErrorMessage;
 import dev.latvian.apps.ichor.error.ParseErrorType;
 import dev.latvian.apps.ichor.exit.ExitType;
 import dev.latvian.apps.ichor.js.ast.AstArguments;
+import dev.latvian.apps.ichor.js.ast.AstClassPrototype;
 import dev.latvian.apps.ichor.js.ast.AstDebugger;
-import dev.latvian.apps.ichor.js.ast.AstPrototype;
+import dev.latvian.apps.ichor.js.ast.AstObjectPrototype;
 import dev.latvian.apps.ichor.js.ast.AstTypeOf;
 import dev.latvian.apps.ichor.token.DeclaringToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
@@ -933,8 +934,10 @@ public class ParserJS implements Parser {
 	}
 
 	private Object namedGet(Object expr, String name, TokenPosSupplier pos) {
-		if (name.equals("__prototype__")) {
-			return new AstPrototype(expr).pos(pos);
+		if (name.equals("__proto__")) {
+			return new AstObjectPrototype(expr).pos(pos);
+		} else if (name.equals("prototype")) {
+			return new AstClassPrototype(expr).pos(pos);
 		} else {
 			return new AstGetByName(expr, name).pos(pos);
 		}

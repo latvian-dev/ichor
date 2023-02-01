@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @SuppressWarnings("rawtypes")
-public class ListJS<T extends List> extends CollectionJS<T> {
+public class ListJS<T extends List> extends CollectionJS<T> implements ListLikeJS {
 	public static Prototype createDefaultArrayPrototype() {
 		return new Prototype("Array") {
 			@Override
@@ -26,26 +26,41 @@ public class ListJS<T extends List> extends CollectionJS<T> {
 	}
 
 	@Override
-	public Object get(Context cx, Scope scope, int index) {
+	public int getLength() {
+		return self.size();
+	}
+
+	@Override
+	public Object getAt(int index) {
 		var v = self.get(index);
 		return v == Special.NULL ? null : v;
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	public boolean set(Context cx, Scope scope, int index, @Nullable Object value) {
+	@SuppressWarnings("unchecked")
+	public void setAt(int index, Object value) {
 		if (index >= self.size()) {
 			self.add(value == null ? Special.NULL : value);
 		} else {
 			self.set(index, value == null ? Special.NULL : value);
 		}
-
-		return true;
 	}
 
 	@Override
-	public boolean delete(Context cx, Scope scope, int index) {
+	@SuppressWarnings("unchecked")
+	public void addAt(int index, Object value) {
+		self.add(index, value == null ? Special.NULL : value);
+	}
+
+	@Override
+	public void deleteAt(int index) {
 		self.remove(index);
-		return true;
+	}
+
+	@Override
+	@Nullable
+	public Object get(Context cx, Scope scope, String name) {
+		var ll = getListLike(name);
+		return ll != null ? ll : super.get(cx, scope, name);
 	}
 }

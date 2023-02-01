@@ -19,11 +19,6 @@ public class AstGetByName extends AstGetFrom {
 	}
 
 	@Override
-	public Object evalKey(Context cx, Scope scope) {
-		return name;
-	}
-
-	@Override
 	public void append(AstStringBuilder builder) {
 		builder.appendValue(from);
 
@@ -39,10 +34,11 @@ public class AstGetByName extends AstGetFrom {
 
 	@Override
 	public Object eval(Context cx, Scope scope) {
-		var r = cx.wrap(scope, evalSelf(cx, scope)).get(cx, scope, name);
+		var self = evalSelf(cx, scope);
+		var r = cx.wrap(scope, self).get(cx, scope, name);
 
 		if (r == Special.NOT_FOUND) {
-			throw new NamedMemberNotFoundError(name).pos(this);
+			throw new NamedMemberNotFoundError(name, self).pos(this);
 		}
 
 		return r;
@@ -50,8 +46,10 @@ public class AstGetByName extends AstGetFrom {
 
 	@Override
 	public void set(Context cx, Scope scope, Object value) {
-		if (!cx.wrap(scope, evalSelf(cx, scope)).set(cx, scope, name, value)) {
-			throw new NamedMemberNotFoundError(name).pos(this);
+		var self = evalSelf(cx, scope);
+
+		if (!cx.wrap(scope, self).set(cx, scope, name, value)) {
+			throw new NamedMemberNotFoundError(name, self).pos(this);
 		}
 	}
 

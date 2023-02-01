@@ -59,10 +59,9 @@ public record ClassJS(Class<?> self) implements PrototypeWrappedObject {
 			case "componentType" -> self.getComponentType();
 			case "canonicalName" -> self.getCanonicalName();
 			case "typeName" -> self.getTypeName();
-			case "isInstance" -> Functions.bound(self, IS_INSTANCE);
-			case "isAssignableFrom" -> Functions.bound(self, IS_ASSIGNABLE_FROM);
+			case "isInstance" -> IS_INSTANCE.with(self);
+			case "isAssignableFrom" -> IS_ASSIGNABLE_FROM.with(self);
 			case "class" -> Class.class;
-			case "__prototype__" -> cx.getClassPrototype(self);
 			default -> PrototypeWrappedObject.super.get(cx, scope, name);
 		};
 	}
