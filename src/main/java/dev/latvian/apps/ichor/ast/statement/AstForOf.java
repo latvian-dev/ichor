@@ -42,10 +42,10 @@ public class AstForOf extends AstLabeledStatement {
 
 	@Override
 	public void interpret(Context cx, Scope scope) {
-		var f = cx.eval(scope, from);
-		var itr = getIterable(cx, scope, f);
+		var self = cx.eval(scope, from);
+		var itr = getIterable(cx, scope, self);
 
-		if (itr.isEmpty()) {
+		if (itr == null || itr.isEmpty()) {
 			return;
 		}
 
@@ -68,12 +68,13 @@ public class AstForOf extends AstLabeledStatement {
 		}
 	}
 
-	protected Collection<?> getIterable(Context cx, Scope scope, Object from) {
-		if (from instanceof Collection<?>) {
-			return (Collection<?>) from;
+	protected Collection<?> getIterable(Context cx, Scope scope, Object self) {
+		if (self instanceof Collection<?>) {
+			return (Collection<?>) self;
 		}
 
-		return cx.wrap(scope, from).values(cx, scope);
+		var p = cx.getPrototype(scope, self);
+		return p.values(cx, scope, p.cast(self));
 	}
 
 	@Override

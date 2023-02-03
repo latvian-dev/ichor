@@ -5,5 +5,5 @@ import dev.latvian.apps.ichor.Scope;
 
 @FunctionalInterface
 public interface PrototypeSupplier {
-	Prototype getPrototype(Context cx, Scope scope);
+	Prototype<?> getPrototype(Context cx, Scope scope);
 }

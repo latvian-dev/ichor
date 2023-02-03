@@ -3,21 +3,21 @@ package dev.latvian.apps.ichor;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.CastError;
 import dev.latvian.apps.ichor.error.InternalScriptError;
-import dev.latvian.apps.ichor.java.JavaTypePrototype;
-import dev.latvian.apps.ichor.js.JavaObjectJS;
-import dev.latvian.apps.ichor.js.NumberJS;
+import dev.latvian.apps.ichor.java.AnnotatedElementPrototype;
+import dev.latvian.apps.ichor.java.JavaClassPrototype;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
+import dev.latvian.apps.ichor.js.type.NumberJS;
 import dev.latvian.apps.ichor.prototype.Prototype;
 
+import java.lang.reflect.AnnotatedElement;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 public abstract class Context {
-	private Map<Class<?>, Prototype> classPrototypeCache;
+	private Map<Class<?>, Prototype<?>> classPrototypeCache;
 	private final Map<ContextProperty<?>, Object> properties;
 	private int maxScopeDepth;
 	private long interpretingTimeout;
@@ -32,7 +32,7 @@ public abstract class Context {
 		environment = Special.NOT_FOUND;
 	}
 
-	public List<Prototype> getSafePrototypes() {
+	public List<Prototype<?>> getSafePrototypes() {
 		return Collections.emptyList();
 	}
 
@@ -79,24 +79,12 @@ public abstract class Context {
 	}
 
 	public Object eval(Scope scope, Object o) {
-		if (o instanceof WrappedObject wrapped) {
-			return wrapped.unwrap();
-		} else if (o instanceof Callable) {
+		if (o instanceof Callable) {
 			return o;
 		} else if (o instanceof Evaluable eval) {
 			return eval.eval(this, scope);
 		} else {
 			return o;
-		}
-	}
-
-	public WrappedObject wrap(Scope scope, Object o) {
-		if (o == null) {
-			return Special.NULL;
-		} else if (o instanceof WrappedObject w) {
-			return w;
-		} else {
-			return new JavaObjectJS<>(o, getClassPrototype(o.getClass()));
 		}
 	}
 
@@ -116,7 +104,11 @@ public abstract class Context {
 		} else if (o instanceof Evaluable eval) {
 			eval.evalString(this, scope, builder);
 		} else {
-			wrap(scope, o).asString(this, scope, builder, escape);
+			var p = getPrototype(scope, o);
+
+			if (o == p || !p.asString(this, scope, p.cast(o), builder, escape)) {
+				builder.append(o);
+			}
 		}
 	}
 
@@ -140,10 +132,26 @@ public abstract class Context {
 			eval.evalString(this, scope, builder);
 			return builder.toString();
 		} else {
+			var p = getPrototype(scope, o);
+
+			if (o == p) {
+				return o.toString();
+			}
+
 			var builder = new StringBuilder();
-			wrap(scope, o).asString(this, scope, builder, escape);
+
+			if (!p.asString(this, scope, p.cast(o), builder, escape)) {
+				return o.toString();
+			}
+
 			return builder.toString();
 		}
+	}
+
+	private Number asNumber0(Scope scope, Object o) {
+		var p = getPrototype(scope, o);
+		var n = o == p ? null : p.asNumber(this, scope, p.cast(o));
+		return n == null ? NumberJS.ONE : n;
 	}
 
 	public Number asNumber(Scope scope, Object o) {
@@ -163,7 +171,7 @@ public abstract class Context {
 			return ((Evaluable) o).evalDouble(this, scope);
 		}
 
-		return wrap(scope, o).asNumber(this, scope);
+		return asNumber0(scope, o);
 	}
 
 	public double asDouble(Scope scope, Object o) {
@@ -183,7 +191,7 @@ public abstract class Context {
 			return ((Evaluable) o).evalDouble(this, scope);
 		}
 
-		return asNumber(scope, o).doubleValue();
+		return asNumber0(scope, o).doubleValue();
 	}
 
 	public int asInt(Scope scope, Object o) {
@@ -203,7 +211,7 @@ public abstract class Context {
 			return ((Evaluable) o).evalInt(this, scope);
 		}
 
-		return asNumber(scope, o).intValue();
+		return asNumber0(scope, o).intValue();
 	}
 
 	public long asLong(Scope scope, Object o) {
@@ -224,7 +232,7 @@ public abstract class Context {
 			return ((Evaluable) o).evalInt(this, scope);
 		}
 
-		return asNumber(scope, o).longValue();
+		return asNumber0(scope, o).longValue();
 	}
 
 	public boolean asBoolean(Scope scope, Object o) {
@@ -240,7 +248,9 @@ public abstract class Context {
 			return ((Evaluable) o).evalBoolean(this, scope);
 		}
 
-		return wrap(scope, o).asBoolean(this, scope);
+		var p = getPrototype(scope, o);
+		var n = o == p ? null : p.asBoolean(this, scope, p.cast(o));
+		return n == null ? Boolean.TRUE : n;
 	}
 
 	public char asChar(Scope scope, Object o) {
@@ -292,23 +302,33 @@ public abstract class Context {
 		throw new CastError(o.getClass().getName(), toType.getName());
 	}
 
-	public Prototype getPrototype(Scope scope, Object o) {
+	public Prototype<?> getPrototype(Scope scope, Object o) {
 		return getClassPrototype(o.getClass());
 	}
 
-	public Prototype getClassPrototype(Class<?> c) {
+	public Prototype<?> getClassPrototype(Class<?> c) {
 		if (classPrototypeCache == null) {
-			classPrototypeCache = new HashMap<>();
+			classPrototypeCache = new IdentityHashMap<>();
 		}
 
 		var p = classPrototypeCache.get(c);
 
 		if (p == null) {
-			p = new JavaTypePrototype(this, c);
+			p = createJavaPrototype(c);
 			classPrototypeCache.put(c, p);
 		}
 
 		return p;
+	}
+
+	protected Prototype<?> createJavaPrototype(Class<?> type) {
+		if (type == Class.class) {
+			return new JavaClassPrototype(this);
+		} else if (type == AnnotatedElement.class) {
+			return new AnnotatedElementPrototype(this);
+		}
+
+		return new Prototype<>(this, type);
 	}
 
 	@Override
@@ -324,7 +344,8 @@ public abstract class Context {
 		} else if (left instanceof CharSequence || left instanceof Character || right instanceof CharSequence || right instanceof Character) {
 			return asString(scope, left, false).equals(asString(scope, right, false));
 		} else {
-			return wrap(scope, left).equals(this, scope, right, shallow);
+			var p = getPrototype(scope, left);
+			return p.equals(this, scope, p.cast(left), right, shallow);
 		}
 	}
 
@@ -334,7 +355,8 @@ public abstract class Context {
 		} else if (left instanceof Number l && right instanceof Number r) {
 			return Math.abs(l.doubleValue() - r.doubleValue()) < 0.00001D ? 0 : Double.compare(l.doubleValue(), r.doubleValue());
 		} else {
-			return wrap(scope, left).compareTo(this, scope, right);
+			var p = getPrototype(scope, right);
+			return p.compareTo(this, scope, p.cast(left), right);
 		}
 	}
 }

@@ -1,11 +1,12 @@
 package dev.latvian.apps.ichor;
 
 import dev.latvian.apps.ichor.prototype.Prototype;
+import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
 import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.token.TokenPos;
 import org.jetbrains.annotations.Nullable;
 
-public class Special implements Token, Evaluable, WrappedObject {
+public class Special implements Token, Evaluable, PrototypeSupplier {
 	public static final Object NOT_FOUND = new Object(); // Internal use only
 	public static final Special NULL = new Special("null");
 	public static final Special UNDEFINED = new Special("undefined");
@@ -14,14 +15,14 @@ public class Special implements Token, Evaluable, WrappedObject {
 		return o == null || o instanceof Special;
 	}
 
-	public final Prototype prototype;
+	public final Prototype<?> prototype;
 
 	private Special(String name) {
-		prototype = new Prototype(name);
+		prototype = new Prototype<>(null, name, Void.TYPE);
 	}
 
 	@Override
-	public Prototype getPrototype(Context cx, Scope scope) {
+	public Prototype<?> getPrototype(Context cx, Scope scope) {
 		return prototype;
 	}
 
@@ -63,10 +64,5 @@ public class Special implements Token, Evaluable, WrappedObject {
 	@Override
 	public Evaluable toEvaluable(Parser parser, TokenPos pos) {
 		return this;
-	}
-
-	@Override
-	public Object unwrap() {
-		return null;
 	}
 }

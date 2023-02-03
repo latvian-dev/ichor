@@ -1,17 +1,16 @@
-package dev.latvian.apps.ichor.js;
+package dev.latvian.apps.ichor.js.type;
 
 import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.prototype.Prototype;
-import dev.latvian.apps.ichor.prototype.PrototypeWrappedObject;
 import dev.latvian.apps.ichor.util.Functions;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 
-public record NumberJS(Number self) implements PrototypeWrappedObject {
+public class NumberJS extends Prototype<Number> {
 	public static final Double ZERO = 0D;
 	public static final Double ONE = 1D;
 	public static final Double NaN = Double.NaN;
@@ -54,70 +53,40 @@ public record NumberJS(Number self) implements PrototypeWrappedObject {
 	private static final Functions.Bound<Number> TO_DOUBLE = (cx, scope, num, args) -> num.doubleValue();
 	private static final Functions.Bound<Number> TO_CHAR = (cx, scope, num, args) -> (char) num.intValue();
 
-	public static Prototype createDefaultPrototype() {
-		return new Prototype("Number") {
-			@Override
-			public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-				return args.length == 0 ? NaN : cx.asNumber(scope, args[0]);
-			}
-
-			@Override
-			@Nullable
-			public Object get(Context cx, Scope scope, String name) {
-				return switch (name) {
-					case "NaN" -> NaN;
-					case "POSITIVE_INFINITY" -> POSITIVE_INFINITY;
-					case "NEGATIVE_INFINITY" -> NEGATIVE_INFINITY;
-					case "MAX_VALUE" -> MAX_VALUE;
-					case "MIN_VALUE" -> MIN_VALUE;
-					case "MAX_SAFE_INTEGER" -> MAX_SAFE_INTEGER;
-					case "MIN_SAFE_INTEGER" -> MIN_SAFE_INTEGER;
-					case "EPSILON" -> EPSILON;
-					case "isFinite" -> IS_FINITE;
-					case "isNaN" -> IS_NAN;
-					case "isInteger" -> IS_INTEGER;
-					case "isSafeInteger" -> IS_SAFE_INTEGER;
-					case "parseFloat" -> PARSE_FLOAT;
-					case "parseInt" -> PARSE_INT;
-					default -> super.get(cx, scope, name);
-				};
-			}
-		};
+	public NumberJS(Context cx) {
+		super(cx, "Number", Number.class);
 	}
 
 	@Override
-	public Object unwrap() {
-		return self;
-	}
-
-	@Override
-	public Prototype getPrototype(Context cx, Scope scope) {
-		return ((ContextJS) cx).numberPrototype;
-	}
-
-	@Override
-	public String toString() {
-		return "[" + self.getClass().getSimpleName() + " " + self + "]";
-	}
-
-	@Override
-	public void asString(Context cx, Scope scope, StringBuilder builder, boolean escape) {
-		AstStringBuilder.wrapNumber(self, builder);
-	}
-
-	@Override
-	public Number asNumber(Context cx, Scope scope) {
-		return self;
-	}
-
-	@Override
-	public boolean asBoolean(Context cx, Scope scope) {
-		return self.doubleValue() != 0D;
+	public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
+		return args.length == 0 ? NaN : cx.asNumber(scope, args[0]);
 	}
 
 	@Override
 	@Nullable
-	public Object get(Context cx, Scope scope, String name) {
+	public Object getStatic(Context cx, Scope scope, String name) {
+		return switch (name) {
+			case "NaN" -> NaN;
+			case "POSITIVE_INFINITY" -> POSITIVE_INFINITY;
+			case "NEGATIVE_INFINITY" -> NEGATIVE_INFINITY;
+			case "MAX_VALUE" -> MAX_VALUE;
+			case "MIN_VALUE" -> MIN_VALUE;
+			case "MAX_SAFE_INTEGER" -> MAX_SAFE_INTEGER;
+			case "MIN_SAFE_INTEGER" -> MIN_SAFE_INTEGER;
+			case "EPSILON" -> EPSILON;
+			case "isFinite" -> IS_FINITE;
+			case "isNaN" -> IS_NAN;
+			case "isInteger" -> IS_INTEGER;
+			case "isSafeInteger" -> IS_SAFE_INTEGER;
+			case "parseFloat" -> PARSE_FLOAT;
+			case "parseInt" -> PARSE_INT;
+			default -> super.getStatic(cx, scope, name);
+		};
+	}
+
+	@Override
+	@Nullable
+	public Object getLocal(Context cx, Scope scope, Number self, String name) {
 		return switch (name) {
 			case "millis", "ms" -> Duration.ofMillis(self.longValue());
 			case "seconds", "s" -> Duration.ofSeconds(self.longValue());
@@ -134,8 +103,23 @@ public record NumberJS(Number self) implements PrototypeWrappedObject {
 			case "toFloat" -> TO_FLOAT.with(self);
 			case "toDouble" -> TO_DOUBLE.with(self);
 			case "toChar" -> TO_CHAR.with(self);
-			case "class" -> self.getClass();
-			default -> PrototypeWrappedObject.super.get(cx, scope, name);
+			default -> super.getLocal(cx, scope, self, name);
 		};
+	}
+
+	@Override
+	public boolean asString(Context cx, Scope scope, Number self, StringBuilder builder, boolean escape) {
+		AstStringBuilder.wrapNumber(self, builder);
+		return true;
+	}
+
+	@Override
+	public Number asNumber(Context cx, Scope scope, Number self) {
+		return self;
+	}
+
+	@Override
+	public Boolean asBoolean(Context cx, Scope scope, Number self) {
+		return self.doubleValue() != 0D;
 	}
 }

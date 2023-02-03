@@ -5,7 +5,7 @@ import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.List;
 
-public class NativeArrayList extends AbstractList<Object> {
+public class JavaArray extends AbstractList<Object> {
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static List<Object> of(Object array) {
 		if (array instanceof List list) {
@@ -14,13 +14,13 @@ public class NativeArrayList extends AbstractList<Object> {
 			return arr.length == 0 ? List.of() : Arrays.asList(arr);
 		}
 
-		return new NativeArrayList(array);
+		return new JavaArray(array);
 	}
 
 	public final Object array;
 	private int size = -1;
 
-	public NativeArrayList(Object array) {
+	public JavaArray(Object array) {
 		this.array = array;
 	}
 

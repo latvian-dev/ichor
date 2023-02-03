@@ -1,17 +1,17 @@
-package dev.latvian.apps.ichor.js;
+package dev.latvian.apps.ichor.js.type;
 
 import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
+import dev.latvian.apps.ichor.js.TokenStreamJS;
 import dev.latvian.apps.ichor.prototype.Prototype;
-import dev.latvian.apps.ichor.prototype.PrototypeWrappedObject;
 import dev.latvian.apps.ichor.util.Functions;
-import dev.latvian.apps.ichor.util.NativeArrayList;
+import dev.latvian.apps.ichor.util.JavaArray;
 import org.jetbrains.annotations.Nullable;
 
-public record StringJS(String self) implements PrototypeWrappedObject {
+public class StringJS extends Prototype<String> {
 	public static class InvalidCodePointError extends ScriptError {
 		public final String codePoint;
 
@@ -24,7 +24,7 @@ public record StringJS(String self) implements PrototypeWrappedObject {
 	private static final Callable RAW = Functions.ofN((cx, scope, args) -> {
 		var sb = new StringBuilder();
 
-		for (var o : NativeArrayList.of(args[0])) {
+		for (var o : JavaArray.of(args[0])) {
 			sb.append(cx.asString(scope, o, false));
 		}
 
@@ -72,40 +72,30 @@ public record StringJS(String self) implements PrototypeWrappedObject {
 	private static final Functions.Bound<String> CHAR_AT = (cx, scope, str, args) -> str.charAt(cx.asInt(scope, args[0]));
 	private static final Functions.Bound<String> TRIM = (cx, scope, str, args) -> str.trim();
 
-	public static Prototype createDefaultPrototype() {
-		return new Prototype("String") {
-			@Override
-			public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-				return args.length == 0 ? "" : cx.asString(scope, args[0], false);
-			}
+	public StringJS(Context cx) {
+		super(cx, "String", String.class);
+	}
 
-			@Override
-			@Nullable
-			public Object get(Context cx, Scope scope, String name) {
-				return switch (name) {
-					case "raw" -> RAW;
-					case "fromCharCode" -> FROM_CHAR_CODE;
-					case "fromCodePoint" -> FROM_CODE_POINT;
-					default -> super.get(cx, scope, name);
-				};
-			}
+	@Override
+	public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
+		return args.length == 0 ? "" : cx.asString(scope, args[0], false);
+	}
+
+	@Override
+	@Nullable
+	public Object getStatic(Context cx, Scope scope, String name) {
+		return switch (name) {
+			case "raw" -> RAW;
+			case "fromCharCode" -> FROM_CHAR_CODE;
+			case "fromCodePoint" -> FROM_CODE_POINT;
+			default -> super.getStatic(cx, scope, name);
 		};
-	}
-
-	@Override
-	public Object unwrap() {
-		return self;
-	}
-
-	@Override
-	public Prototype getPrototype(Context cx, Scope scope) {
-		return ((ContextJS) cx).stringPrototype;
 	}
 
 	@Override
 	@Nullable
 	@SuppressWarnings("DuplicateBranchesInSwitch")
-	public Object get(Context cx, Scope scope, String name) {
+	public Object getLocal(Context cx, Scope scope, String self, String name) {
 		return switch (name) {
 			case "length" -> self.length();
 			case "charAt" -> CHAR_AT.with(self);
@@ -138,22 +128,23 @@ public record StringJS(String self) implements PrototypeWrappedObject {
 			case "padEnd" -> Functions.WIP;
 			case "trimStart" -> Functions.WIP;
 			case "trimEnd" -> Functions.WIP;
-			case "class" -> self.getClass();
-			default -> PrototypeWrappedObject.super.get(cx, scope, name);
+			default -> super.getLocal(cx, scope, self, name);
 		};
 	}
 
 	@Override
-	public void asString(Context cx, Scope scope, StringBuilder builder, boolean escape) {
+	public boolean asString(Context cx, Scope scope, String self, StringBuilder builder, boolean escape) {
 		if (escape) {
 			AstStringBuilder.wrapString(self, builder);
 		} else {
 			builder.append(self);
 		}
+
+		return true;
 	}
 
 	@Override
-	public Number asNumber(Context cx, Scope scope) {
+	public Number asNumber(Context cx, Scope scope, String self) {
 		try {
 			return TokenStreamJS.parseNumber(self);
 		} catch (NumberFormatException ex) {
@@ -162,7 +153,7 @@ public record StringJS(String self) implements PrototypeWrappedObject {
 	}
 
 	@Override
-	public boolean asBoolean(Context cx, Scope scope) {
+	public Boolean asBoolean(Context cx, Scope scope, String self) {
 		return !self.isEmpty();
 	}
 }

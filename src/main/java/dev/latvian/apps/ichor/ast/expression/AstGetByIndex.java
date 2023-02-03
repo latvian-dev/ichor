@@ -25,7 +25,13 @@ public class AstGetByIndex extends AstGetFrom {
 	@Override
 	public Object eval(Context cx, Scope scope) {
 		var self = evalSelf(cx, scope);
-		var r = cx.wrap(scope, self).get(cx, scope, index);
+		var p = cx.getPrototype(scope, self);
+
+		if (self == p) {
+			throw new IndexedMemberNotFoundError(index, self).pos(this);
+		}
+
+		var r = p.getLocal(cx, scope, p.cast(self), index);
 
 		if (r == Special.NOT_FOUND) {
 			throw new IndexedMemberNotFoundError(index, self).pos(this);
@@ -37,13 +43,26 @@ public class AstGetByIndex extends AstGetFrom {
 	@Override
 	public void set(Context cx, Scope scope, Object value) {
 		var self = evalSelf(cx, scope);
-		if (!cx.wrap(scope, self).set(cx, scope, index, value)) {
+		var p = cx.getPrototype(scope, self);
+
+		if (self == p) {
+			throw new IndexedMemberNotFoundError(index, self).pos(this);
+		}
+
+		if (!p.setLocal(cx, scope, p.cast(self), index, value)) {
 			throw new IndexedMemberNotFoundError(index, self).pos(this);
 		}
 	}
 
 	@Override
 	public boolean delete(Context cx, Scope scope) {
-		return cx.wrap(scope, evalSelf(cx, scope)).delete(cx, scope, index);
+		var self = evalSelf(cx, scope);
+		var p = cx.getPrototype(scope, self);
+
+		if (self == p) {
+			throw new IndexedMemberNotFoundError(index, self).pos(this);
+		}
+
+		return p.deleteLocal(cx, scope, p.cast(self), index);
 	}
 }

@@ -1,15 +1,8 @@
 package dev.latvian.apps.ichor;
 
-import dev.latvian.apps.ichor.prototype.Prototype;
-import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
 import org.jetbrains.annotations.Nullable;
 
-public interface Evaluable extends PrototypeSupplier {
-	@Override
-	default Prototype getPrototype(Context cx, Scope scope) {
-		return cx.getPrototype(scope, eval(cx, scope));
-	}
-
+public interface Evaluable {
 	Object eval(Context cx, Scope scope);
 
 	@Nullable

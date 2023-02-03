@@ -3,6 +3,7 @@ package dev.latvian.apps.ichor.util;
 import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
+import dev.latvian.apps.ichor.error.ArgumentCountMismatchError;
 import dev.latvian.apps.ichor.error.WIPFeatureError;
 
 public class Functions {
@@ -59,7 +60,7 @@ public class Functions {
 		@Override
 		default Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
 			if (args.length < 1) {
-				throw new FunctionInstance.ArgumentCountMismatchError(1, args.length);
+				throw new ArgumentCountMismatchError(1, args.length);
 			}
 
 			return call(cx, scope, args[0]);
@@ -73,7 +74,7 @@ public class Functions {
 		@Override
 		default Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
 			if (args.length < 2) {
-				throw new FunctionInstance.ArgumentCountMismatchError(2, args.length);
+				throw new ArgumentCountMismatchError(2, args.length);
 			}
 
 			return call(cx, scope, args[0], args[1]);
@@ -87,7 +88,7 @@ public class Functions {
 		@Override
 		default Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
 			if (args.length < 3) {
-				throw new FunctionInstance.ArgumentCountMismatchError(3, args.length);
+				throw new ArgumentCountMismatchError(3, args.length);
 			}
 
 			return call(cx, scope, args[0], args[1], args[2]);

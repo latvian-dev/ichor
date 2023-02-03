@@ -3,6 +3,8 @@ package dev.latvian.apps.ichor.js;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.error.TokenStreamError;
 import dev.latvian.apps.ichor.exit.EndOfFileExit;
+import dev.latvian.apps.ichor.js.type.MathJS;
+import dev.latvian.apps.ichor.js.type.NumberJS;
 import dev.latvian.apps.ichor.token.IdentifierToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
 import dev.latvian.apps.ichor.token.Token;

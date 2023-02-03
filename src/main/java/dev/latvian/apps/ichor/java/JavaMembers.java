@@ -4,6 +4,7 @@ import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.expression.AstCall;
 import dev.latvian.apps.ichor.error.InternalScriptError;
+import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.Empty;
 import dev.latvian.apps.ichor.util.Signature;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +24,7 @@ public final class JavaMembers {
 	}
 
 	public final String name;
-	public JavaTypePrototype prototype;
+	public Prototype prototype;
 	public Field field;
 	public SigMethod[] methods;
 	public Method beanGet;
@@ -34,7 +35,7 @@ public final class JavaMembers {
 		this.name = name;
 	}
 
-	public void prepare(JavaTypePrototype p) {
+	public void prepare(Prototype p) {
 		prototype = p;
 
 		if (methods != null && methods.length >= 2) {

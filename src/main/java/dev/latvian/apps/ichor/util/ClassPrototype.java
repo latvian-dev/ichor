@@ -1,18 +1,17 @@
 package dev.latvian.apps.ichor.util;
 
+import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.statement.AstClass;
-import dev.latvian.apps.ichor.prototype.Prototype;
 
 import java.util.Arrays;
 
-public final class ClassPrototype extends Prototype {
+public final class ClassPrototype implements Callable {
 	public final AstClass astClass;
 	public final Scope classEvalScope;
 
 	public ClassPrototype(AstClass astClass, Scope classEvalScope) {
-		super(astClass.name);
 		this.astClass = astClass;
 		this.classEvalScope = classEvalScope;
 	}

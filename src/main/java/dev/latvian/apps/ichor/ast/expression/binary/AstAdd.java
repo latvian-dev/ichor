@@ -27,7 +27,10 @@ public class AstAdd extends AstBinary {
 		var r = cx.eval(scope, right);
 
 		if (l instanceof CharSequence || l instanceof Character || r instanceof CharSequence || r instanceof Character) {
-			return cx.asString(scope, l, false) + cx.asString(scope, r, false);
+			var sb = new StringBuilder();
+			cx.asString(scope, l, sb, false);
+			cx.asString(scope, r, sb, false);
+			return sb.toString();
 		} else if (l instanceof Number && r instanceof Number) {
 			return ((Number) l).doubleValue() + ((Number) r).doubleValue();
 		} else {

@@ -19,7 +19,9 @@ public class AstGetByNameOptional extends AstGetByName {
 
 	@Override
 	public Object eval(Context cx, Scope scope) {
-		var r = cx.wrap(scope, evalSelf(cx, scope)).get(cx, scope, name);
+		var self = evalSelf(cx, scope);
+		var p = cx.getPrototype(scope, self);
+		var r = self == p ? p.getStatic(cx, scope, name) : p.getLocal(cx, scope, p.cast(self), name);
 
 		if (Special.isInvalid(r)) {
 			return Special.UNDEFINED;

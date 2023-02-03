@@ -12,14 +12,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
 
-public class Scope implements WrappedObject {
+public class Scope {
 	public final Scope parent;
 	public RootScope root;
 	public SlotMap members;
 	private int depth;
 	public Object scopeOwner;
-	public WrappedObject scopeThis;
-	public WrappedObject scopeSuper;
+	public Scope scopeThis;
+	public Scope scopeSuper;
 	public Object[] scopeArguments;
 
 	protected Scope(Scope parent) {
@@ -191,22 +191,5 @@ public class Scope implements WrappedObject {
 
 	public int getDepth() {
 		return depth;
-	}
-
-	@Override
-	@Nullable
-	public Object get(Context cx, Scope scope, String name) {
-		var slot = getDeclaredMember(name);
-		return slot == null ? Special.NOT_FOUND : slot.value;
-	}
-
-	@Override
-	public boolean set(Context cx, Scope scope, String name, @Nullable Object value) {
-		if (getDeclaredMember(name) == null) {
-			add(name, value, false);
-			return true;
-		} else {
-			return setMember(name, value);
-		}
 	}
 }

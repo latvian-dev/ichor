@@ -4,9 +4,9 @@ import dev.latvian.apps.ichor.RootScope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.ScopeExit;
 import dev.latvian.apps.ichor.js.ContextJS;
-import dev.latvian.apps.ichor.js.NumberJS;
 import dev.latvian.apps.ichor.js.ParserJS;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
+import dev.latvian.apps.ichor.js.type.NumberJS;
 import dev.latvian.apps.ichor.test.AdvancedTestUtils;
 import dev.latvian.apps.ichor.test.ReflectionExample;
 import dev.latvian.apps.ichor.test.TestConsole;
@@ -641,9 +641,9 @@ public class InterpreterTests {
 				console.log(String.prototype)
 				console.log(6.__proto__)
 				""", """
-				String
-				String
-				Number
+				[JavaClass java.lang.String]
+				[JavaClass java.lang.String]
+				[JavaClass java.lang.Number]
 				""");
 	}
 

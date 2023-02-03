@@ -35,7 +35,8 @@ public class AstGetByName extends AstGetFrom {
 	@Override
 	public Object eval(Context cx, Scope scope) {
 		var self = evalSelf(cx, scope);
-		var r = cx.wrap(scope, self).get(cx, scope, name);
+		var p = cx.getPrototype(scope, self);
+		var r = self == p ? p.getStatic(cx, scope, name) : p.getLocal(cx, scope, p.cast(self), name);
 
 		if (r == Special.NOT_FOUND) {
 			throw new NamedMemberNotFoundError(name, self).pos(this);
@@ -47,14 +48,22 @@ public class AstGetByName extends AstGetFrom {
 	@Override
 	public void set(Context cx, Scope scope, Object value) {
 		var self = evalSelf(cx, scope);
+		var p = cx.getPrototype(scope, self);
 
-		if (!cx.wrap(scope, self).set(cx, scope, name, value)) {
+		if (!(self == p ? p.setStatic(cx, scope, name, value) : p.setLocal(cx, scope, p.cast(self), name, value))) {
 			throw new NamedMemberNotFoundError(name, self).pos(this);
 		}
 	}
 
 	@Override
 	public boolean delete(Context cx, Scope scope) {
-		return cx.wrap(scope, evalSelf(cx, scope)).delete(cx, scope, name);
+		var self = evalSelf(cx, scope);
+		var p = cx.getPrototype(scope, self);
+
+		if (self == p) {
+			throw new NamedMemberNotFoundError(name, self).pos(this);
+		}
+
+		return p.deleteLocal(cx, scope, p.cast(self), name);
 	}
 }
