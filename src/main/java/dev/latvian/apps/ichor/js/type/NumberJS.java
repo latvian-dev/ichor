@@ -9,6 +9,8 @@ import dev.latvian.apps.ichor.util.Functions;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
+import java.util.Collection;
+import java.util.List;
 
 public class NumberJS extends Prototype<Number> {
 	public static final Double ZERO = 0D;
@@ -105,6 +107,21 @@ public class NumberJS extends Prototype<Number> {
 			case "toChar" -> TO_CHAR.with(self);
 			default -> super.getLocal(cx, scope, self, name);
 		};
+	}
+
+	@Override
+	public Collection<?> keys(Context cx, Scope scope, Number self) {
+		return List.of();
+	}
+
+	@Override
+	public Collection<?> values(Context cx, Scope scope, Number self) {
+		return List.of();
+	}
+
+	@Override
+	public Collection<?> entries(Context cx, Scope scope, Number self) {
+		return List.of();
 	}
 
 	@Override

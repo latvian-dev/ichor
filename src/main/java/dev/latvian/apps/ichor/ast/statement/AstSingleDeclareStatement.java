@@ -24,7 +24,7 @@ public class AstSingleDeclareStatement extends AstDeclareStatement {
 
 	@Override
 	public void interpret(Context cx, Scope scope) {
-		variable.declare(cx, scope, assignToken.isConst());
+		variable.declare(cx, scope, assignToken.flags);
 	}
 
 	@Override

@@ -7,8 +7,10 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.BreakExit;
 import dev.latvian.apps.ichor.exit.ContinueExit;
+import dev.latvian.apps.ichor.js.type.IterableJS;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
+import java.util.Iterator;
 
 public class AstForOf extends AstLabeledStatement {
 	public String name;
@@ -45,11 +47,9 @@ public class AstForOf extends AstLabeledStatement {
 		var self = cx.eval(scope, from);
 		var itr = getIterable(cx, scope, self);
 
-		if (itr == null || (itr instanceof Collection<?> c && c.isEmpty())) {
-			return;
-		}
+		while (itr != null && itr.hasNext()) {
+			var it = itr.next();
 
-		for (var it : itr) {
 			try {
 				var s = scope.push();
 				s.addMutable(name, it);
@@ -68,13 +68,16 @@ public class AstForOf extends AstLabeledStatement {
 		}
 	}
 
-	protected Iterable<?> getIterable(Context cx, Scope scope, Object self) {
-		if (self instanceof Iterable<?>) {
-			return (Iterable<?>) self;
+	@Nullable
+	protected Iterator<?> getIterable(Context cx, Scope scope, Object self) {
+		var itr = IterableJS.iteratorOf(self);
+
+		if (itr != null) {
+			return itr;
 		}
 
 		var p = cx.getPrototype(scope, self);
-		return p.values(cx, scope, p.cast(self));
+		return IterableJS.iteratorOf(p.values(cx, scope, p.cast(self)));
 	}
 
 	@Override

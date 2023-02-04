@@ -11,6 +11,10 @@ import dev.latvian.apps.ichor.util.Functions;
 import dev.latvian.apps.ichor.util.JavaArray;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
 public class StringJS extends Prototype<String> {
 	public static class InvalidCodePointError extends ScriptError {
 		public final String codePoint;
@@ -130,6 +134,51 @@ public class StringJS extends Prototype<String> {
 			case "trimEnd" -> Functions.WIP;
 			default -> super.getLocal(cx, scope, self, name);
 		};
+	}
+
+	@Override
+	public Collection<?> keys(Context cx, Scope scope, String self) {
+		if (self.isEmpty()) {
+			return List.of();
+		}
+
+		var obj = new Object[self.length()];
+
+		for (int i = 0; i < obj.length; i++) {
+			obj[i] = i;
+		}
+
+		return Arrays.asList(obj);
+	}
+
+	@Override
+	public Collection<?> values(Context cx, Scope scope, String self) {
+		if (self.isEmpty()) {
+			return List.of();
+		}
+
+		var obj = new Object[self.length()];
+
+		for (int i = 0; i < obj.length; i++) {
+			obj[i] = self.charAt(i);
+		}
+
+		return Arrays.asList(obj);
+	}
+
+	@Override
+	public Collection<?> entries(Context cx, Scope scope, String self) {
+		if (self.isEmpty()) {
+			return List.of();
+		}
+
+		var obj = new Object[self.length()];
+
+		for (int i = 0; i < obj.length; i++) {
+			obj[i] = List.of(i, self.charAt(i));
+		}
+
+		return Arrays.asList(obj);
 	}
 
 	@Override

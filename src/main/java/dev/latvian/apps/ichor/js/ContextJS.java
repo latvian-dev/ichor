@@ -13,14 +13,25 @@ import dev.latvian.apps.ichor.js.type.MathJS;
 import dev.latvian.apps.ichor.js.type.NumberJS;
 import dev.latvian.apps.ichor.js.type.ObjectJS;
 import dev.latvian.apps.ichor.js.type.RegExpJS;
+import dev.latvian.apps.ichor.js.type.SetJS;
 import dev.latvian.apps.ichor.js.type.StringJS;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
@@ -38,6 +49,7 @@ public class ContextJS extends Context {
 			jsArrayPrototype,
 			jsMathPrototype,
 			jsMapPrototype,
+			jsSetPrototype,
 			regExpPrototype,
 			listPrototype,
 			collectionPrototype,
@@ -57,6 +69,7 @@ public class ContextJS extends Context {
 		jsArrayPrototype = new ArrayJS(this);
 		jsMathPrototype = new MathJS(this);
 		jsMapPrototype = new MapJS(this);
+		jsSetPrototype = new SetJS(this);
 		regExpPrototype = new RegExpJS(this);
 		listPrototype = new ListJS(this);
 		collectionPrototype = new CollectionJS(this);
@@ -75,6 +88,7 @@ public class ContextJS extends Context {
 				jsArrayPrototype,
 				jsMathPrototype,
 				jsMapPrototype,
+				jsSetPrototype,
 				regExpPrototype
 		);
 	}
@@ -144,9 +158,11 @@ public class ContextJS extends Context {
 			return stringPrototype;
 		} else if (c == Class.class) {
 			return classPrototype;
-		} else if (c == Map.class) {
+		} else if (c == Map.class || c == HashMap.class || c == LinkedHashMap.class || c == IdentityHashMap.class || c == EnumMap.class) {
 			return jsMapPrototype;
-		} else if (c == List.class) {
+		} else if (c == Set.class || c == HashSet.class || c == LinkedHashSet.class || c == EnumSet.class) {
+			return jsSetPrototype;
+		} else if (c == List.class || c == ArrayList.class || c == LinkedList.class) {
 			return listPrototype;
 		} else if (c == Collection.class) {
 			return collectionPrototype;

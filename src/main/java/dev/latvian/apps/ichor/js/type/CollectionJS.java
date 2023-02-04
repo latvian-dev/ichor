@@ -43,7 +43,7 @@ public class CollectionJS extends Prototype<Collection> {
 
 	@Override
 	public Collection<?> entries(Context cx, Scope scope, Collection self) {
-		var entries = new List[self.size()];
+		var entries = new Object[self.size()];
 
 		int i = 0;
 

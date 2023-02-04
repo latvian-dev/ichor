@@ -14,6 +14,7 @@ import dev.latvian.apps.ichor.util.Empty;
 import dev.latvian.apps.ichor.util.NamedTokenSource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
@@ -24,10 +25,18 @@ import java.util.function.Consumer;
 // @Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class InterpreterTests {
+	public static ContextJS context;
+
 	private static void printLines(List<String> lines) {
 		for (int i = 0; i < lines.size(); i++) {
 			System.out.printf("%02d | %s%n", i + 1, lines.get(i));
 		}
+	}
+
+	static {
+		context = new ContextJS();
+		context.setInterpretingTimeout(1500L);
+		context.setTokenStreamTimeout(1500L);
 	}
 
 	public static void testInterpreter(String filename, String input, Consumer<RootScope> rootScopeCallback, String match) {
@@ -41,20 +50,16 @@ public class InterpreterTests {
 		printLines(matchStr);
 		System.out.println();
 
-		var cx = new ContextJS();
-		cx.setInterpretingTimeout(1500L);
-		cx.setTokenStreamTimeout(filename.isEmpty() ? 1500L : 0L);
-
-		var rootScope = new RootScope(cx);
+		var rootScope = new RootScope(context);
 		rootScope.addSafePrototypes();
 		var console = new TestConsole(System.out);
 		rootScope.addImmutable("console", console);
 		rootScope.addImmutable("Advanced", new AdvancedTestUtils(console));
 		rootScopeCallback.accept(rootScope);
 
-		var tokenStream = new TokenStreamJS(cx, new NamedTokenSource(filename), input);
+		var tokenStream = new TokenStreamJS(context, new NamedTokenSource(filename), input);
 		var rootToken = tokenStream.getRootToken();
-		var parser = new ParserJS(cx, rootToken);
+		var parser = new ParserJS(context, rootToken);
 		var ast = parser.parse();
 		var astStr = ast.toString();
 
@@ -63,7 +68,7 @@ public class InterpreterTests {
 		System.out.println();
 
 		try {
-			ast.interpretSafe(cx, rootScope);
+			ast.interpretSafe(context, rootScope);
 		} catch (ScopeExit ex) {
 			throw ex;
 		} catch (Throwable ex) {
@@ -702,5 +707,11 @@ public class InterpreterTests {
 				['b', 'c']
 				a
 				""");
+	}
+
+	@Test
+	@Order(1)
+	public void z_last() {
+		System.out.println("Hi");
 	}
 }

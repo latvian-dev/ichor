@@ -4,6 +4,7 @@ import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.statement.AstClass;
+import dev.latvian.apps.ichor.slot.Slot;
 
 import java.util.Arrays;
 
@@ -37,7 +38,7 @@ public final class ClassPrototype implements Callable {
 			this.prototype = prototype;
 
 			for (var func : prototype.astClass.methods.values()) {
-				add(func.functionName, new ClassFunctionInstance(func, cx, this), false);
+				add(func.functionName, new ClassFunctionInstance(func, cx, this), Slot.DEFAULT);
 			}
 		}
 

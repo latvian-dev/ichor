@@ -47,7 +47,7 @@ public class Scope {
 		return members.getSlot(name);
 	}
 
-	public void add(String name, @Nullable Object value, boolean immutable) {
+	public void add(String name, @Nullable Object value, byte flags) {
 		var slot = members.getSlot(name);
 
 		if (slot == null) {
@@ -57,16 +57,16 @@ public class Scope {
 		}
 
 		slot.value = value;
-		slot.immutable = immutable;
+		slot.flags = flags;
 		// slot.prototype = null;
 	}
 
 	public void addMutable(String name, @Nullable Object value) {
-		add(name, value, false);
+		add(name, value, Slot.DEFAULT);
 	}
 
 	public void addImmutable(String name, @Nullable Object value) {
-		add(name, value, true);
+		add(name, value, Slot.IMMUTABLE);
 	}
 
 	public void add(String name, Class<?> type) {
@@ -85,7 +85,7 @@ public class Scope {
 			var slot = s.members.getSlot(name);
 
 			if (slot != null) {
-				if (slot.immutable && slot.value != Special.UNDEFINED) {
+				if (slot.value != Special.UNDEFINED && slot.isImmutable()) {
 					throw new ConstantReassignError(name);
 				} else {
 					slot.value = value;
@@ -106,7 +106,7 @@ public class Scope {
 
 		if (slot == null) {
 			return AssignType.NONE;
-		} else if (slot.immutable) {
+		} else if (slot.isImmutable()) {
 			return AssignType.IMMUTABLE;
 		} else {
 			return AssignType.MUTABLE;

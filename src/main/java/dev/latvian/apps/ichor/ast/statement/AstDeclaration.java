@@ -41,8 +41,8 @@ public abstract class AstDeclaration implements AppendableAst {
 		}
 
 		@Override
-		public void declare(Context cx, Scope scope, boolean isConst) {
-			scope.add(name, cx.eval(scope, defaultValue), isConst);
+		public void declare(Context cx, Scope scope, byte flags) {
+			scope.add(name, cx.eval(scope, defaultValue), flags);
 		}
 
 		@Override
@@ -57,7 +57,7 @@ public abstract class AstDeclaration implements AppendableAst {
 		}
 
 		@Override
-		public void declare(Context cx, Scope scope, boolean isConst) {
+		public void declare(Context cx, Scope scope, byte flags) {
 		}
 	}
 
@@ -67,11 +67,11 @@ public abstract class AstDeclaration implements AppendableAst {
 		}
 
 		@Override
-		public void declare(Context cx, Scope scope, boolean isConst) {
+		public void declare(Context cx, Scope scope, byte flags) {
 		}
 	}
 
-	public abstract void declare(Context cx, Scope scope, boolean isConst);
+	public abstract void declare(Context cx, Scope scope, byte flags);
 
 	public void optimize(Parser parser) {
 	}

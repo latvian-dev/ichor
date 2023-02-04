@@ -63,7 +63,7 @@ public class MapJS extends Prototype<Map<?, ?>> {
 			var entry = self.entrySet().iterator().next();
 			return List.of(List.of(entry.getKey(), entry.getValue()));
 		} else {
-			var entries = new List[self.size()];
+			var entries = new Object[self.size()];
 			int i = 0;
 
 			for (var entry : self.entrySet()) {

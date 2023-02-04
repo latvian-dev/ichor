@@ -2,10 +2,12 @@ package dev.latvian.apps.ichor.ast.statement;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
+import dev.latvian.apps.ichor.js.type.IterableJS;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 
 public class AstForIn extends AstForOf {
 	@Override
@@ -14,7 +16,8 @@ public class AstForIn extends AstForOf {
 	}
 
 	@Override
-	protected Iterable<?> getIterable(Context cx, Scope scope, Object self) {
+	@Nullable
+	protected Iterator<?> getIterable(Context cx, Scope scope, Object self) {
 		if (self instanceof Collection<?> c) {
 			var keys = new Object[c.size()];
 
@@ -22,7 +25,7 @@ public class AstForIn extends AstForOf {
 				keys[i] = i;
 			}
 
-			return Arrays.asList(keys);
+			return IterableJS.iteratorOf(keys);
 		} else if (self instanceof Iterable<?> itr) {
 			var keys = new ArrayList<Integer>();
 
@@ -32,10 +35,10 @@ public class AstForIn extends AstForOf {
 				keys.add(i++);
 			}
 
-			return keys;
+			return keys.iterator();
 		} else {
 			var p = cx.getPrototype(scope, self);
-			return p.keys(cx, scope, p.cast(self));
+			return IterableJS.iteratorOf(p.keys(cx, scope, p.cast(self)));
 		}
 	}
 }

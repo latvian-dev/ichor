@@ -1,6 +1,7 @@
 package dev.latvian.apps.ichor.js;
 
 import dev.latvian.apps.ichor.Special;
+import dev.latvian.apps.ichor.slot.Slot;
 import dev.latvian.apps.ichor.token.DeclaringToken;
 import dev.latvian.apps.ichor.token.KeywordToken;
 import dev.latvian.apps.ichor.token.Token;
@@ -33,9 +34,9 @@ public interface KeywordTokenJS {
 	Token IN = cache(new InKeywordJS());
 	Token INSTANCEOF = cache(new InstanceofKeywordJS());
 
-	DeclaringToken LET = (DeclaringToken) cache(new DeclaringToken("let", false));
-	DeclaringToken CONST = (DeclaringToken) cache(new DeclaringToken("const", true));
-	DeclaringToken VAR = (DeclaringToken) cache(new DeclaringToken("var", false));
+	DeclaringToken LET = (DeclaringToken) cache(new DeclaringToken("let", Slot.DEFAULT));
+	DeclaringToken CONST = (DeclaringToken) cache(new DeclaringToken("const", Slot.IMMUTABLE));
+	DeclaringToken VAR = (DeclaringToken) cache(new DeclaringToken("var", Slot.DEFAULT));
 
 	Token ARGUMENTS = cache("arguments");
 	Token AS = cache("as").literalPre(); // TODO

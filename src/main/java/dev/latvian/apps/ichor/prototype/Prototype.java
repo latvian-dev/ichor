@@ -4,6 +4,7 @@ import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
+import dev.latvian.apps.ichor.annotation.Hidden;
 import dev.latvian.apps.ichor.error.ConstructorError;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.java.JavaMembers;
@@ -62,20 +63,17 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 	private final String prototypeName;
 	public final Context context;
 	public final Class<T> type;
-	private boolean shouldInit;
 	private PrototypeConstructor constructor;
 	private Map<String, PrototypeProperty> localProperties;
 	private Map<String, PrototypeStaticProperty> staticProperties;
 	private Boolean isSingleMethodInterface;
-	protected Prototype<?>[] parents;
+	private Prototype<?>[] parents;
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public Prototype(Context cx, String name, Class type) {
 		this.context = cx;
 		this.type = type;
 		this.prototypeName = name;
-		this.shouldInit = true;
-		this.parents = Empty.PROTOTYPES;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -97,16 +95,23 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 		return (C) o;
 	}
 
-	protected void initLazy() {
-		if (shouldInit) {
-			shouldInit = false;
+	public Prototype<?>[] getParents() {
+		if (parents == null) {
 			parents = Empty.PROTOTYPES;
+			initParents();
+		}
+
+		return parents;
+	}
+
+	protected void initProperties() {
+		if (staticProperties == null || localProperties == null) {
+			staticProperties = Map.of();
+			localProperties = Map.of();
 
 			if (type != getClass()) {
 				initMembers();
 			}
-
-			initParents();
 		}
 	}
 
@@ -121,6 +126,11 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 				}
 
 				int mod = f.getModifiers();
+
+				if (Modifier.isTransient(mod) || f.isAnnotationPresent(Hidden.class)) {
+					continue;
+				}
+
 				var map = Modifier.isStatic(mod) ? staticMap : localMap;
 				var name = f.getName();
 
@@ -177,6 +187,12 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 		var p = new ArrayList<Prototype<?>>(1);
 		// var p1 = new IdentityHashMap<Class<?>, Prototype<?>>();
 
+		for (var i : type.getInterfaces()) {
+			if (i != Serializable.class && i != Cloneable.class && i != Comparable.class/* && !p1.containsKey(i)*/) {
+				p.add(context.getClassPrototype(i));
+			}
+		}
+
 		var s = type.getSuperclass();
 
 		if (s != null && s != Object.class) {
@@ -185,13 +201,7 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 			// proto.unfold(p1);
 		}
 
-		for (var i : type.getInterfaces()) {
-			if (i != Serializable.class && i != Cloneable.class && i != Comparable.class/* && !p1.containsKey(i)*/) {
-				p.add(context.getClassPrototype(i));
-			}
-		}
-
-		parent(p.toArray(Empty.PROTOTYPES));
+		parents = p.toArray(Empty.PROTOTYPES);
 	}
 
 	/*
@@ -240,6 +250,7 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 	// Builder //
 
 	public void parent(Prototype<?>... parent) {
+		getParents();
 		var newParents = new Prototype[parents.length + parent.length];
 		System.arraycopy(parents, 0, newParents, 0, parents.length);
 		System.arraycopy(parent, 0, newParents, parents.length, parent.length);
@@ -251,7 +262,9 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 	}
 
 	public void property(String name, PrototypeProperty property) {
-		if (localProperties == null) {
+		initProperties();
+
+		if (localProperties.isEmpty()) {
 			localProperties = new HashMap<>(1);
 		}
 
@@ -263,7 +276,9 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 	}
 
 	public void staticProperty(String name, PrototypeStaticProperty property) {
-		if (staticProperties == null) {
+		initProperties();
+
+		if (staticProperties.isEmpty()) {
 			staticProperties = new HashMap<>(1);
 		}
 
@@ -282,6 +297,8 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 
 	@Override
 	public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
+		initProperties();
+
 		if (constructor != null) {
 			return constructor.construct(cx, scope, args, hasNew);
 		}
@@ -293,17 +310,15 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 
 	@Nullable
 	public Object getStatic(Context cx, Scope scope, String name) {
-		initLazy();
+		initProperties();
 
-		if (staticProperties != null) {
-			var m = staticProperties.get(name);
+		var m = staticProperties.get(name);
 
-			if (m != null) {
-				return m.get(cx, scope);
-			}
+		if (m != null) {
+			return m.get(cx, scope);
 		}
 
-		for (var p : parents) {
+		for (var p : getParents()) {
 			var r = p.getStatic(cx, scope, name);
 
 			if (r != Special.NOT_FOUND) {
@@ -315,17 +330,15 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 	}
 
 	public boolean setStatic(Context cx, Scope scope, String name, @Nullable Object value) {
-		initLazy();
+		initProperties();
 
-		if (staticProperties != null) {
-			var m = staticProperties.get(name);
+		var m = staticProperties.get(name);
 
-			if (m != null) {
-				return m.set(cx, scope, value);
-			}
+		if (m != null) {
+			return m.set(cx, scope, value);
 		}
 
-		for (var p : parents) {
+		for (var p : getParents()) {
 			if (p.setStatic(cx, scope, name, value)) {
 				return true;
 			}
@@ -338,17 +351,15 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 
 	@Nullable
 	public Object getLocal(Context cx, Scope scope, T self, String name) {
-		initLazy();
+		initProperties();
 
-		if (localProperties != null) {
-			var m = localProperties.get(name);
+		var m = localProperties.get(name);
 
-			if (m != null) {
-				return m.get(cx, scope, self);
-			}
+		if (m != null) {
+			return m.get(cx, scope, self);
 		}
 
-		for (var p : parents) {
+		for (var p : getParents()) {
 			var r = p.getLocal(cx, scope, cast(self), name);
 
 			if (r != Special.NOT_FOUND) {
@@ -360,17 +371,15 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 	}
 
 	public boolean setLocal(Context cx, Scope scope, T self, String name, @Nullable Object value) {
-		initLazy();
+		initProperties();
 
-		if (localProperties != null) {
-			var m = localProperties.get(name);
+		var m = localProperties.get(name);
 
-			if (m != null) {
-				return m.set(cx, scope, self, value);
-			}
+		if (m != null) {
+			return m.set(cx, scope, self, value);
 		}
 
-		for (var p : parents) {
+		for (var p : getParents()) {
 			if (p.setLocal(cx, scope, cast(self), name, value)) {
 				return true;
 			}
@@ -380,9 +389,7 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 	}
 
 	public boolean deleteLocal(Context cx, Scope scope, T self, String name) {
-		initLazy();
-
-		for (var p : parents) {
+		for (var p : getParents()) {
 			if (p.deleteLocal(cx, scope, cast(self), name)) {
 				return true;
 			}
@@ -395,9 +402,7 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 
 	@Nullable
 	public Object getLocal(Context cx, Scope scope, T self, int index) {
-		initLazy();
-
-		for (var p : parents) {
+		for (var p : getParents()) {
 			var r = p.getLocal(cx, scope, cast(self), index);
 
 			if (r != Special.NOT_FOUND) {
@@ -409,9 +414,7 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 	}
 
 	public boolean setLocal(Context cx, Scope scope, T self, int index, @Nullable Object value) {
-		initLazy();
-
-		for (var p : parents) {
+		for (var p : getParents()) {
 			if (p.setLocal(cx, scope, cast(self), index, value)) {
 				return true;
 			}
@@ -421,9 +424,7 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 	}
 
 	public boolean deleteLocal(Context cx, Scope scope, T self, int index) {
-		initLazy();
-
-		for (var p : parents) {
+		for (var p : getParents()) {
 			if (p.deleteLocal(cx, scope, cast(self), index)) {
 				return true;
 			}
@@ -432,11 +433,11 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 		return false;
 	}
 
+	// Iterators
+
 	@Nullable
 	public Collection<?> keys(Context cx, Scope scope, T self) {
-		initLazy();
-
-		for (var p : parents) {
+		for (var p : getParents()) {
 			var r = p.keys(cx, scope, cast(self));
 
 			if (r != null) {
@@ -449,9 +450,7 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 
 	@Nullable
 	public Collection<?> values(Context cx, Scope scope, T self) {
-		initLazy();
-
-		for (var p : parents) {
+		for (var p : getParents()) {
 			var r = p.values(cx, scope, cast(self));
 
 			if (r != null) {
@@ -464,9 +463,7 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 
 	@Nullable
 	public Collection<?> entries(Context cx, Scope scope, T self) {
-		initLazy();
-
-		for (var p : parents) {
+		for (var p : getParents()) {
 			var r = p.entries(cx, scope, cast(self));
 
 			if (r != null) {
@@ -477,10 +474,10 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 		return null;
 	}
 
-	public boolean asString(Context cx, Scope scope, T self, StringBuilder builder, boolean escape) {
-		initLazy();
+	// Conversions
 
-		for (var p : parents) {
+	public boolean asString(Context cx, Scope scope, T self, StringBuilder builder, boolean escape) {
+		for (var p : getParents()) {
 			if (p.asString(cx, scope, cast(self), builder, escape)) {
 				return true;
 			}
@@ -491,9 +488,7 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 
 	@Nullable
 	public Number asNumber(Context cx, Scope scope, T self) {
-		initLazy();
-
-		for (var p : parents) {
+		for (var p : getParents()) {
 			var r = p.asNumber(cx, scope, cast(self));
 
 			if (r != null) {
@@ -506,9 +501,7 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 
 	@Nullable
 	public Boolean asBoolean(Context cx, Scope scope, T self) {
-		initLazy();
-
-		for (var p : parents) {
+		for (var p : getParents()) {
 			var r = p.asBoolean(cx, scope, cast(self));
 
 			if (r != null) {
@@ -518,6 +511,21 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 
 		return null;
 	}
+
+	@Nullable
+	public Object adapt(Context cx, Scope scope, Object self, @Nullable Class<?> toType) {
+		for (var p : getParents()) {
+			var r = p.adapt(cx, scope, self, toType);
+
+			if (r != Special.NOT_FOUND) {
+				return r;
+			}
+		}
+
+		return Special.NOT_FOUND;
+	}
+
+	// Equality
 
 	public boolean equals(Context cx, Scope scope, T left, Object right, boolean shallow) {
 		return shallow ? left == right : Objects.equals(left, right);
@@ -530,20 +538,5 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 		}
 
 		return 0;
-	}
-
-	@Nullable
-	public Object adapt(Context cx, Scope scope, Object self, @Nullable Class<?> toType) {
-		initLazy();
-
-		for (var p : parents) {
-			var r = p.adapt(cx, scope, self, toType);
-
-			if (r != Special.NOT_FOUND) {
-				return r;
-			}
-		}
-
-		return Special.NOT_FOUND;
 	}
 }

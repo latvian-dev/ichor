@@ -33,7 +33,7 @@ public class AstMultiDeclareStatement extends AstDeclareStatement {
 	@Override
 	public void interpret(Context cx, Scope scope) {
 		for (var v : variables) {
-			v.declare(cx, scope, assignToken.isConst());
+			v.declare(cx, scope, assignToken.flags);
 		}
 	}
 
