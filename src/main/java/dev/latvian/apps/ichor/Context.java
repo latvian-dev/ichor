@@ -8,8 +8,9 @@ import dev.latvian.apps.ichor.java.JavaClassPrototype;
 import dev.latvian.apps.ichor.js.TokenStreamJS;
 import dev.latvian.apps.ichor.js.type.NumberJS;
 import dev.latvian.apps.ichor.prototype.Prototype;
+import dev.latvian.apps.ichor.util.JavaArray;
+import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.AnnotatedElement;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -17,33 +18,27 @@ import java.util.Map;
 import java.util.Objects;
 
 public abstract class Context {
-	private Map<Class<?>, Prototype<?>> classPrototypeCache;
-	private final Map<ContextProperty<?>, Object> properties;
+	private final Map<Class<?>, Prototype<?>> classPrototypes;
 	private int maxScopeDepth;
 	private long interpretingTimeout;
 	private long tokenStreamTimeout;
-	private Object environment;
 
 	public Context() {
-		properties = new IdentityHashMap<>();
+		classPrototypes = new IdentityHashMap<>();
 		maxScopeDepth = 1000;
 		interpretingTimeout = 30000L;
 		tokenStreamTimeout = 5000L;
-		environment = Special.NOT_FOUND;
+
+		registerPrototype(new JavaClassPrototype(this));
+		registerPrototype(new AnnotatedElementPrototype(this));
 	}
 
 	public List<Prototype<?>> getSafePrototypes() {
 		return Collections.emptyList();
 	}
 
-	@SuppressWarnings("unchecked")
-	public <T> T getProperty(ContextProperty<T> property) {
-		var val = properties == null ? null : properties.get(property);
-		return val == null ? property.defaultValue() : (T) val;
-	}
-
-	public <T> void setProperty(ContextProperty<T> property, T value) {
-		properties.put(property, value);
+	public void registerPrototype(Prototype<?> prototype) {
+		classPrototypes.put(prototype.type, prototype);
 	}
 
 	public int getMaxScopeDepth() {
@@ -68,14 +63,6 @@ public abstract class Context {
 
 	public void setTokenStreamTimeout(long tokenStreamTimeout) {
 		this.tokenStreamTimeout = tokenStreamTimeout;
-	}
-
-	public Object getEnvironment() {
-		return environment;
-	}
-
-	public void setEnvironment(Object environment) {
-		this.environment = environment;
 	}
 
 	public Object eval(Scope scope, Object o) {
@@ -266,14 +253,19 @@ public abstract class Context {
 			return builder.charAt(0);
 		}
 
-		return 0;
+		throw new CastError(o, "Character");
+	}
+
+	@SuppressWarnings("rawtypes")
+	public Class asClass(Scope scope, Object o) {
+		return as(scope, o, Class.class);
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> T as(Scope scope, Object o, Class<T> toType) {
+	public <T> T as(Scope scope, Object o, @Nullable Class<T> toType) {
 		if (Special.isInvalid(o)) {
 			return null;
-		} else if (toType == null || toType == Void.TYPE || toType == Object.class || toType.isInstance(o)) {
+		} else if (toType == null || toType == Void.TYPE || toType == Object.class || toType == o.getClass() || toType.isInstance(o)) {
 			return (T) o;
 		} else if (toType == String.class || toType == CharSequence.class) {
 			return (T) asString(scope, o, false);
@@ -288,18 +280,37 @@ public abstract class Context {
 		} else if (toType == Short.class || toType == Short.TYPE) {
 			return (T) Short.valueOf(asNumber(scope, o).shortValue());
 		} else if (toType == Integer.class || toType == Integer.TYPE) {
-			return (T) Integer.valueOf(asNumber(scope, o).intValue());
+			return (T) Integer.valueOf(asInt(scope, o));
 		} else if (toType == Long.class || toType == Long.TYPE) {
-			return (T) Long.valueOf(asNumber(scope, o).longValue());
+			return (T) Long.valueOf(asLong(scope, o));
 		} else if (toType == Float.class || toType == Float.TYPE) {
 			return (T) Float.valueOf(asNumber(scope, o).floatValue());
 		} else if (toType == Double.class || toType == Double.TYPE) {
-			return (T) Double.valueOf(asNumber(scope, o).doubleValue());
+			return (T) Double.valueOf(asDouble(scope, o));
 		} else if (o instanceof TypeAdapter typeAdapter && typeAdapter.canAdapt(this, toType)) {
 			return typeAdapter.adapt(this, scope, toType);
 		}
 
-		throw new CastError(o.getClass().getName(), toType.getName());
+		var c = customAs(scope, o, toType);
+
+		if (c != Special.NOT_FOUND) {
+			return (T) c;
+		}
+
+		var a = getPrototype(scope, o).adapt(this, scope, o, toType);
+
+		if (a != Special.NOT_FOUND) {
+			return (T) a;
+		} else if (o instanceof Iterable<?> itr && toType.isArray()) {
+			return (T) JavaArray.adaptToArray(this, scope, itr, toType);
+		} else {
+			throw new CastError(o, toType.getName());
+		}
+	}
+
+	@Nullable
+	private <T> Object customAs(Scope scope, Object o, Class<?> toType) {
+		return Special.NOT_FOUND;
 	}
 
 	public Prototype<?> getPrototype(Scope scope, Object o) {
@@ -307,28 +318,14 @@ public abstract class Context {
 	}
 
 	public Prototype<?> getClassPrototype(Class<?> c) {
-		if (classPrototypeCache == null) {
-			classPrototypeCache = new IdentityHashMap<>();
-		}
-
-		var p = classPrototypeCache.get(c);
+		var p = classPrototypes.get(c);
 
 		if (p == null) {
-			p = createJavaPrototype(c);
-			classPrototypeCache.put(c, p);
+			p = new Prototype<>(this, c);
+			classPrototypes.put(c, p);
 		}
 
 		return p;
-	}
-
-	protected Prototype<?> createJavaPrototype(Class<?> type) {
-		if (type == Class.class) {
-			return new JavaClassPrototype(this);
-		} else if (type == AnnotatedElement.class) {
-			return new AnnotatedElementPrototype(this);
-		}
-
-		return new Prototype<>(this, type);
 	}
 
 	@Override

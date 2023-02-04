@@ -1,11 +1,12 @@
 package dev.latvian.apps.ichor.error;
 
 public class CastError extends ScriptError {
-	public final String fromType, toType;
+	public final Object object;
+	public final String type;
 
-	public CastError(String fromType, String toType) {
-		super("Cannot cast " + fromType + " to " + toType);
-		this.fromType = fromType;
-		this.toType = toType;
+	public CastError(Object object, String type) {
+		super("Cannot cast " + object + " (" + object.getClass().getName() + ")" + " to " + type);
+		this.object = object;
+		this.type = type;
 	}
 }

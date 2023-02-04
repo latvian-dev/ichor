@@ -14,7 +14,7 @@ public class AstForIn extends AstForOf {
 	}
 
 	@Override
-	protected Collection<?> getIterable(Context cx, Scope scope, Object self) {
+	protected Iterable<?> getIterable(Context cx, Scope scope, Object self) {
 		if (self instanceof Collection<?> c) {
 			var keys = new Object[c.size()];
 

@@ -8,16 +8,40 @@ import dev.latvian.apps.ichor.util.Functions;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ObjectJS extends Prototype<ObjectJS> {
-	public static final Callable ASSIGN = Functions.WIP;
+	public static final Callable ASSIGN = Functions.of2((cx, scope, arg1, arg2) -> {
+		var o = cx.as(scope, arg1, Map.class);
+		//noinspection unchecked
+		o.putAll(cx.as(scope, arg2, Map.class));
+		return o;
+	});
+
 	public static final Callable CREATE = Functions.WIP;
 	public static final Callable DEFINE_PROPERTIES = Functions.WIP;
 	public static final Callable DEFINE_PROPERTY = Functions.WIP;
-	public static final Callable ENTRIES = Functions.WIP;
-	public static final Callable KEYS = Functions.WIP;
-	public static final Callable VALUES = Functions.WIP;
-	public static final Callable GET_PROTOTYPE_OF = Functions.WIP;
+
+	public static final Callable ENTRIES = Functions.of1((cx, scope, arg) -> {
+		var p = cx.getPrototype(scope, arg);
+		var c = p.entries(cx, scope, p.cast(arg));
+		return c == null ? List.of() : c;
+	});
+
+	public static final Callable KEYS = Functions.of1((cx, scope, arg) -> {
+		var p = cx.getPrototype(scope, arg);
+		var c = p.keys(cx, scope, p.cast(arg));
+		return c == null ? List.of() : c;
+	});
+
+	public static final Callable VALUES = Functions.of1((cx, scope, arg) -> {
+		var p = cx.getPrototype(scope, arg);
+		var c = p.values(cx, scope, p.cast(arg));
+		return c == null ? List.of() : c;
+	});
+
+	public static final Callable GET_PROTOTYPE_OF = Functions.of1(Context::getPrototype);
 
 	public ObjectJS(Context cx) {
 		super(cx, "Object", ObjectJS.class);

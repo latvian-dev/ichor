@@ -4,7 +4,6 @@ import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.java.BooleanPrototype;
-import dev.latvian.apps.ichor.java.JavaClassPrototype;
 import dev.latvian.apps.ichor.js.type.ArrayJS;
 import dev.latvian.apps.ichor.js.type.CollectionJS;
 import dev.latvian.apps.ichor.js.type.IterableJS;
@@ -46,10 +45,11 @@ public class ContextJS extends Context {
 			arrayPrototype;
 
 	public ContextJS() {
+		super();
 		timeoutExecutor = null;
 		timeoutExecutorAfter = null;
 
-		classPrototype = new JavaClassPrototype(this);
+		classPrototype = super.getClassPrototype(Class.class);
 		stringPrototype = new StringJS(this);
 		numberPrototype = new NumberJS(this);
 		booleanPrototype = new BooleanPrototype(this);
@@ -62,7 +62,7 @@ public class ContextJS extends Context {
 		collectionPrototype = new CollectionJS(this);
 		iterablePrototype = new IterableJS(this);
 
-		arrayPrototype = createJavaPrototype(Object[].class);
+		arrayPrototype = super.getClassPrototype(Object[].class);
 	}
 
 	@Override
@@ -74,7 +74,8 @@ public class ContextJS extends Context {
 				jsObjectPrototype,
 				jsArrayPrototype,
 				jsMathPrototype,
-				jsMapPrototype
+				jsMapPrototype,
+				regExpPrototype
 		);
 	}
 

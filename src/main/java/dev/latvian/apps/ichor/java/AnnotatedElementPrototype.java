@@ -10,10 +10,10 @@ import java.lang.reflect.AnnotatedElement;
 
 @SuppressWarnings("unchecked")
 public class AnnotatedElementPrototype extends Prototype<AnnotatedElement> {
-	private static final Functions.Bound<AnnotatedElement> GET_ANNOTATION = (cx, scope, cl, args) -> cl.getAnnotation(cx.as(scope, args[0], Class.class));
-	private static final Functions.Bound<AnnotatedElement> GET_DECLARED_ANNOTATION = (cx, scope, cl, args) -> cl.getDeclaredAnnotation(cx.as(scope, args[0], Class.class));
-	private static final Functions.Bound<AnnotatedElement> GET_ANNOTATIONS_BY_TYPE = (cx, scope, cl, args) -> cl.getAnnotationsByType(cx.as(scope, args[0], Class.class));
-	private static final Functions.Bound<AnnotatedElement> GET_DECLARED_ANNOTATIONS_BY_TYPE = (cx, scope, cl, args) -> cl.getDeclaredAnnotationsByType(cx.as(scope, args[0], Class.class));
+	private static final Functions.Bound<AnnotatedElement> GET_ANNOTATION = (cx, scope, cl, args) -> cl.getAnnotation(cx.asClass(scope, args[0]));
+	private static final Functions.Bound<AnnotatedElement> GET_DECLARED_ANNOTATION = (cx, scope, cl, args) -> cl.getDeclaredAnnotation(cx.asClass(scope, args[0]));
+	private static final Functions.Bound<AnnotatedElement> GET_ANNOTATIONS_BY_TYPE = (cx, scope, cl, args) -> cl.getAnnotationsByType(cx.asClass(scope, args[0]));
+	private static final Functions.Bound<AnnotatedElement> GET_DECLARED_ANNOTATIONS_BY_TYPE = (cx, scope, cl, args) -> cl.getDeclaredAnnotationsByType(cx.asClass(scope, args[0]));
 
 	public AnnotatedElementPrototype(Context cx) {
 		super(cx, AnnotatedElement.class);

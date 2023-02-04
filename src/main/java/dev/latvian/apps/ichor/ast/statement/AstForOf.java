@@ -45,7 +45,7 @@ public class AstForOf extends AstLabeledStatement {
 		var self = cx.eval(scope, from);
 		var itr = getIterable(cx, scope, self);
 
-		if (itr == null || itr.isEmpty()) {
+		if (itr == null || (itr instanceof Collection<?> c && c.isEmpty())) {
 			return;
 		}
 
@@ -68,9 +68,9 @@ public class AstForOf extends AstLabeledStatement {
 		}
 	}
 
-	protected Collection<?> getIterable(Context cx, Scope scope, Object self) {
-		if (self instanceof Collection<?>) {
-			return (Collection<?>) self;
+	protected Iterable<?> getIterable(Context cx, Scope scope, Object self) {
+		if (self instanceof Iterable<?>) {
+			return (Iterable<?>) self;
 		}
 
 		var p = cx.getPrototype(scope, self);

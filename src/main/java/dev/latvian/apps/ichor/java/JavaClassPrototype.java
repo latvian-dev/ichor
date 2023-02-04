@@ -10,7 +10,7 @@ import java.lang.reflect.AnnotatedElement;
 
 public class JavaClassPrototype extends Prototype<Class<?>> {
 	private static final Functions.Bound<Class<?>> IS_INSTANCE = (cx, scope, cl, args) -> cl.isInstance(args[0]);
-	private static final Functions.Bound<Class<?>> IS_ASSIGNABLE_FROM = (cx, scope, cl, args) -> cl.isAssignableFrom(cx.as(scope, args[0], Class.class));
+	private static final Functions.Bound<Class<?>> IS_ASSIGNABLE_FROM = (cx, scope, cl, args) -> cl.isAssignableFrom(cx.asClass(scope, args[0]));
 
 	public JavaClassPrototype(Context cx) {
 		super(cx, "JavaClass", Class.class);
@@ -22,9 +22,7 @@ public class JavaClassPrototype extends Prototype<Class<?>> {
 
 	@Override
 	protected void initParents() {
-		parents = new Prototype[]{
-				context.getClassPrototype(AnnotatedElement.class)
-		};
+		parent(context.getClassPrototype(AnnotatedElement.class));
 	}
 
 	@Override

@@ -66,9 +66,6 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 	private PrototypeConstructor constructor;
 	private Map<String, PrototypeProperty> localProperties;
 	private Map<String, PrototypeStaticProperty> staticProperties;
-	protected Map<String, PrototypeProperty> localMembers;
-	protected Map<String, PrototypeStaticProperty> staticMembers;
-	private Prototype<T> customMembers;
 	private Boolean isSingleMethodInterface;
 	protected Prototype<?>[] parents;
 
@@ -78,6 +75,7 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 		this.type = type;
 		this.prototypeName = name;
 		this.shouldInit = true;
+		this.parents = Empty.PROTOTYPES;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -103,8 +101,6 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 		if (shouldInit) {
 			shouldInit = false;
 			parents = Empty.PROTOTYPES;
-			localMembers = Map.of();
-			staticMembers = Map.of();
 
 			if (type != getClass()) {
 				initMembers();
@@ -162,17 +158,14 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 			e.addFieldAccessors(staticMap);
 		}
 
-		localMembers = localMap.isEmpty() ? Map.of() : new HashMap<>(localMap.size());
-		staticMembers = staticMap.isEmpty() ? Map.of() : new HashMap<>(staticMap.size());
-
 		for (var e : localMap.values()) {
 			e.prepare(this);
-			localMembers.put(e.name, new LocalJavaMembers(e));
+			property(e.name, new LocalJavaMembers(e));
 		}
 
 		for (var e : staticMap.values()) {
 			e.prepare(this);
-			staticMembers.put(e.name, new StaticJavaMembers(e));
+			staticProperty(e.name, new StaticJavaMembers(e));
 		}
 	}
 
@@ -198,7 +191,7 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 			}
 		}
 
-		parents = p.toArray(Empty.PROTOTYPES);
+		parent(p.toArray(Empty.PROTOTYPES));
 	}
 
 	/*
@@ -246,64 +239,57 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 
 	// Builder //
 
-	public Prototype<T> parent(Prototype<?> parent) {
-		var newParents = new Prototype[parents.length + 1];
+	public void parent(Prototype<?>... parent) {
+		var newParents = new Prototype[parents.length + parent.length];
 		System.arraycopy(parents, 0, newParents, 0, parents.length);
-		newParents[parents.length] = parent;
+		System.arraycopy(parent, 0, newParents, parents.length, parent.length);
 		parents = newParents;
-		return this;
 	}
 
-	public Prototype<T> constructor(PrototypeConstructor c) {
+	public void constructor(PrototypeConstructor c) {
 		constructor = c;
-		return this;
 	}
 
-	public Prototype<T> property(String name, PrototypeProperty property) {
+	public void property(String name, PrototypeProperty property) {
 		if (localProperties == null) {
 			localProperties = new HashMap<>(1);
 		}
 
 		localProperties.put(name, property);
-		return this;
 	}
 
-	public Prototype<T> function(String name, PrototypeFunction value) {
-		return property(name, value);
+	public void function(String name, PrototypeFunction value) {
+		property(name, value);
 	}
 
-	public Prototype<T> staticProperty(String name, PrototypeStaticProperty property) {
+	public void staticProperty(String name, PrototypeStaticProperty property) {
 		if (staticProperties == null) {
 			staticProperties = new HashMap<>(1);
 		}
 
 		staticProperties.put(name, property);
-		return this;
 	}
 
-	public Prototype<T> staticFunction(String name, PrototypeStaticFunction value) {
-		return staticProperty(name, value);
+	public void staticFunction(String name, PrototypeStaticFunction value) {
+		staticProperty(name, value);
 	}
 
-	public Prototype<T> constant(String name, Object value) {
-		return staticProperty(name, new PrototypeConstant(value));
+	public void constant(String name, Object value) {
+		staticProperty(name, new PrototypeConstant(value));
 	}
 
-	public Prototype<T> customMembers(Prototype<T> value) {
-		customMembers = value;
-		return this;
-	}
-
-	// Impl //
+	// Constructor
 
 	@Override
 	public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
 		if (constructor != null) {
-			return constructor.construct(cx, scope, args, false);
+			return constructor.construct(cx, scope, args, hasNew);
 		}
 
 		throw new ConstructorError(this);
 	}
+
+	// Static Named
 
 	@Nullable
 	public Object getStatic(Context cx, Scope scope, String name) {
@@ -314,16 +300,6 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 
 			if (m != null) {
 				return m.get(cx, scope);
-			}
-		}
-
-		var m = staticMembers.get(name);
-
-		if (m != null) {
-			var r = m.get(cx, scope);
-
-			if (r != Special.NOT_FOUND) {
-				return r;
 			}
 		}
 
@@ -338,31 +314,37 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 		return name.equals("class") ? type : Special.NOT_FOUND;
 	}
 
+	public boolean setStatic(Context cx, Scope scope, String name, @Nullable Object value) {
+		initLazy();
+
+		if (staticProperties != null) {
+			var m = staticProperties.get(name);
+
+			if (m != null) {
+				return m.set(cx, scope, value);
+			}
+		}
+
+		for (var p : parents) {
+			if (p.setStatic(cx, scope, name, value)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	// Local Named
+
 	@Nullable
 	public Object getLocal(Context cx, Scope scope, T self, String name) {
 		initLazy();
 
-		if (self != null && self != this) {
-			if (localProperties != null) {
-				var m = localProperties.get(name);
+		if (localProperties != null) {
+			var m = localProperties.get(name);
 
-				if (m != null) {
-					return m.get(cx, scope, self);
-				}
-			}
-		}
-
-		if (customMembers != null && self != null) {
-			return customMembers.getLocal(cx, scope, self, name);
-		}
-
-		var m = localMembers.get(name);
-
-		if (m != null) {
-			var r = m.get(cx, scope, self);
-
-			if (r != Special.NOT_FOUND) {
-				return r;
+			if (m != null) {
+				return m.get(cx, scope, self);
 			}
 		}
 
@@ -377,53 +359,15 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 		return name.equals("class") ? self.getClass() : Special.NOT_FOUND;
 	}
 
-	public boolean setStatic(Context cx, Scope scope, String name, @Nullable Object value) {
-		initLazy();
-
-		if (staticProperties != null) {
-			var m = staticProperties.get(name);
-
-			if (m != null) {
-				return m.set(cx, scope, value);
-			}
-		}
-
-		var m = staticMembers.get(name);
-
-		if (m != null && m.set(cx, scope, value)) {
-			return true;
-		}
-
-		for (var p : parents) {
-			if (p.setStatic(cx, scope, name, value)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	public boolean setLocal(Context cx, Scope scope, T self, String name, @Nullable Object value) {
 		initLazy();
 
-		if (self != null && self != this) {
-			if (localProperties != null) {
-				var m = localProperties.get(name);
+		if (localProperties != null) {
+			var m = localProperties.get(name);
 
-				if (m != null) {
-					return m.set(cx, scope, self, value);
-				}
+			if (m != null) {
+				return m.set(cx, scope, self, value);
 			}
-		}
-
-		if (customMembers != null && self != null) {
-			return customMembers.setLocal(cx, scope, self, name, value);
-		}
-
-		var m = localMembers.get(name);
-
-		if (m != null && m.set(cx, scope, self, value)) {
-			return true;
 		}
 
 		for (var p : parents) {
@@ -438,10 +382,6 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 	public boolean deleteLocal(Context cx, Scope scope, T self, String name) {
 		initLazy();
 
-		if (customMembers != null && self != null) {
-			return customMembers.deleteLocal(cx, scope, self, name);
-		}
-
 		for (var p : parents) {
 			if (p.deleteLocal(cx, scope, cast(self), name)) {
 				return true;
@@ -451,13 +391,11 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 		return false;
 	}
 
+	// Local Indexed
+
 	@Nullable
 	public Object getLocal(Context cx, Scope scope, T self, int index) {
 		initLazy();
-
-		if (customMembers != null && self != null) {
-			return customMembers.getLocal(cx, scope, self, index);
-		}
 
 		for (var p : parents) {
 			var r = p.getLocal(cx, scope, cast(self), index);
@@ -473,10 +411,6 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 	public boolean setLocal(Context cx, Scope scope, T self, int index, @Nullable Object value) {
 		initLazy();
 
-		if (customMembers != null && self != null) {
-			return customMembers.setLocal(cx, scope, self, index, value);
-		}
-
 		for (var p : parents) {
 			if (p.setLocal(cx, scope, cast(self), index, value)) {
 				return true;
@@ -488,10 +422,6 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 
 	public boolean deleteLocal(Context cx, Scope scope, T self, int index) {
 		initLazy();
-
-		if (customMembers != null && self != null) {
-			return customMembers.deleteLocal(cx, scope, self, index);
-		}
 
 		for (var p : parents) {
 			if (p.deleteLocal(cx, scope, cast(self), index)) {
@@ -600,5 +530,20 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 		}
 
 		return 0;
+	}
+
+	@Nullable
+	public Object adapt(Context cx, Scope scope, Object self, @Nullable Class<?> toType) {
+		initLazy();
+
+		for (var p : parents) {
+			var r = p.adapt(cx, scope, self, toType);
+
+			if (r != Special.NOT_FOUND) {
+				return r;
+			}
+		}
+
+		return Special.NOT_FOUND;
 	}
 }
