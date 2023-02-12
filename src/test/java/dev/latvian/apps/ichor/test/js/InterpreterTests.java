@@ -18,19 +18,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.function.Consumer;
 
 // @Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class InterpreterTests {
 	public static ContextJS context;
-
-	private static void printLines(List<String> lines) {
-		for (int i = 0; i < lines.size(); i++) {
-			System.out.printf("%02d | %s%n", i + 1, lines.get(i));
-		}
-	}
 
 	static {
 		context = new ContextJS();
@@ -43,10 +36,10 @@ public class InterpreterTests {
 		System.out.println("--- Interpreter Test ---");
 		System.out.println();
 		System.out.println("Input:");
-		printLines(Arrays.asList(input.split("\n")));
+		IchorUtils.printLines(Arrays.asList(input.split("\n")));
 		System.out.println();
 		System.out.println("Expected:");
-		printLines(matchStr);
+		IchorUtils.printLines(matchStr);
 		System.out.println();
 
 		var rootScope = new RootScope(context);
@@ -76,7 +69,7 @@ public class InterpreterTests {
 
 		System.out.println();
 		System.out.println("Returned:");
-		printLines(console.output);
+		IchorUtils.printLines(console.output);
 		Assertions.assertEquals(matchStr, console.output);
 	}
 

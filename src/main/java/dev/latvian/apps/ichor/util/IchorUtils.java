@@ -3,6 +3,7 @@ package dev.latvian.apps.ichor.util;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
+import java.util.List;
 
 public interface IchorUtils {
 	Double ZERO = 0D;
@@ -56,5 +57,11 @@ public interface IchorUtils {
 
 		var d = Double.parseDouble(numStr);
 		return d == 0D ? ZERO : d == 1D ? ONE : d;
+	}
+
+	static void printLines(List<String> lines) {
+		for (int i = 0; i < lines.size(); i++) {
+			System.out.printf("%02d | %s%n", i + 1, lines.get(i));
+		}
 	}
 }
