@@ -1,13 +1,13 @@
-package dev.latvian.apps.ichor.js;
+package dev.latvian.apps.ichor.lang.js;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.expression.binary.AstBinaryBoolean;
 
-public class AstIn extends AstBinaryBoolean {
+public class AstInstanceOf extends AstBinaryBoolean {
 	@Override
 	public void appendSymbol(StringBuilder builder) {
-		builder.append(" in ");
+		builder.append(" instanceof ");
 	}
 
 	@Override

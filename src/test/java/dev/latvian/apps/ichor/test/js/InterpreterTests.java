@@ -3,18 +3,17 @@ package dev.latvian.apps.ichor.test.js;
 import dev.latvian.apps.ichor.RootScope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.ScopeExit;
-import dev.latvian.apps.ichor.js.ContextJS;
-import dev.latvian.apps.ichor.js.ParserJS;
-import dev.latvian.apps.ichor.js.TokenStreamJS;
-import dev.latvian.apps.ichor.js.type.NumberJS;
+import dev.latvian.apps.ichor.lang.js.ContextJS;
+import dev.latvian.apps.ichor.lang.js.ParserJS;
+import dev.latvian.apps.ichor.lang.js.TokenStreamJS;
 import dev.latvian.apps.ichor.test.AdvancedTestUtils;
 import dev.latvian.apps.ichor.test.ReflectionExample;
 import dev.latvian.apps.ichor.test.TestConsole;
 import dev.latvian.apps.ichor.util.Empty;
+import dev.latvian.apps.ichor.util.IchorUtils;
 import dev.latvian.apps.ichor.util.NamedTokenSource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
@@ -221,7 +220,7 @@ public class InterpreterTests {
 	public void numberProtoAccess() {
 		testInterpreter("""
 				console.log(Number.MAX_SAFE_INTEGER);
-				""", AstStringBuilder.wrapNumber(NumberJS.MAX_SAFE_INTEGER));
+				""", AstStringBuilder.wrapNumber(IchorUtils.MAX_SAFE_INTEGER));
 	}
 
 	@Test
@@ -710,7 +709,6 @@ public class InterpreterTests {
 	}
 
 	@Test
-	@Order(1)
 	public void z_last() {
 		System.out.println("Hi");
 	}

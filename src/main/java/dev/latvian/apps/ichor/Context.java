@@ -5,9 +5,8 @@ import dev.latvian.apps.ichor.error.CastError;
 import dev.latvian.apps.ichor.error.InternalScriptError;
 import dev.latvian.apps.ichor.java.AnnotatedElementPrototype;
 import dev.latvian.apps.ichor.java.JavaClassPrototype;
-import dev.latvian.apps.ichor.js.TokenStreamJS;
-import dev.latvian.apps.ichor.js.type.NumberJS;
 import dev.latvian.apps.ichor.prototype.Prototype;
+import dev.latvian.apps.ichor.util.IchorUtils;
 import dev.latvian.apps.ichor.util.JavaArray;
 import org.jetbrains.annotations.Nullable;
 
@@ -138,21 +137,21 @@ public abstract class Context {
 	private Number asNumber0(Scope scope, Object o) {
 		var p = getPrototype(scope, o);
 		var n = o == p ? null : p.asNumber(this, scope, p.cast(o));
-		return n == null ? NumberJS.ONE : n;
+		return n == null ? IchorUtils.ONE : n;
 	}
 
 	public Number asNumber(Scope scope, Object o) {
 		if (Special.isInvalid(o)) {
-			return NumberJS.NaN;
+			return IchorUtils.NaN;
 		} else if (o instanceof Number) {
 			return (Number) o;
 		} else if (o instanceof Boolean) {
-			return (Boolean) o ? NumberJS.ONE : NumberJS.ZERO;
+			return (Boolean) o ? IchorUtils.ONE : IchorUtils.ZERO;
 		} else if (o instanceof CharSequence) {
 			try {
-				return TokenStreamJS.parseNumber(o.toString());
+				return IchorUtils.parseNumber(o.toString());
 			} catch (Exception ex) {
-				return NumberJS.NaN;
+				return IchorUtils.NaN;
 			}
 		} else if (o instanceof Evaluable) {
 			return ((Evaluable) o).evalDouble(this, scope);
@@ -170,7 +169,7 @@ public abstract class Context {
 			return (Boolean) o ? 1D : 0D;
 		} else if (o instanceof CharSequence) {
 			try {
-				return TokenStreamJS.parseNumber(o.toString()).doubleValue();
+				return IchorUtils.parseNumber(o.toString()).doubleValue();
 			} catch (Exception ex) {
 				return Double.NaN;
 			}
@@ -190,7 +189,7 @@ public abstract class Context {
 			return (Boolean) o ? 1 : 0;
 		} else if (o instanceof CharSequence) {
 			try {
-				return TokenStreamJS.parseNumber(o.toString()).intValue();
+				return IchorUtils.parseNumber(o.toString()).intValue();
 			} catch (Exception ex) {
 				throw new InternalScriptError(ex);
 			}
@@ -210,7 +209,7 @@ public abstract class Context {
 			return (Boolean) o ? 1L : 0L;
 		} else if (o instanceof CharSequence) {
 			try {
-				return TokenStreamJS.parseNumber(o.toString()).longValue();
+				return IchorUtils.parseNumber(o.toString()).longValue();
 			} catch (Exception ex) {
 				throw new InternalScriptError(ex);
 			}

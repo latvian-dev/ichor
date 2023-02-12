@@ -1,4 +1,4 @@
-package dev.latvian.apps.ichor.js;
+package dev.latvian.apps.ichor.lang.js;
 
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.slot.Slot;

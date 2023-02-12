@@ -1,4 +1,4 @@
-package dev.latvian.apps.ichor.js;
+package dev.latvian.apps.ichor.lang.js;
 
 import dev.latvian.apps.ichor.ast.expression.binary.AstBinary;
 import dev.latvian.apps.ichor.token.KeywordToken;

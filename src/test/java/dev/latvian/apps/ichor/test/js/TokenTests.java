@@ -1,8 +1,8 @@
 package dev.latvian.apps.ichor.test.js;
 
 import dev.latvian.apps.ichor.error.TokenStreamError;
-import dev.latvian.apps.ichor.js.ContextJS;
-import dev.latvian.apps.ichor.js.TokenStreamJS;
+import dev.latvian.apps.ichor.lang.js.ContextJS;
+import dev.latvian.apps.ichor.lang.js.TokenStreamJS;
 import dev.latvian.apps.ichor.token.IdentifierToken;
 import dev.latvian.apps.ichor.util.NamedTokenSource;
 import dev.latvian.apps.ichor.util.PrintWrapper;
@@ -15,9 +15,9 @@ import org.junit.jupiter.api.function.Executable;
 
 import java.util.Arrays;
 
-import static dev.latvian.apps.ichor.js.KeywordTokenJS.*;
-import static dev.latvian.apps.ichor.js.SymbolTokenJS.SET;
-import static dev.latvian.apps.ichor.js.SymbolTokenJS.*;
+import static dev.latvian.apps.ichor.lang.js.KeywordTokenJS.*;
+import static dev.latvian.apps.ichor.lang.js.SymbolTokenJS.SET;
+import static dev.latvian.apps.ichor.lang.js.SymbolTokenJS.*;
 
 @Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
 @TestMethodOrder(MethodOrderer.MethodName.class)

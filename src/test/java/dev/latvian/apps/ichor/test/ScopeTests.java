@@ -2,7 +2,7 @@ package dev.latvian.apps.ichor.test;
 
 import dev.latvian.apps.ichor.RootScope;
 import dev.latvian.apps.ichor.error.IchorError;
-import dev.latvian.apps.ichor.js.ContextJS;
+import dev.latvian.apps.ichor.lang.js.ContextJS;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

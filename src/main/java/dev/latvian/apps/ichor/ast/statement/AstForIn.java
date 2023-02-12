@@ -2,7 +2,7 @@ package dev.latvian.apps.ichor.ast.statement;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.js.type.IterableJS;
+import dev.latvian.apps.ichor.util.IchorUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ public class AstForIn extends AstForOf {
 				keys[i] = i;
 			}
 
-			return IterableJS.iteratorOf(keys);
+			return IchorUtils.iteratorOf(keys);
 		} else if (self instanceof Iterable<?> itr) {
 			var keys = new ArrayList<Integer>();
 
@@ -38,7 +38,7 @@ public class AstForIn extends AstForOf {
 			return keys.iterator();
 		} else {
 			var p = cx.getPrototype(scope, self);
-			return IterableJS.iteratorOf(p.keys(cx, scope, p.cast(self)));
+			return IchorUtils.iteratorOf(p.keys(cx, scope, p.cast(self)));
 		}
 	}
 }

@@ -1,4 +1,4 @@
-package dev.latvian.apps.ichor.js.type;
+package dev.latvian.apps.ichor.lang.js.type;
 
 import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
@@ -6,6 +6,7 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.Functions;
+import dev.latvian.apps.ichor.util.IchorUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -13,17 +14,6 @@ import java.util.Collection;
 import java.util.List;
 
 public class NumberJS extends Prototype<Number> {
-	public static final Double ZERO = 0D;
-	public static final Double ONE = 1D;
-	public static final Double NaN = Double.NaN;
-	public static final Double POSITIVE_INFINITY = Double.POSITIVE_INFINITY;
-	public static final Double NEGATIVE_INFINITY = Double.NEGATIVE_INFINITY;
-	public static final Double MAX_VALUE = Double.MAX_VALUE;
-	public static final Double MIN_VALUE = Double.MIN_VALUE;
-	public static final Double MAX_SAFE_INTEGER = 9007199254740991.0;
-	public static final Double MIN_SAFE_INTEGER = -9007199254740991.0;
-	public static final Double EPSILON = Math.pow(2D, -52D);
-
 	private static final Callable IS_FINITE = Functions.of1((cx, scope, arg) -> {
 		double d = cx.asDouble(scope, arg);
 		return !Double.isInfinite(d) && !Double.isNaN(d);
@@ -38,7 +28,7 @@ public class NumberJS extends Prototype<Number> {
 
 	private static final Callable IS_SAFE_INTEGER = Functions.of1((cx, scope, arg) -> {
 		double d = cx.asDouble(scope, arg);
-		return !Double.isInfinite(d) && !Double.isNaN(d) && (d <= MAX_SAFE_INTEGER) && (d >= MIN_SAFE_INTEGER) && (Math.floor(d) == d);
+		return !Double.isInfinite(d) && !Double.isNaN(d) && (d <= IchorUtils.MAX_SAFE_INTEGER) && (d >= IchorUtils.MIN_SAFE_INTEGER) && (Math.floor(d) == d);
 	});
 
 	private static final Callable PARSE_FLOAT = Functions.of1(Context::asDouble);
@@ -61,21 +51,21 @@ public class NumberJS extends Prototype<Number> {
 
 	@Override
 	public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-		return args.length == 0 ? NaN : cx.asNumber(scope, args[0]);
+		return args.length == 0 ? IchorUtils.NaN : cx.asNumber(scope, args[0]);
 	}
 
 	@Override
 	@Nullable
 	public Object getStatic(Context cx, Scope scope, String name) {
 		return switch (name) {
-			case "NaN" -> NaN;
-			case "POSITIVE_INFINITY" -> POSITIVE_INFINITY;
-			case "NEGATIVE_INFINITY" -> NEGATIVE_INFINITY;
-			case "MAX_VALUE" -> MAX_VALUE;
-			case "MIN_VALUE" -> MIN_VALUE;
-			case "MAX_SAFE_INTEGER" -> MAX_SAFE_INTEGER;
-			case "MIN_SAFE_INTEGER" -> MIN_SAFE_INTEGER;
-			case "EPSILON" -> EPSILON;
+			case "NaN" -> IchorUtils.NaN;
+			case "POSITIVE_INFINITY" -> IchorUtils.POSITIVE_INFINITY;
+			case "NEGATIVE_INFINITY" -> IchorUtils.NEGATIVE_INFINITY;
+			case "MAX_VALUE" -> IchorUtils.MAX_DOUBLE_VALUE;
+			case "MIN_VALUE" -> IchorUtils.MIN_DOUBLE_VALUE;
+			case "MAX_SAFE_INTEGER" -> IchorUtils.MAX_SAFE_INTEGER;
+			case "MIN_SAFE_INTEGER" -> IchorUtils.MIN_SAFE_INTEGER;
+			case "EPSILON" -> IchorUtils.EPSILON;
 			case "isFinite" -> IS_FINITE;
 			case "isNaN" -> IS_NAN;
 			case "isInteger" -> IS_INTEGER;

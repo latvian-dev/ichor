@@ -1,23 +1,15 @@
-package dev.latvian.apps.ichor.js.type;
+package dev.latvian.apps.ichor.lang.js.type;
 
 import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.js.ContextJS;
+import dev.latvian.apps.ichor.lang.js.ContextJS;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.Functions;
+import dev.latvian.apps.ichor.util.IchorUtils;
 import org.jetbrains.annotations.Nullable;
 
 public class MathJS extends Prototype<MathJS> {
-	public static final Double PI = Math.PI;
-	public static final Double E = Math.E;
-	public static final Double LN10 = 2.302585092994046D;
-	public static final Double LN2 = 0.6931471805599453D;
-	public static final Double LOG2E = 1.4426950408889634D;
-	public static final Double LOG10E = 0.4342944819032518D;
-	public static final Double SQRT1_2 = Math.sqrt(0.5D);
-	public static final Double SQRT2 = Math.sqrt(2D);
-
 	public static final Callable ABS = Functions.of1((cx, scope, arg) -> Math.abs(cx.asDouble(scope, arg)));
 	public static final Callable ACOS = Functions.of1((cx, scope, arg) -> Math.acos(cx.asDouble(scope, arg)));
 	public static final Callable ASIN = Functions.of1((cx, scope, arg) -> Math.asin(cx.asDouble(scope, arg)));
@@ -62,14 +54,14 @@ public class MathJS extends Prototype<MathJS> {
 	@Nullable
 	public Object getStatic(Context cx, Scope scope, String name) {
 		return switch (name) {
-			case "PI" -> PI;
-			case "E" -> E;
-			case "LN10" -> LN10;
-			case "LN2" -> LN2;
-			case "LOG2E" -> LOG2E;
-			case "LOG10E" -> LOG10E;
-			case "SQRT1_2" -> SQRT1_2;
-			case "SQRT2" -> SQRT2;
+			case "PI" -> IchorUtils.PI;
+			case "E" -> IchorUtils.E;
+			case "LN10" -> IchorUtils.LN10;
+			case "LN2" -> IchorUtils.LN2;
+			case "LOG2E" -> IchorUtils.LOG2E;
+			case "LOG10E" -> IchorUtils.LOG10E;
+			case "SQRT1_2" -> IchorUtils.SQRT1_2;
+			case "SQRT2" -> IchorUtils.SQRT2;
 			case "abs" -> ABS;
 			case "acos" -> ACOS;
 			case "asin" -> ASIN;

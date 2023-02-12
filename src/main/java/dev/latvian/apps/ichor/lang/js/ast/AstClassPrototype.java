@@ -1,4 +1,4 @@
-package dev.latvian.apps.ichor.js.ast;
+package dev.latvian.apps.ichor.lang.js.ast;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;

@@ -7,7 +7,7 @@ import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.BreakExit;
 import dev.latvian.apps.ichor.exit.ContinueExit;
-import dev.latvian.apps.ichor.js.type.IterableJS;
+import dev.latvian.apps.ichor.util.IchorUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
@@ -70,14 +70,14 @@ public class AstForOf extends AstLabeledStatement {
 
 	@Nullable
 	protected Iterator<?> getIterable(Context cx, Scope scope, Object self) {
-		var itr = IterableJS.iteratorOf(self);
+		var itr = IchorUtils.iteratorOf(self);
 
 		if (itr != null) {
 			return itr;
 		}
 
 		var p = cx.getPrototype(scope, self);
-		return IterableJS.iteratorOf(p.values(cx, scope, p.cast(self)));
+		return IchorUtils.iteratorOf(p.values(cx, scope, p.cast(self)));
 	}
 
 	@Override

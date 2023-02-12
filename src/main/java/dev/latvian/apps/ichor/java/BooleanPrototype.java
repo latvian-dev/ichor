@@ -2,8 +2,8 @@ package dev.latvian.apps.ichor.java;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.js.type.NumberJS;
 import dev.latvian.apps.ichor.prototype.Prototype;
+import dev.latvian.apps.ichor.util.IchorUtils;
 
 public class BooleanPrototype extends Prototype<Boolean> {
 	public BooleanPrototype(Context cx) {
@@ -17,7 +17,7 @@ public class BooleanPrototype extends Prototype<Boolean> {
 
 	@Override
 	public Number asNumber(Context cx, Scope scope, Boolean self) {
-		return self ? NumberJS.ONE : NumberJS.ZERO;
+		return self ? IchorUtils.ONE : IchorUtils.ZERO;
 	}
 
 	@Override

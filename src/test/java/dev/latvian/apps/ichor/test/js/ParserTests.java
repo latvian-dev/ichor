@@ -2,9 +2,9 @@ package dev.latvian.apps.ichor.test.js;
 
 import dev.latvian.apps.ichor.ast.AppendableAst;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.js.ContextJS;
-import dev.latvian.apps.ichor.js.ParserJS;
-import dev.latvian.apps.ichor.js.TokenStreamJS;
+import dev.latvian.apps.ichor.lang.js.ContextJS;
+import dev.latvian.apps.ichor.lang.js.ParserJS;
+import dev.latvian.apps.ichor.lang.js.TokenStreamJS;
 import dev.latvian.apps.ichor.util.NamedTokenSource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;

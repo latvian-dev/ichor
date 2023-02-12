@@ -1,33 +1,18 @@
-package dev.latvian.apps.ichor.js.type;
+package dev.latvian.apps.ichor.lang.js.type;
 
 import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.Functions;
-import dev.latvian.apps.ichor.util.JavaArray;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 @SuppressWarnings({"rawtypes"})
 public class IterableJS extends Prototype<Iterable> {
-	@Nullable
-	public static Iterator<?> iteratorOf(Object self) {
-		if (self instanceof Iterator<?> itr) {
-			return itr;
-		} else if (self instanceof Iterable<?> itr) {
-			return itr.iterator();
-		} else if (self != null && self.getClass().isArray()) {
-			return JavaArray.of(self).iterator();
-		}
-
-		return null;
-	}
-
 	public static final Functions.Bound<Iterable> FOR_EACH = (cx, scope, self, args) -> {
 		var func = (Callable) args[0];
 		int i = 0;

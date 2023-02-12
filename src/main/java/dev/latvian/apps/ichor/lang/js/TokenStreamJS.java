@@ -1,16 +1,15 @@
-package dev.latvian.apps.ichor.js;
+package dev.latvian.apps.ichor.lang.js;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.error.TokenStreamError;
 import dev.latvian.apps.ichor.exit.EndOfFileExit;
-import dev.latvian.apps.ichor.js.type.MathJS;
-import dev.latvian.apps.ichor.js.type.NumberJS;
 import dev.latvian.apps.ichor.token.IdentifierToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
 import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.token.TokenPos;
 import dev.latvian.apps.ichor.token.TokenSource;
 import dev.latvian.apps.ichor.token.TokenStream;
+import dev.latvian.apps.ichor.util.IchorUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -325,7 +324,7 @@ public class TokenStreamJS implements TokenStream {
 
 		if (num == null) {
 			try {
-				num = parseNumber(numStr);
+				num = IchorUtils.parseNumber(numStr);
 			} catch (NumberFormatException ex) {
 				throw error("Invalid number: " + numStr);
 			}
@@ -334,27 +333,6 @@ public class TokenStreamJS implements TokenStream {
 		}
 
 		return num;
-	}
-
-	public static Number parseNumber(String numStr) {
-		if (numStr.startsWith("3.14159")) {
-			return MathJS.PI;
-		} else if (numStr.startsWith("2.71828")) {
-			return MathJS.E;
-		}
-
-		try {
-			return Integer.decode(numStr);
-		} catch (Exception ignored) {
-		}
-
-		try {
-			return Long.decode(numStr);
-		} catch (Exception ignored) {
-		}
-
-		var d = Double.parseDouble(numStr);
-		return d == 0D ? NumberJS.ZERO : d == 1D ? NumberJS.ONE : d;
 	}
 
 	private char readUnicode() {

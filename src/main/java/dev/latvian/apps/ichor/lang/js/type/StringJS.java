@@ -1,13 +1,13 @@
-package dev.latvian.apps.ichor.js.type;
+package dev.latvian.apps.ichor.lang.js.type;
 
 import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
-import dev.latvian.apps.ichor.js.TokenStreamJS;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.Functions;
+import dev.latvian.apps.ichor.util.IchorUtils;
 import dev.latvian.apps.ichor.util.JavaArray;
 import org.jetbrains.annotations.Nullable;
 
@@ -195,9 +195,9 @@ public class StringJS extends Prototype<String> {
 	@Override
 	public Number asNumber(Context cx, Scope scope, String self) {
 		try {
-			return TokenStreamJS.parseNumber(self);
+			return IchorUtils.parseNumber(self);
 		} catch (NumberFormatException ex) {
-			return NumberJS.NaN;
+			return IchorUtils.NaN;
 		}
 	}
 

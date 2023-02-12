@@ -5,7 +5,7 @@ import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.ast.expression.AstFunction;
-import dev.latvian.apps.ichor.js.KeywordTokenJS;
+import dev.latvian.apps.ichor.lang.js.KeywordTokenJS;
 
 public class AstFunctionDeclareStatement extends AstDeclareStatement {
 	public final AstFunction function;

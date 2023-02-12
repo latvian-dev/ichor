@@ -7,7 +7,7 @@ import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.InternalScriptError;
-import dev.latvian.apps.ichor.js.TokenStreamJS;
+import dev.latvian.apps.ichor.util.IchorUtils;
 
 import java.util.ArrayList;
 
@@ -83,7 +83,7 @@ public class AstTemplateLiteral extends AstExpression {
 	@Override
 	public double evalDouble(Context cx, Scope scope) {
 		try {
-			return TokenStreamJS.parseNumber(eval(cx, scope)).doubleValue();
+			return IchorUtils.parseNumber(eval(cx, scope)).doubleValue();
 		} catch (Exception ex) {
 			return Double.NaN;
 		}
@@ -92,7 +92,7 @@ public class AstTemplateLiteral extends AstExpression {
 	@Override
 	public int evalInt(Context cx, Scope scope) {
 		try {
-			return TokenStreamJS.parseNumber(eval(cx, scope)).intValue();
+			return IchorUtils.parseNumber(eval(cx, scope)).intValue();
 		} catch (Exception ex) {
 			throw new InternalScriptError(ex);
 		}

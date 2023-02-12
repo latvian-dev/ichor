@@ -1,4 +1,4 @@
-package dev.latvian.apps.ichor.js;
+package dev.latvian.apps.ichor.lang.js;
 
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Interpretable;
@@ -56,11 +56,11 @@ import dev.latvian.apps.ichor.error.ParseError;
 import dev.latvian.apps.ichor.error.ParseErrorMessage;
 import dev.latvian.apps.ichor.error.ParseErrorType;
 import dev.latvian.apps.ichor.exit.ExitType;
-import dev.latvian.apps.ichor.js.ast.AstArguments;
-import dev.latvian.apps.ichor.js.ast.AstClassPrototype;
-import dev.latvian.apps.ichor.js.ast.AstDebugger;
-import dev.latvian.apps.ichor.js.ast.AstObjectPrototype;
-import dev.latvian.apps.ichor.js.ast.AstTypeOf;
+import dev.latvian.apps.ichor.lang.js.ast.AstArguments;
+import dev.latvian.apps.ichor.lang.js.ast.AstClassPrototype;
+import dev.latvian.apps.ichor.lang.js.ast.AstDebugger;
+import dev.latvian.apps.ichor.lang.js.ast.AstObjectPrototype;
+import dev.latvian.apps.ichor.lang.js.ast.AstTypeOf;
 import dev.latvian.apps.ichor.token.DeclaringToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
 import dev.latvian.apps.ichor.token.Token;
@@ -118,6 +118,7 @@ public class ParserJS implements Parser {
 		return context;
 	}
 
+	@Override
 	public Interpretable parse() {
 		var list = new ArrayList<Interpretable>();
 

@@ -1,4 +1,4 @@
-package dev.latvian.apps.ichor.js.type;
+package dev.latvian.apps.ichor.lang.js.type;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
