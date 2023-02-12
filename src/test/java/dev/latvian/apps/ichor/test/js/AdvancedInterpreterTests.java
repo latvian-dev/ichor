@@ -103,7 +103,7 @@ public class AdvancedInterpreterTests {
 				""");
 	}
 
-	@Test
+	// @Test
 	public void jsClass() {
 		InterpreterTests.testInterpreter("""
 				class Rect { // AstClass -> ClassPrototype

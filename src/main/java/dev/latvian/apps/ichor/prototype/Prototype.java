@@ -2,22 +2,29 @@ package dev.latvian.apps.ichor.prototype;
 
 import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
+import dev.latvian.apps.ichor.Remapper;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.annotation.Hidden;
+import dev.latvian.apps.ichor.annotation.Remap;
+import dev.latvian.apps.ichor.annotation.RemapPrefix;
 import dev.latvian.apps.ichor.error.ConstructorError;
 import dev.latvian.apps.ichor.error.ScriptError;
 import dev.latvian.apps.ichor.java.JavaMembers;
 import dev.latvian.apps.ichor.java.LocalJavaMembers;
 import dev.latvian.apps.ichor.java.StaticJavaMembers;
 import dev.latvian.apps.ichor.util.Empty;
+import dev.latvian.apps.ichor.util.Signature;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 
@@ -119,7 +126,17 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 		var localMap = new HashMap<String, JavaMembers>();
 		var staticMap = new HashMap<String, JavaMembers>();
 
+		var remapper = context.getRemapper();
+
 		try {
+			var prefixes0 = new HashSet<String>(0);
+
+			for (var a : type.getAnnotationsByType(RemapPrefix.class)) {
+				prefixes0.add(a.value());
+			}
+
+			var prefixes = prefixes0.toArray(Empty.STRINGS);
+
 			for (var f : type.getDeclaredFields()) {
 				if (f.getDeclaringClass() != type) {
 					continue;
@@ -127,18 +144,13 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 
 				int mod = f.getModifiers();
 
-				if (Modifier.isTransient(mod) || f.isAnnotationPresent(Hidden.class)) {
+				if (!Modifier.isPublic(mod) || Modifier.isTransient(mod) || f.isAnnotationPresent(Hidden.class)) {
 					continue;
 				}
 
 				var map = Modifier.isStatic(mod) ? staticMap : localMap;
-				var name = f.getName();
-
-				var members = map.computeIfAbsent(name, JavaMembers::new);
-
-				if (Modifier.isPublic(mod) && !Modifier.isTransient(mod)) {
-					members.addField(f);
-				}
+				var members = map.computeIfAbsent(getFieldName(prefixes, remapper, f), JavaMembers::new);
+				members.addField(f);
 			}
 
 			for (var m : type.getDeclaredMethods()) {
@@ -147,14 +159,15 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 				}
 
 				int mod = m.getModifiers();
-				var map = Modifier.isStatic(mod) ? staticMap : localMap;
-				var name = m.getName();
 
-				var members = map.computeIfAbsent(name, JavaMembers::new);
-
-				if (Modifier.isPublic(mod)) {
-					members.addMethod(m, map);
+				if (!Modifier.isPublic(mod) || m.isAnnotationPresent(Hidden.class)) {
+					continue;
 				}
+
+				var map = Modifier.isStatic(mod) ? staticMap : localMap;
+				var signature = Signature.of(m);
+				var members = map.computeIfAbsent(getMethodName(prefixes, remapper, m, signature), JavaMembers::new);
+				members.addMethod(m, signature, map);
 			}
 		} catch (Exception ex) {
 			throw new ClassLoadingError(type, ex);
@@ -177,6 +190,26 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 			e.prepare(this);
 			staticProperty(e.name, new StaticJavaMembers(e));
 		}
+	}
+
+	private String getFieldName(String[] prefixes, @Nullable Remapper remapper, Field field) {
+		var r = field.getAnnotation(Remap.class);
+
+		if (r != null) {
+			return r.value();
+		}
+
+		return remapper != null ? remapper.getFieldName(context, field) : field.getName();
+	}
+
+	private String getMethodName(String[] prefixes, @Nullable Remapper remapper, Method method, Signature signature) {
+		var r = method.getAnnotation(Remap.class);
+
+		if (r != null) {
+			return r.value();
+		}
+
+		return remapper != null ? remapper.getMethodName(context, method, signature) : method.getName();
 	}
 
 	protected void initParents() {

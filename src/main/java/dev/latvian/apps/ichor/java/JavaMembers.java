@@ -58,9 +58,7 @@ public final class JavaMembers {
 		return name;
 	}
 
-	public void addMethod(Method m, Map<String, JavaMembers> otherMembers) {
-		var signature = Signature.of(m);
-
+	public void addMethod(Method m, Signature signature, Map<String, JavaMembers> otherMembers) {
 		if (methods == null) {
 			methods = new SigMethod[1];
 		} else {

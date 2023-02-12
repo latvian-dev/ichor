@@ -21,6 +21,7 @@ public abstract class Context {
 	private int maxScopeDepth;
 	private long interpretingTimeout;
 	private long tokenStreamTimeout;
+	private Remapper remapper;
 
 	public Context() {
 		classPrototypes = new IdentityHashMap<>();
@@ -62,6 +63,15 @@ public abstract class Context {
 
 	public void setTokenStreamTimeout(long tokenStreamTimeout) {
 		this.tokenStreamTimeout = tokenStreamTimeout;
+	}
+
+	@Nullable
+	public Remapper getRemapper() {
+		return remapper;
+	}
+
+	public void setRemapper(Remapper r) {
+		remapper = r;
 	}
 
 	public Object eval(Scope scope, Object o) {
