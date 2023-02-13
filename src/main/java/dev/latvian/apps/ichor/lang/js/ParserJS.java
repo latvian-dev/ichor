@@ -535,6 +535,7 @@ public class ParserJS implements Parser {
 
 	private Interpretable whileStatement(PositionedToken pos, String label) {
 		AstWhile ast = new AstWhile().pos(pos);
+		ast.label = label;
 		consume(SymbolTokenJS.LP, ParseErrorType.EXP_LP_WHILE_COND);
 		ast.condition = expression();
 		consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_WHILE_COND);
@@ -546,6 +547,7 @@ public class ParserJS implements Parser {
 
 	private Interpretable doWhileStatement(PositionedToken pos, String label) {
 		AstDoWhile ast = new AstDoWhile().pos(pos);
+		ast.label = label;
 		pushExit(ast);
 		ast.body = statementBody();
 		popExit(ast);
@@ -634,7 +636,7 @@ public class ParserJS implements Parser {
 			ignoreSemi();
 		}
 
-		return new AstExpressionStatement(expr).pos(pos);
+		return new AstExpressionStatement(expr).pos(expr instanceof TokenPosSupplier s ? s : pos);
 	}
 
 	private AstFunction function(@Nullable AstClass owner, @Nullable AstClassFunction.Type type, int modifiers) {
@@ -751,11 +753,12 @@ public class ParserJS implements Parser {
 
 			throw new ParseError(pos, ParseErrorType.INVALID_TARGET.format(value));
 		} else if (advanceIf(SymbolTokenJS.HOOK)) {
-			AstTernary ternary = new AstTernary().pos(pos);
+			AstTernary ternary = new AstTernary();
 			ternary.condition = expr;
 			ternary.ifTrue = expression();
 			consume(SymbolTokenJS.COL, ParseErrorType.EXP_TERNARY_COL);
 			ternary.ifFalse = expression();
+			ternary.pos(expr instanceof TokenPosSupplier s ? s : pos);
 			return ternary;
 		}
 
