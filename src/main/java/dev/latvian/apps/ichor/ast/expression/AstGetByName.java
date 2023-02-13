@@ -1,10 +1,13 @@
 package dev.latvian.apps.ichor.ast.expression;
 
+import dev.latvian.apps.ichor.Callable;
 import dev.latvian.apps.ichor.Context;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.NamedMemberNotFoundError;
+import dev.latvian.apps.ichor.prototype.Prototype;
 
 import java.util.regex.Pattern;
 
@@ -65,5 +68,27 @@ public class AstGetByName extends AstGetFrom {
 		}
 
 		return p.deleteLocal(cx, scope, p.cast(self), name);
+	}
+
+	@Override
+	public Object optimize(Parser parser) {
+		from = parser.optimize(from);
+
+		// Is this correct? So far seems to work
+
+		if (from instanceof Prototype<?> p) {
+			var m = p.getStatic(parser.getContext(), parser.getRootScope(), name);
+
+			if (m == Special.NOT_FOUND) {
+				throw new NamedMemberNotFoundError(name, p).pos(this);
+			}
+
+			// Disabled for functions for now, potential issues with static java member scoping
+			if (!(m instanceof Callable)) {
+				return m;
+			}
+		}
+
+		return this;
 	}
 }

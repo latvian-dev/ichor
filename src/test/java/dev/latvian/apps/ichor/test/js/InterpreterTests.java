@@ -51,7 +51,7 @@ public class InterpreterTests {
 
 		var tokenStream = new TokenStreamJS(context, new NamedTokenSource(filename), input);
 		var rootToken = tokenStream.getRootToken();
-		var parser = new ParserJS(context, rootToken);
+		var parser = new ParserJS(context, rootScope, rootToken);
 		var ast = parser.parse();
 		var astStr = ast.toString();
 

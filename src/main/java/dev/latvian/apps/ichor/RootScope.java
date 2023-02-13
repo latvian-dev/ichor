@@ -1,6 +1,8 @@
 package dev.latvian.apps.ichor;
 
 import dev.latvian.apps.ichor.error.ScriptTimedOutError;
+import dev.latvian.apps.ichor.slot.Slot;
+import org.jetbrains.annotations.Nullable;
 
 public class RootScope extends Scope {
 	public final Context context;
@@ -17,9 +19,13 @@ public class RootScope extends Scope {
 		interpretingTimeout = cx.getInterpretingTimeout();
 	}
 
+	public void addRoot(String name, @Nullable Object value) {
+		add(name, value, (byte) (Slot.IMMUTABLE | Slot.ROOT));
+	}
+
 	public void addSafePrototypes() {
 		for (var p : context.getSafePrototypes()) {
-			addImmutable(p.getPrototypeName(), p);
+			addRoot(p.getPrototypeName(), p);
 		}
 	}
 

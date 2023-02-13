@@ -1,13 +1,16 @@
 package dev.latvian.apps.ichor.util;
 
+import dev.latvian.apps.ichor.Callable;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 import java.util.List;
 
 public interface IchorUtils {
-	Double ZERO = 0D;
-	Double ONE = 1D;
+	Double ZERO = 0.0;
+	Double NZERO = -0.0;
+	Double ONE = 1.0;
+	Double D32 = 32.0;
 	Double NaN = Double.NaN;
 	Double POSITIVE_INFINITY = Double.POSITIVE_INFINITY;
 	Double NEGATIVE_INFINITY = Double.NEGATIVE_INFINITY;
@@ -15,15 +18,71 @@ public interface IchorUtils {
 	Double MIN_DOUBLE_VALUE = Double.MIN_VALUE;
 	Double MAX_SAFE_INTEGER = 9007199254740991.0;
 	Double MIN_SAFE_INTEGER = -9007199254740991.0;
-	Double EPSILON = Math.pow(2D, -52D);
+	Double EPSILON = Math.pow(2, -52);
 	Double PI = Math.PI;
 	Double E = Math.E;
-	Double LN10 = 2.302585092994046D;
-	Double LN2 = 0.6931471805599453D;
-	Double LOG2E = 1.4426950408889634D;
-	Double LOG10E = 0.4342944819032518D;
-	Double SQRT1_2 = Math.sqrt(0.5D);
-	Double SQRT2 = Math.sqrt(2D);
+	Double LN10 = 2.302585092994046;
+	Double LN2 = 0.6931471805599453;
+	Double LOG2E = 1.4426950408889634;
+	Double LOG10E = 0.4342944819032518;
+	Double SQRT1_2 = Math.sqrt(0.5);
+	Double SQRT2 = Math.sqrt(2);
+
+	Callable ABS = Functions.of1((cx, scope, arg) -> Math.abs(cx.asDouble(scope, arg)));
+	Callable ACOS = Functions.of1((cx, scope, arg) -> Math.acos(cx.asDouble(scope, arg)));
+	Callable ASIN = Functions.of1((cx, scope, arg) -> Math.asin(cx.asDouble(scope, arg)));
+	Callable ATAN = Functions.of1((cx, scope, arg) -> Math.atan(cx.asDouble(scope, arg)));
+	Callable ATAN2 = Functions.of2((cx, scope, arg1, arg2) -> Math.atan2(cx.asDouble(scope, arg1), cx.asDouble(scope, arg2)));
+	Callable CEIL = Functions.of1((cx, scope, arg) -> Math.ceil(cx.asDouble(scope, arg)));
+	Callable COS = Functions.of1((cx, scope, arg) -> Math.cos(cx.asDouble(scope, arg)));
+	Callable EXP = Functions.of1((cx, scope, arg) -> Math.exp(cx.asDouble(scope, arg)));
+	Callable FLOOR = Functions.of1((cx, scope, arg) -> Math.floor(cx.asDouble(scope, arg)));
+	Callable LOG = Functions.of1((cx, scope, arg) -> Math.log(cx.asDouble(scope, arg)));
+	Callable MAX = Functions.of2((cx, scope, arg1, arg2) -> Math.max(cx.asDouble(scope, arg1), cx.asDouble(scope, arg2)));
+	Callable MIN = Functions.of2((cx, scope, arg1, arg2) -> Math.min(cx.asDouble(scope, arg1), cx.asDouble(scope, arg2)));
+	Callable POW = Functions.of2((cx, scope, arg1, arg2) -> Math.pow(cx.asDouble(scope, arg1), cx.asDouble(scope, arg2)));
+	Callable RANDOM = Functions.ofN((cx, scope, args) -> Math.random());
+	Callable ROUND = Functions.of1((cx, scope, arg) -> Math.round(cx.asDouble(scope, arg)));
+	Callable SIN = Functions.of1((cx, scope, arg) -> Math.sin(cx.asDouble(scope, arg)));
+	Callable SQRT = Functions.of1((cx, scope, arg) -> Math.sqrt(cx.asDouble(scope, arg)));
+	Callable TAN = Functions.of1((cx, scope, arg) -> Math.tan(cx.asDouble(scope, arg)));
+	Callable CBRT = Functions.of1((cx, scope, arg) -> Math.cbrt(cx.asDouble(scope, arg)));
+	Callable COSH = Functions.of1((cx, scope, arg) -> Math.cosh(cx.asDouble(scope, arg)));
+	Callable EXPM1 = Functions.of1((cx, scope, arg) -> Math.expm1(cx.asDouble(scope, arg)));
+	Callable HYPOT = Functions.of2((cx, scope, arg1, arg2) -> Math.hypot(cx.asDouble(scope, arg1), cx.asDouble(scope, arg2)));
+	Callable LOG1P = Functions.of1((cx, scope, arg) -> Math.log1p(cx.asDouble(scope, arg)));
+	Callable LOG10 = Functions.of1((cx, scope, arg) -> Math.log10(cx.asDouble(scope, arg)));
+	Callable SINH = Functions.of1((cx, scope, arg) -> Math.sinh(cx.asDouble(scope, arg)));
+	Callable TANH = Functions.of1((cx, scope, arg) -> Math.tanh(cx.asDouble(scope, arg)));
+	Callable IMUL = Functions.of2((cx, scope, arg1, arg2) -> Math.multiplyExact(cx.asInt(scope, arg1), cx.asInt(scope, arg2)));
+
+	Callable TRUNC = Functions.of1((cx, scope, arg) -> {
+		var x = cx.asDouble(scope, arg);
+		return x < 0D ? Math.ceil(x) : Math.floor(x);
+	});
+
+	Callable ACOSH = Functions.WIP;
+	Callable ASINH = Functions.WIP;
+	Callable ATANH = Functions.WIP;
+	Callable SIGN = Functions.of1((cx, scope, arg) -> Math.signum(cx.asDouble(scope, arg)));
+	Callable LOG2 = Functions.of1((cx, scope, arg) -> Math.log(cx.asDouble(scope, arg)) * LOG2E);
+	Callable FROUND = Functions.of1((cx, scope, arg) -> (float) cx.asDouble(scope, arg));
+
+	Callable CLZ32 = Functions.of1((cx, scope, arg) -> {
+		var x = cx.asDouble(scope, arg);
+
+		if (x == 0 || Double.isNaN(x) || Double.isInfinite(x)) {
+			return D32;
+		}
+
+		long n = (long) x;
+
+		if (n == 0L) {
+			return D32;
+		}
+
+		return 31 - Math.floor(Math.log(n) * LOG2E);
+	});
 
 	@Nullable
 	static Iterator<?> iteratorOf(Object self) {

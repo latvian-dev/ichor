@@ -3,6 +3,7 @@ package dev.latvian.apps.ichor.lang.js;
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Parser;
+import dev.latvian.apps.ichor.RootScope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.Ast;
 import dev.latvian.apps.ichor.ast.expression.AstAwait;
@@ -102,12 +103,14 @@ public class ParserJS implements Parser {
 	};
 
 	private final ContextJS context;
+	private final RootScope rootScope;
 	private PositionedToken current;
 	private final Stack<LabeledStatement> labeledStatements;
 	private final Map<String, AstType.Generic> genericTypeCache;
 
-	public ParserJS(ContextJS cx, PositionedToken r) {
+	public ParserJS(ContextJS cx, RootScope scope, PositionedToken r) {
 		context = cx;
+		rootScope = scope;
 		current = r;
 		labeledStatements = new Stack<>();
 		genericTypeCache = new HashMap<>();
@@ -116,6 +119,11 @@ public class ParserJS implements Parser {
 	@Override
 	public ContextJS getContext() {
 		return context;
+	}
+
+	@Override
+	public RootScope getRootScope() {
+		return rootScope;
 	}
 
 	@Override

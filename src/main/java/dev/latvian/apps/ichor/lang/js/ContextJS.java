@@ -56,6 +56,8 @@ public class ContextJS extends Context {
 			iterablePrototype,
 			arrayPrototype;
 
+	public final List<Prototype<?>> safePrototypes;
+
 	public ContextJS() {
 		super();
 		timeoutExecutor = null;
@@ -76,21 +78,22 @@ public class ContextJS extends Context {
 		iterablePrototype = new IterableJS(this);
 
 		arrayPrototype = super.getClassPrototype(Object[].class);
+
+		safePrototypes = new ArrayList<>();
+		safePrototypes.add(stringPrototype);
+		safePrototypes.add(numberPrototype);
+		safePrototypes.add(booleanPrototype);
+		safePrototypes.add(jsObjectPrototype);
+		safePrototypes.add(jsArrayPrototype);
+		safePrototypes.add(jsMathPrototype);
+		safePrototypes.add(jsMapPrototype);
+		safePrototypes.add(jsSetPrototype);
+		safePrototypes.add(regExpPrototype);
 	}
 
 	@Override
 	public List<Prototype<?>> getSafePrototypes() {
-		return List.of(
-				stringPrototype,
-				numberPrototype,
-				booleanPrototype,
-				jsObjectPrototype,
-				jsArrayPrototype,
-				jsMathPrototype,
-				jsMapPrototype,
-				jsSetPrototype,
-				regExpPrototype
-		);
+		return safePrototypes;
 	}
 
 	@Nullable

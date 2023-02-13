@@ -1,5 +1,6 @@
 package dev.latvian.apps.ichor.test.js;
 
+import dev.latvian.apps.ichor.RootScope;
 import dev.latvian.apps.ichor.ast.AppendableAst;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.lang.js.ContextJS;
@@ -20,7 +21,7 @@ public class ParserTests {
 		var cx = new ContextJS();
 		var tokenStream = new TokenStreamJS(cx, new NamedTokenSource(filename), input);
 		var rootToken = tokenStream.getRootToken();
-		var parser = new ParserJS(cx, rootToken);
+		var parser = new ParserJS(cx, new RootScope(cx), rootToken);
 		var ast = parser.parse();
 
 		var sb = new AstStringBuilder();

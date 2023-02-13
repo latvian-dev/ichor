@@ -5,6 +5,7 @@ import dev.latvian.apps.ichor.Special;
 public class Slot {
 	public static final byte DEFAULT = 0;
 	public static final byte IMMUTABLE = 1;
+	public static final byte ROOT = 2;
 
 	public final String name;
 	public Object value;
@@ -23,5 +24,9 @@ public class Slot {
 
 	public boolean isImmutable() {
 		return (flags & IMMUTABLE) != 0;
+	}
+
+	public boolean isRoot() {
+		return (flags & ROOT) != 0;
 	}
 }

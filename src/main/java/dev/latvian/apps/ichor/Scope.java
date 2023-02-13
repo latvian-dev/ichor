@@ -2,6 +2,7 @@ package dev.latvian.apps.ichor;
 
 import dev.latvian.apps.ichor.error.ConstantReassignError;
 import dev.latvian.apps.ichor.error.NamedMemberNotFoundError;
+import dev.latvian.apps.ichor.error.RedeclarationError;
 import dev.latvian.apps.ichor.error.ScopeDepthError;
 import dev.latvian.apps.ichor.slot.EmptySlotMap;
 import dev.latvian.apps.ichor.slot.Slot;
@@ -51,14 +52,22 @@ public class Scope {
 		var slot = members.getSlot(name);
 
 		if (slot == null) {
+			if (this != root) {
+				var rootSlot = root.members.getSlot(name);
+
+				if (rootSlot != null && rootSlot.isRoot()) {
+					throw new RedeclarationError(name, this);
+				}
+			}
+
 			slot = new Slot(name);
 			members = members.upgradeSlotMap();
 			members.setSlot(slot);
+			slot.value = value;
+			slot.flags = flags;
+		} else {
+			throw new RedeclarationError(name, this);
 		}
-
-		slot.value = value;
-		slot.flags = flags;
-		// slot.prototype = null;
 	}
 
 	public void addMutable(String name, @Nullable Object value) {
