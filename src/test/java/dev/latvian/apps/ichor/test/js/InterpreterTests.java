@@ -702,6 +702,50 @@ public class InterpreterTests {
 	}
 
 	@Test
+	public void declareNormal() {
+		testInterpreter("""
+				const obj = {a: 1, b: {c: 2}, d: ['a', 'b', 'c']}
+				console.log(obj.a)
+				console.log(obj.a.b.c)
+				""", """
+				1
+				""");
+	}
+
+	@Test
+	public void declareDestructObj() {
+		testInterpreter("""
+				const obj = {a: 1, b: {c: 2}, d: ['a', 'b', 'c']}
+				console.log(obj.a)
+				console.log(obj.a.b.c)
+				""", """
+				1
+				""");
+	}
+
+	@Test
+	public void declareDestructArr() {
+		testInterpreter("""
+				const obj = {a: 1, b: {c: 2}, d: ['a', 'b', 'c']}
+				console.log(obj.a)
+				console.log(obj.a.b.c)
+				""", """
+				1
+				""");
+	}
+
+	@Test
+	public void declareDestructObjNested() {
+		testInterpreter("""
+				const obj = {a: 1, b: {c: 2}, d: ['a', 'b', 'c']}
+				console.log(obj.a)
+				console.log(obj.a.b.c)
+				""", """
+				1
+				""");
+	}
+
+	@Test
 	public void z_last() {
 		System.out.println("Hi");
 	}

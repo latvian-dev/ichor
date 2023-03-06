@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -75,8 +76,10 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 	private Map<String, PrototypeStaticProperty> staticProperties;
 	private Boolean isSingleMethodInterface;
 	private Prototype<?>[] parents;
+	private Map<Class<?>, PrototypeTypeAdapter<T>> typeAdapters;
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
+
 	public Prototype(Context cx, String name, Class type) {
 		this.context = cx;
 		this.type = type;
@@ -326,6 +329,26 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 		staticProperty(name, new PrototypeConstant(value));
 	}
 
+	public void typeAdapter(PrototypeTypeAdapter<T> typeAdapter, Class<?> toType) {
+		if (typeAdapters == null) {
+			typeAdapters = new IdentityHashMap<>();
+		}
+
+		var f = typeAdapters.get(toType);
+
+		if (f == null) {
+			typeAdapters.put(toType, typeAdapter);
+		} else {
+			typeAdapters.put(toType, new PrototypeTypeAdapter.Fallback<>(typeAdapter, f));
+		}
+	}
+
+	public void typeAdapter(PrototypeTypeAdapter<T> typeAdapter, Class<?>... toTypes) {
+		for (var toType : toTypes) {
+			typeAdapter(typeAdapter, toType);
+		}
+	}
+
 	// Constructor
 
 	@Override
@@ -337,6 +360,13 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 		}
 
 		throw new ConstructorError(this);
+	}
+
+	// Internal getter methods
+
+	@Nullable
+	public Object getInternal(Context cx, Scope scope, Object self, String name) {
+		return self == this ? getStatic(cx, scope, name) : getLocal(cx, scope, cast(self), name);
 	}
 
 	// Static Named
@@ -546,9 +576,21 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 	}
 
 	@Nullable
-	public Object adapt(Context cx, Scope scope, Object self, @Nullable Class<?> toType) {
+	public Object adapt(Context cx, Scope scope, T self, @Nullable Class<?> toType) {
+		if (typeAdapters != null) {
+			var a = typeAdapters.get(toType);
+
+			if (a != null) {
+				var r = a.adapt(cx, scope, self, toType);
+
+				if (r != Special.NOT_FOUND) {
+					return r;
+				}
+			}
+		}
+
 		for (var p : getParents()) {
-			var r = p.adapt(cx, scope, self, toType);
+			var r = p.adapt(cx, scope, cast(self), toType);
 
 			if (r != Special.NOT_FOUND) {
 				return r;

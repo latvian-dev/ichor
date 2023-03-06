@@ -1,9 +1,9 @@
 package dev.latvian.apps.ichor;
 
 import dev.latvian.apps.ichor.error.ConstantReassignError;
-import dev.latvian.apps.ichor.error.NamedMemberNotFoundError;
 import dev.latvian.apps.ichor.error.RedeclarationError;
 import dev.latvian.apps.ichor.error.ScopeDepthError;
+import dev.latvian.apps.ichor.error.ScopeMemberNotFoundError;
 import dev.latvian.apps.ichor.slot.EmptySlotMap;
 import dev.latvian.apps.ichor.slot.Slot;
 import dev.latvian.apps.ichor.slot.SlotMap;
@@ -107,7 +107,7 @@ public class Scope {
 		}
 		while (s != null);
 
-		throw new NamedMemberNotFoundError(name, this);
+		throw new ScopeMemberNotFoundError(name, this);
 	}
 
 	public AssignType hasDeclaredMember(String name) {
@@ -126,7 +126,7 @@ public class Scope {
 		var slot = members.getSlot(name);
 
 		if (slot == null) {
-			throw new NamedMemberNotFoundError(name, this);
+			throw new ScopeMemberNotFoundError(name, this);
 		}
 
 		members.removeSlot(name);
@@ -158,7 +158,7 @@ public class Scope {
 		}
 		while (s != null);
 
-		throw new NamedMemberNotFoundError(name, this);
+		throw new ScopeMemberNotFoundError(name, this);
 	}
 
 	public AssignType hasMember(String name) {

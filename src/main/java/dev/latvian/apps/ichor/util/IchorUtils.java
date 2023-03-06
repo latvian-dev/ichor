@@ -58,12 +58,43 @@ public interface IchorUtils {
 
 	Callable TRUNC = Functions.of1((cx, scope, arg) -> {
 		var x = cx.asDouble(scope, arg);
-		return x < 0D ? Math.ceil(x) : Math.floor(x);
+		return x < 0.0 ? Math.ceil(x) : Math.floor(x);
 	});
 
-	Callable ACOSH = Functions.WIP;
-	Callable ASINH = Functions.WIP;
-	Callable ATANH = Functions.WIP;
+	Callable ACOSH = Functions.of1((cx, scope, arg) -> {
+		var x = cx.asDouble(scope, arg);
+
+		if (!Double.isNaN(x)) {
+			return Math.log(x + Math.sqrt(x * x - 1.0));
+		}
+
+		return NaN;
+	});
+
+	Callable ASINH = Functions.of1((cx, scope, arg) -> {
+		var x = cx.asDouble(scope, arg);
+
+		if (Double.isInfinite(x)) {
+			return x;
+		}
+
+		if (!Double.isNaN(x)) {
+			return x == 0.0 ? 1.0 / x > 0.0 ? ZERO : NZERO : Math.log(x + Math.sqrt(x * x + 1.0));
+		}
+
+		return NaN;
+	});
+
+	Callable ATANH = Functions.of1((cx, scope, arg) -> {
+		var x = cx.asDouble(scope, arg);
+
+		if (!Double.isNaN(x) && -1.0 <= x && x <= 1.0) {
+			return x == 0.0 ? 1.0 / x > 0.0 ? ZERO : NZERO : 0.5 * Math.log((x + 1.0) / (x - 1.0));
+		}
+
+		return NaN;
+	});
+
 	Callable SIGN = Functions.of1((cx, scope, arg) -> Math.signum(cx.asDouble(scope, arg)));
 	Callable LOG2 = Functions.of1((cx, scope, arg) -> Math.log(cx.asDouble(scope, arg)) * LOG2E);
 	Callable FROUND = Functions.of1((cx, scope, arg) -> (float) cx.asDouble(scope, arg));

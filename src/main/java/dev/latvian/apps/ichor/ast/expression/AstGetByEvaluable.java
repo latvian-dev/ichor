@@ -36,20 +36,20 @@ public class AstGetByEvaluable extends AstGetFrom {
 			var ki = n.intValue();
 
 			if (self == p) {
-				throw new IndexedMemberNotFoundError(ki, self).pos(this);
+				throw new IndexedMemberNotFoundError(ki, p, self).pos(this);
 			}
 
 			r = p.getLocal(cx, scope, p.cast(self), ki);
 
 			if (r == Special.NOT_FOUND) {
-				throw new IndexedMemberNotFoundError(ki, self).pos(this);
+				throw new IndexedMemberNotFoundError(ki, p, self).pos(this);
 			}
 		} else {
 			var ks = cx.asString(scope, k, false);
-			r = self == p ? p.getStatic(cx, scope, ks) : p.getLocal(cx, scope, p.cast(self), ks);
+			r = p.getInternal(cx, scope, self, ks);
 
 			if (r == Special.NOT_FOUND) {
-				throw new NamedMemberNotFoundError(ks, self).pos(this);
+				throw new NamedMemberNotFoundError(ks, p, self).pos(this);
 			}
 		}
 
@@ -66,17 +66,17 @@ public class AstGetByEvaluable extends AstGetFrom {
 			var ki = n.intValue();
 
 			if (self == p) {
-				throw new IndexedMemberNotFoundError(ki, self).pos(this);
+				throw new IndexedMemberNotFoundError(ki, p, self).pos(this);
 			}
 
 			if (!p.setLocal(cx, scope, p.cast(self), ki, value)) {
-				throw new IndexedMemberNotFoundError(ki, self).pos(this);
+				throw new IndexedMemberNotFoundError(ki, p, self).pos(this);
 			}
 		} else {
 			var ks = cx.asString(scope, k, false);
 
 			if (!(self == p ? p.setStatic(cx, scope, ks, value) : p.setLocal(cx, scope, p.cast(self), ks, value))) {
-				throw new NamedMemberNotFoundError(ks, self).pos(this);
+				throw new NamedMemberNotFoundError(ks, p, self).pos(this);
 			}
 		}
 	}
@@ -91,7 +91,7 @@ public class AstGetByEvaluable extends AstGetFrom {
 			var ki = n.intValue();
 
 			if (self == p) {
-				throw new IndexedMemberNotFoundError(ki, self).pos(this);
+				throw new IndexedMemberNotFoundError(ki, p, self).pos(this);
 			}
 
 			return p.deleteLocal(cx, scope, p.cast(self), ki);
@@ -99,7 +99,7 @@ public class AstGetByEvaluable extends AstGetFrom {
 			var ks = cx.asString(scope, k, false);
 
 			if (self == p) {
-				throw new NamedMemberNotFoundError(ks, self).pos(this);
+				throw new NamedMemberNotFoundError(ks, p, self).pos(this);
 			}
 
 			return p.deleteLocal(cx, scope, p.cast(self), ks);

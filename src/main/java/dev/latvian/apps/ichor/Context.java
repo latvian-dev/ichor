@@ -75,7 +75,7 @@ public abstract class Context {
 	}
 
 	public Object eval(Scope scope, Object o) {
-		if (o instanceof Callable) {
+		if (o == Special.UNDEFINED || o instanceof Callable) {
 			return o;
 		} else if (o instanceof Evaluable eval) {
 			return eval.eval(this, scope);
@@ -267,35 +267,44 @@ public abstract class Context {
 
 	@SuppressWarnings("rawtypes")
 	public Class asClass(Scope scope, Object o) {
-		return as(scope, o, Class.class);
+		return o instanceof Class s ? s : (Class) as(scope, o, Class.class);
 	}
 
-	@SuppressWarnings("unchecked")
-	public <T> T as(Scope scope, Object o, @Nullable Class<T> toType) {
+	@SuppressWarnings("rawtypes")
+	public Map asMap(Scope scope, Object o) {
+		return o instanceof Map s ? s : (Map) as(scope, o, Map.class);
+	}
+
+	@SuppressWarnings("rawtypes")
+	public List asList(Scope scope, Object o) {
+		return o instanceof List s ? s : o != null ? o.getClass().isArray() ? JavaArray.of(o) : (List) as(scope, o, List.class) : null;
+	}
+
+	public Object as(Scope scope, Object o, @Nullable Class<?> toType) {
 		if (Special.isInvalid(o)) {
 			return null;
 		} else if (toType == null || toType == Void.TYPE || toType == Object.class || toType == o.getClass() || toType.isInstance(o)) {
-			return (T) o;
+			return o;
 		} else if (toType == String.class || toType == CharSequence.class) {
-			return (T) asString(scope, o, false);
+			return asString(scope, o, false);
 		} else if (toType == Number.class) {
-			return (T) asNumber(scope, o);
+			return asNumber(scope, o);
 		} else if (toType == Boolean.class || toType == Boolean.TYPE) {
-			return (T) Boolean.valueOf(asBoolean(scope, o));
+			return asBoolean(scope, o);
 		} else if (toType == Character.class || toType == Character.TYPE) {
-			return (T) Character.valueOf(asChar(scope, o));
+			return asChar(scope, o);
 		} else if (toType == Byte.class || toType == Byte.TYPE) {
-			return (T) Byte.valueOf(asNumber(scope, o).byteValue());
+			return asNumber(scope, o).byteValue();
 		} else if (toType == Short.class || toType == Short.TYPE) {
-			return (T) Short.valueOf(asNumber(scope, o).shortValue());
+			return asNumber(scope, o).shortValue();
 		} else if (toType == Integer.class || toType == Integer.TYPE) {
-			return (T) Integer.valueOf(asInt(scope, o));
+			return asInt(scope, o);
 		} else if (toType == Long.class || toType == Long.TYPE) {
-			return (T) Long.valueOf(asLong(scope, o));
+			return asLong(scope, o);
 		} else if (toType == Float.class || toType == Float.TYPE) {
-			return (T) Float.valueOf(asNumber(scope, o).floatValue());
+			return asNumber(scope, o).floatValue();
 		} else if (toType == Double.class || toType == Double.TYPE) {
-			return (T) Double.valueOf(asDouble(scope, o));
+			return asDouble(scope, o);
 		} else if (o instanceof TypeAdapter typeAdapter && typeAdapter.canAdapt(this, toType)) {
 			return typeAdapter.adapt(this, scope, toType);
 		}
@@ -303,22 +312,23 @@ public abstract class Context {
 		var c = customAs(scope, o, toType);
 
 		if (c != Special.NOT_FOUND) {
-			return (T) c;
+			return c;
 		}
 
-		var a = getPrototype(scope, o).adapt(this, scope, o, toType);
+		var p = getPrototype(scope, o);
+		var a = p.adapt(this, scope, p.cast(o), toType);
 
 		if (a != Special.NOT_FOUND) {
-			return (T) a;
+			return a;
 		} else if (o instanceof Iterable<?> itr && toType.isArray()) {
-			return (T) JavaArray.adaptToArray(this, scope, itr, toType);
+			return JavaArray.adaptToArray(this, scope, itr, toType);
 		} else {
 			throw new CastError(o, toType.getName());
 		}
 	}
 
 	@Nullable
-	private <T> Object customAs(Scope scope, Object o, Class<?> toType) {
+	protected Object customAs(Scope scope, Object o, Class<?> toType) {
 		return Special.NOT_FOUND;
 	}
 

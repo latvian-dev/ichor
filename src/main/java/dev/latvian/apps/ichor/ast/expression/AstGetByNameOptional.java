@@ -21,7 +21,7 @@ public class AstGetByNameOptional extends AstGetByName {
 	public Object eval(Context cx, Scope scope) {
 		var self = evalSelf(cx, scope);
 		var p = cx.getPrototype(scope, self);
-		var r = self == p ? p.getStatic(cx, scope, name) : p.getLocal(cx, scope, p.cast(self), name);
+		var r = p.getInternal(cx, scope, self, name);
 
 		if (Special.isInvalid(r)) {
 			return Special.UNDEFINED;

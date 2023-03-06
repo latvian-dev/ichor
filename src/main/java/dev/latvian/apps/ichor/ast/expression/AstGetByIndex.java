@@ -28,13 +28,13 @@ public class AstGetByIndex extends AstGetFrom {
 		var p = cx.getPrototype(scope, self);
 
 		if (self == p) {
-			throw new IndexedMemberNotFoundError(index, self).pos(this);
+			throw new IndexedMemberNotFoundError(index, p, self).pos(this);
 		}
 
 		var r = p.getLocal(cx, scope, p.cast(self), index);
 
 		if (r == Special.NOT_FOUND) {
-			throw new IndexedMemberNotFoundError(index, self).pos(this);
+			throw new IndexedMemberNotFoundError(index, p, self).pos(this);
 		}
 
 		return r;
@@ -46,11 +46,11 @@ public class AstGetByIndex extends AstGetFrom {
 		var p = cx.getPrototype(scope, self);
 
 		if (self == p) {
-			throw new IndexedMemberNotFoundError(index, self).pos(this);
+			throw new IndexedMemberNotFoundError(index, p, self).pos(this);
 		}
 
 		if (!p.setLocal(cx, scope, p.cast(self), index, value)) {
-			throw new IndexedMemberNotFoundError(index, self).pos(this);
+			throw new IndexedMemberNotFoundError(index, p, self).pos(this);
 		}
 	}
 
@@ -60,7 +60,7 @@ public class AstGetByIndex extends AstGetFrom {
 		var p = cx.getPrototype(scope, self);
 
 		if (self == p) {
-			throw new IndexedMemberNotFoundError(index, self).pos(this);
+			throw new IndexedMemberNotFoundError(index, p, self).pos(this);
 		}
 
 		return p.deleteLocal(cx, scope, p.cast(self), index);

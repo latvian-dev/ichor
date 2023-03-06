@@ -9,13 +9,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ObjectJS extends Prototype<ObjectJS> {
 	public static final Callable ASSIGN = Functions.of2((cx, scope, arg1, arg2) -> {
-		var o = cx.as(scope, arg1, Map.class);
+		var o = cx.asMap(scope, arg1);
 		//noinspection unchecked
-		o.putAll(cx.as(scope, arg2, Map.class));
+		o.putAll(cx.asMap(scope, arg2));
 		return o;
 	});
 

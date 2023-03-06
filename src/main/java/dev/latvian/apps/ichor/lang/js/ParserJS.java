@@ -56,6 +56,7 @@ import dev.latvian.apps.ichor.ast.statement.LabeledStatement;
 import dev.latvian.apps.ichor.error.ParseError;
 import dev.latvian.apps.ichor.error.ParseErrorMessage;
 import dev.latvian.apps.ichor.error.ParseErrorType;
+import dev.latvian.apps.ichor.error.WIPFeatureError;
 import dev.latvian.apps.ichor.exit.ExitType;
 import dev.latvian.apps.ichor.lang.js.ast.AstArguments;
 import dev.latvian.apps.ichor.lang.js.ast.AstClassPrototype;
@@ -371,7 +372,7 @@ public class ParserJS implements Parser {
 			initializer = varDeclaration(current.prev);
 		} else if (current.isIdentifier() && current.next.is(FOR_OF_IN_TOKENS)) {
 			var n = name(ParseErrorType.EXP_VAR_NAME);
-			initializer = new AstSingleDeclareStatement(KeywordTokenJS.LET, new AstDeclaration.Simple(n));
+			initializer = new AstSingleDeclareStatement(KeywordTokenJS.LET, new AstDeclaration.AstSimple(n));
 		} else {
 			initializer = expressionStatement(false);
 		}
@@ -384,7 +385,7 @@ public class ParserJS implements Parser {
 			String name;
 
 			if (initializer instanceof AstSingleDeclareStatement s) {
-				if (s.variable instanceof AstDeclaration.Simple p) {
+				if (s.variable instanceof AstDeclaration.AstSimple p) {
 					name = p.name;
 				} else {
 					throw new ParseError(pos, ParseErrorType.DESTRUCT_NOT_SUPPORTED);
@@ -520,17 +521,69 @@ public class ParserJS implements Parser {
 	}
 
 	private AstDeclaration varParam() {
-		var decl = new AstDeclaration.Simple(name(ParseErrorType.EXP_VAR_NAME));
+		if (current.is(SymbolTokenJS.LC) || current.is(SymbolTokenJS.LS)) {
+			var decl = new AstDeclaration.AstDestructured();
+			decl.part = destructured();
+			consume(SymbolTokenJS.SET, ParseErrorType.EXP_TOKEN.format(SymbolTokenJS.SET));
+			decl.of = expression();
+			return decl;
+		} else {
+			var decl = new AstDeclaration.AstSimple(name(ParseErrorType.EXP_VAR_NAME));
+
+			if (advanceIf(SymbolTokenJS.COL)) {
+				decl.type = type();
+			}
+
+			if (advanceIf(SymbolTokenJS.SET)) {
+				decl.initialValue = expression();
+			}
+
+			return decl;
+		}
+	}
+
+	private AstDeclaration.Destructured destructured() {
+		if (advanceIf(SymbolTokenJS.LC)) {
+			var list = new ArrayList<AstDeclaration.Destructured>(2);
+			var rest = "";
+
+			while (!current.is(SymbolTokenJS.RC)) {
+				if (advanceIf(SymbolTokenJS.TDOT)) {
+					rest = name(ParseErrorType.EXP_VAR_NAME);
+					// ...rest can only be last destruct item in list
+					consume(SymbolTokenJS.RC, ParseErrorType.EXP_RC_BLOCK);
+					break;
+				} else {
+					// list.add(destructuredPart());
+				}
+
+				if (current.is(SymbolTokenJS.DOT)) {
+					advance();
+					rest = name(ParseErrorType.EXP_VAR_NAME);
+					consume(SymbolTokenJS.RC, ParseErrorType.EXP_RC_BLOCK);
+					break;
+				} else {
+					consume(SymbolTokenJS.RC, ParseErrorType.EXP_RC_BLOCK);
+					break;
+				}
+			}
+
+			return new AstDeclaration.DestructuredObject(list.toArray(AstDeclaration.Destructured.EMPTY), rest);
+		} else if (advanceIf(SymbolTokenJS.LS)) {
+			throw new WIPFeatureError();
+		}
+
+		var name = name(ParseErrorType.EXP_VAR_NAME);
 
 		if (advanceIf(SymbolTokenJS.COL)) {
-			decl.type = type();
+			if (current.is(SymbolTokenJS.LC) || current.is(SymbolTokenJS.LS)) {
+				return new AstDeclaration.NestedDestructured(name, destructured());
+			} else {
+				return new AstDeclaration.DestructuredObjectPart(name, name(ParseErrorType.EXP_VAR_NAME));
+			}
 		}
 
-		if (advanceIf(SymbolTokenJS.SET)) {
-			decl.defaultValue = expression();
-		}
-
-		return decl;
+		return new AstDeclaration.DestructuredObjectPart(name, "");
 	}
 
 	private Interpretable whileStatement(PositionedToken pos, String label) {

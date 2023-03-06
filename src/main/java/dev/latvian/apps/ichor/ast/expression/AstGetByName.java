@@ -39,10 +39,10 @@ public class AstGetByName extends AstGetFrom {
 	public Object eval(Context cx, Scope scope) {
 		var self = evalSelf(cx, scope);
 		var p = cx.getPrototype(scope, self);
-		var r = self == p ? p.getStatic(cx, scope, name) : p.getLocal(cx, scope, p.cast(self), name);
+		var r = p.getInternal(cx, scope, self, name);
 
 		if (r == Special.NOT_FOUND) {
-			throw new NamedMemberNotFoundError(name, self).pos(this);
+			throw new NamedMemberNotFoundError(name, p, self).pos(this);
 		}
 
 		return r;
@@ -54,7 +54,7 @@ public class AstGetByName extends AstGetFrom {
 		var p = cx.getPrototype(scope, self);
 
 		if (!(self == p ? p.setStatic(cx, scope, name, value) : p.setLocal(cx, scope, p.cast(self), name, value))) {
-			throw new NamedMemberNotFoundError(name, self).pos(this);
+			throw new NamedMemberNotFoundError(name, p, self).pos(this);
 		}
 	}
 
@@ -64,7 +64,7 @@ public class AstGetByName extends AstGetFrom {
 		var p = cx.getPrototype(scope, self);
 
 		if (self == p) {
-			throw new NamedMemberNotFoundError(name, self).pos(this);
+			throw new NamedMemberNotFoundError(name, p, self).pos(this);
 		}
 
 		return p.deleteLocal(cx, scope, p.cast(self), name);
@@ -80,7 +80,7 @@ public class AstGetByName extends AstGetFrom {
 			var m = p.getStatic(parser.getContext(), parser.getRootScope(), name);
 
 			if (m == Special.NOT_FOUND) {
-				throw new NamedMemberNotFoundError(name, p).pos(this);
+				throw new NamedMemberNotFoundError(name, p, p).pos(this);
 			}
 
 			// Disabled for functions for now, potential issues with static java member scoping
