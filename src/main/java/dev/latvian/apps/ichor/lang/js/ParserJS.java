@@ -1034,10 +1034,10 @@ public class ParserJS implements Parser {
 			funcFlags |= AstFunction.Mod.ASYNC;
 		}
 
-		if (advanceIf(KeywordTokenJS.SUPER)) {
-			return new AstSuperExpression().pos(pos);
-		} else if (advanceIf(KeywordTokenJS.THIS)) {
+		if (advanceIf(KeywordTokenJS.THIS)) {
 			return new AstThisExpression().pos(pos);
+		} else if (advanceIf(KeywordTokenJS.SUPER)) {
+			return new AstSuperExpression().pos(pos);
 		} else if (advanceIf(KeywordTokenJS.ARGUMENTS)) {
 			return new AstArguments().pos(pos);
 		} else if (advanceIf(KeywordTokenJS.FUNCTION)) {

@@ -74,6 +74,12 @@ public class AstGetByName extends AstGetFrom {
 	public Object optimize(Parser parser) {
 		from = parser.optimize(from);
 
+		if (from instanceof AstThisExpression) {
+			return new AstGetThis(name);
+		} else if (from instanceof AstSuperExpression) {
+			return new AstGetSuper(name);
+		}
+
 		// Is this correct? So far seems to work
 
 		if (from instanceof Prototype<?> p) {

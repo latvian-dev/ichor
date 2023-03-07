@@ -1,14 +1,7 @@
 package dev.latvian.apps.ichor;
 
-import org.jetbrains.annotations.Nullable;
-
 public interface Evaluable {
 	Object eval(Context cx, Scope scope);
-
-	@Nullable
-	default Object evalSelf(Context cx, Scope scope) {
-		return null;
-	}
 
 	default void evalString(Context cx, Scope scope, StringBuilder builder) {
 		var e = this.eval(cx, scope);

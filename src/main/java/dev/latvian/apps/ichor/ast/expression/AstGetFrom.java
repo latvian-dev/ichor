@@ -12,7 +12,6 @@ public abstract class AstGetFrom extends AstGetBase {
 		this.from = from;
 	}
 
-	@Override
 	@Nullable
 	public Object evalSelf(Context cx, Scope scope) {
 		return cx.eval(scope, from);

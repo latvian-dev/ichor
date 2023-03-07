@@ -49,6 +49,8 @@ public enum ParseErrorType implements ParseErrorMessage {
 	EXIT_NOT_SUPPORTED("%s statement not supported here"),
 	UNREACHABLE_STATEMENT("Unreachable statement"),
 	DESTRUCT_NOT_SUPPORTED("Destructured param not supported here yet"),
+	INVALID_THIS("Missing identifier after 'this'"),
+	INVALID_SUPER("Missing identifier after 'super'"),
 
 	;
 
