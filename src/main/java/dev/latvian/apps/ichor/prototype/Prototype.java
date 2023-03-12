@@ -369,6 +369,11 @@ public class Prototype<T> implements PrototypeSupplier, Callable {
 		return self == this ? getStatic(cx, scope, name) : getLocal(cx, scope, cast(self), name);
 	}
 
+	public int getLength(Context cx, Scope scope, Object self) {
+		var o = getInternal(cx, scope, self, "length");
+		return o == Special.NOT_FOUND ? -1 : cx.asInt(scope, o);
+	}
+
 	// Static Named
 
 	@Nullable

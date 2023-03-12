@@ -26,6 +26,11 @@ public class CollectionJS extends Prototype<Collection> {
 	}
 
 	@Override
+	public int getLength(Context cx, Scope scope, Object self) {
+		return ((Collection) self).size();
+	}
+
+	@Override
 	public Collection<?> keys(Context cx, Scope scope, Collection self) {
 		var keys = new Object[self.size()];
 

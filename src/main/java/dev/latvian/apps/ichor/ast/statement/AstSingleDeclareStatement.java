@@ -4,31 +4,36 @@ import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
+import dev.latvian.apps.ichor.ast.statement.decl.AstDeclaration;
 import dev.latvian.apps.ichor.token.DeclaringToken;
 
 public class AstSingleDeclareStatement extends AstDeclareStatement {
-	public final AstDeclaration variable;
+	public final AstDeclaration declaration;
+	public Object value;
 
-	public AstSingleDeclareStatement(DeclaringToken assignToken, AstDeclaration variable) {
+	public AstSingleDeclareStatement(DeclaringToken assignToken, AstDeclaration declaration, Object value) {
 		super(assignToken);
-		this.variable = variable;
+		this.declaration = declaration;
+		this.value = value;
 	}
 
 	@Override
 	public void append(AstStringBuilder builder) {
 		builder.append(assignToken);
 		builder.append(' ');
-		builder.append(variable);
+		declaration.append(builder);
+		builder.append('=');
+		builder.appendValue(value);
 		builder.append(';');
 	}
 
 	@Override
 	public void interpret(Context cx, Scope scope) {
-		variable.declare(cx, scope, assignToken.flags);
+		declaration.declare(cx, scope, assignToken.flags, cx.eval(scope, value));
 	}
 
 	@Override
 	public void optimize(Parser parser) {
-		variable.optimize(parser);
+		value = parser.optimize(value);
 	}
 }

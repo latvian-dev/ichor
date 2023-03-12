@@ -706,20 +706,27 @@ public class InterpreterTests {
 		testInterpreter("""
 				const obj = {a: 1, b: {c: 2}, d: ['a', 'b', 'c']}
 				console.log(obj.a)
-				console.log(obj.a.b.c)
+				console.log(obj.b.c)
 				""", """
 				1
+				2
 				""");
 	}
 
 	@Test
 	public void declareDestructObj() {
 		testInterpreter("""
-				const obj = {a: 1, b: {c: 2}, d: ['a', 'b', 'c']}
-				console.log(obj.a)
-				console.log(obj.a.b.c)
+				const obj = {a: 1, b: {c: 2}, d: ['a', 'b', 'c'], e: 'f', g: 'h'}
+				const { a = 5, b, d: x, ...rest } = obj
+				console.log(a)
+				console.log(x[1])
+				console.log(b.c)
+				console.log(rest)
 				""", """
 				1
+				b
+				2
+				{e: 'f', g: 'h'}
 				""");
 	}
 
@@ -727,10 +734,12 @@ public class InterpreterTests {
 	public void declareDestructArr() {
 		testInterpreter("""
 				const obj = {a: 1, b: {c: 2}, d: ['a', 'b', 'c']}
-				console.log(obj.a)
-				console.log(obj.a.b.c)
+				const [,x1, ...rest] = obj.d
+				console.log(x1)
+				console.log(rest)
 				""", """
-				1
+				b
+				['c']
 				""");
 	}
 
@@ -738,10 +747,10 @@ public class InterpreterTests {
 	public void declareDestructObjNested() {
 		testInterpreter("""
 				const obj = {a: 1, b: {c: 2}, d: ['a', 'b', 'c']}
-				console.log(obj.a)
-				console.log(obj.a.b.c)
+				const { b: { c: x }} = obj
+				console.log(x)
 				""", """
-				1
+				2
 				""");
 	}
 

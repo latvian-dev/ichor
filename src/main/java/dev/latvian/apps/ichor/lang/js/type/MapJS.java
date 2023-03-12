@@ -60,6 +60,11 @@ public class MapJS extends Prototype<Map<?, ?>> {
 	}
 
 	@Override
+	public int getLength(Context cx, Scope scope, Object self) {
+		return ((Map<?, ?>) self).size();
+	}
+
+	@Override
 	public boolean setLocal(Context cx, Scope scope, Map<?, ?> self, String name, @Nullable Object value) {
 		self.put(cast(name), cast(value == null ? Special.NULL : value)); // FIXME: Casting
 		return true;

@@ -7,11 +7,11 @@ import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.token.DeclaringToken;
 
 public class AstMultiDeclareStatement extends AstDeclareStatement {
-	public final AstDeclaration[] variables;
+	public final Part[] parts;
 
-	public AstMultiDeclareStatement(DeclaringToken assignToken, AstDeclaration[] variables) {
+	public AstMultiDeclareStatement(DeclaringToken assignToken, Part[] parts) {
 		super(assignToken);
-		this.variables = variables;
+		this.parts = parts;
 	}
 
 	@Override
@@ -19,12 +19,12 @@ public class AstMultiDeclareStatement extends AstDeclareStatement {
 		builder.append(assignToken);
 		builder.append(' ');
 
-		for (int i = 0; i < variables.length; i++) {
+		for (int i = 0; i < parts.length; i++) {
 			if (i > 0) {
 				builder.append(',');
 			}
 
-			builder.append(variables[i]);
+			builder.append(parts[i]);
 		}
 
 		builder.append(';');
@@ -32,15 +32,15 @@ public class AstMultiDeclareStatement extends AstDeclareStatement {
 
 	@Override
 	public void interpret(Context cx, Scope scope) {
-		for (var v : variables) {
-			v.declare(cx, scope, assignToken.flags);
+		for (var p : parts) {
+			p.declaration.declare(cx, scope, assignToken.flags, cx.eval(scope, p.value));
 		}
 	}
 
 	@Override
 	public void optimize(Parser parser) {
-		for (var v : variables) {
-			v.optimize(parser);
+		for (var p : parts) {
+			p.value = parser.optimize(p.value);
 		}
 	}
 }

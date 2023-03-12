@@ -50,6 +50,11 @@ public class ListJS extends Prototype<List> {
 	}
 
 	@Override
+	public int getLength(Context cx, Scope scope, Object self) {
+		return ((List) self).size();
+	}
+
+	@Override
 	@Nullable
 	public Object getLocal(Context cx, Scope scope, List self, int index) {
 		return self.get(index);

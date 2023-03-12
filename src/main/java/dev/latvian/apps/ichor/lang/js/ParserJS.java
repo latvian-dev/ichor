@@ -33,7 +33,7 @@ import dev.latvian.apps.ichor.ast.statement.AstBlock;
 import dev.latvian.apps.ichor.ast.statement.AstBreak;
 import dev.latvian.apps.ichor.ast.statement.AstClass;
 import dev.latvian.apps.ichor.ast.statement.AstContinue;
-import dev.latvian.apps.ichor.ast.statement.AstDeclaration;
+import dev.latvian.apps.ichor.ast.statement.AstDeclareStatement;
 import dev.latvian.apps.ichor.ast.statement.AstDoWhile;
 import dev.latvian.apps.ichor.ast.statement.AstEmptyBlock;
 import dev.latvian.apps.ichor.ast.statement.AstExpressionStatement;
@@ -53,6 +53,13 @@ import dev.latvian.apps.ichor.ast.statement.AstThrow;
 import dev.latvian.apps.ichor.ast.statement.AstTry;
 import dev.latvian.apps.ichor.ast.statement.AstWhile;
 import dev.latvian.apps.ichor.ast.statement.LabeledStatement;
+import dev.latvian.apps.ichor.ast.statement.decl.AstDeclaration;
+import dev.latvian.apps.ichor.ast.statement.decl.DestructuredArray;
+import dev.latvian.apps.ichor.ast.statement.decl.DestructuredArrayName;
+import dev.latvian.apps.ichor.ast.statement.decl.DestructuredObject;
+import dev.latvian.apps.ichor.ast.statement.decl.DestructuredObjectName;
+import dev.latvian.apps.ichor.ast.statement.decl.NameDeclaration;
+import dev.latvian.apps.ichor.ast.statement.decl.NestedDestructuredPart;
 import dev.latvian.apps.ichor.error.ParseError;
 import dev.latvian.apps.ichor.error.ParseErrorMessage;
 import dev.latvian.apps.ichor.error.ParseErrorType;
@@ -72,8 +79,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 import java.util.function.Function;
 
@@ -153,7 +162,7 @@ public class ParserJS implements Parser {
 			return classDeclaration(pos);
 		} else if (advanceIf(KeywordTokenJS.FUNCTION)) {
 			funcFlags |= AstFunction.Mod.STATEMENT;
-			var name = name(ParseErrorType.EXP_FUNC_NAME);
+			var name = identifier(ParseErrorType.EXP_FUNC_NAME);
 			var func = function(null, null, funcFlags);
 			func.functionName = name;
 			ignoreSemi();
@@ -168,7 +177,7 @@ public class ParserJS implements Parser {
 	}
 
 	private AstType type() {
-		var id = name(ParseErrorType.EXP_TYPE_NAME);
+		var id = identifier(ParseErrorType.EXP_TYPE_NAME);
 
 		AstType type = switch (id) {
 			case "any" -> AstType.Generic.ANY;
@@ -180,7 +189,7 @@ public class ParserJS implements Parser {
 			case "object" -> AstType.Generic.OBJECT;
 			case "bigint" -> AstType.Generic.BIGINT;
 			case "Array" -> AstType.Generic.ARRAY;
-			default -> genericTypeCache.computeIfAbsent(id, AstType.Generic::new);
+			default -> genericTypeCache.computeIfAbsent(id, s -> new AstType.Generic(s, AstType.CastFunc.NONE));
 		};
 
 		if (advanceIf(SymbolTokenJS.LT)) {
@@ -232,10 +241,10 @@ public class ParserJS implements Parser {
 	}
 
 	private Interpretable classDeclaration(PositionedToken pos) {
-		AstClass astClass = new AstClass(name(ParseErrorType.EXP_CLASS_NAME)).pos(pos);
+		AstClass astClass = new AstClass(identifier(ParseErrorType.EXP_CLASS_NAME)).pos(pos);
 
 		if (advanceIf(KeywordTokenJS.EXTENDS)) {
-			astClass.parent = new AstGetScopeMember(name(ParseErrorType.EXP_CLASS_NAME));
+			astClass.parent = new AstGetScopeMember(identifier(ParseErrorType.EXP_CLASS_NAME));
 		}
 
 		consume(SymbolTokenJS.LC, ParseErrorType.EXP_LC_CLASS);
@@ -260,7 +269,7 @@ public class ParserJS implements Parser {
 				type = AstClassFunction.Type.SETTER;
 			}
 
-			var fname = name(ParseErrorType.EXP_FUNC_NAME);
+			var fname = identifier(ParseErrorType.EXP_FUNC_NAME);
 
 			if (fname.equals("constructor")) {
 				modifiers |= AstFunction.Mod.CONSTRUCTOR;
@@ -310,7 +319,7 @@ public class ParserJS implements Parser {
 	private Interpretable statement() {
 		if (current.isIdentifier() && current.next.is(SymbolTokenJS.COL)) {
 			var pos = current;
-			var name = name(ParseErrorType.EXP_VAR_NAME);
+			var name = varIdentifier();
 			advance();
 			var statement = unlabelledStatement(name);
 
@@ -371,8 +380,8 @@ public class ParserJS implements Parser {
 		} else if (advanceIf(VAR_TOKENS)) {
 			initializer = varDeclaration(current.prev);
 		} else if (current.isIdentifier() && current.next.is(FOR_OF_IN_TOKENS)) {
-			var n = name(ParseErrorType.EXP_VAR_NAME);
-			initializer = new AstSingleDeclareStatement(KeywordTokenJS.LET, new AstDeclaration.AstSimple(n));
+			var n = varIdentifier();
+			initializer = new AstSingleDeclareStatement(KeywordTokenJS.LET, new NameDeclaration(n), Special.UNDEFINED);
 		} else {
 			initializer = expressionStatement(false);
 		}
@@ -385,8 +394,8 @@ public class ParserJS implements Parser {
 			String name;
 
 			if (initializer instanceof AstSingleDeclareStatement s) {
-				if (s.variable instanceof AstDeclaration.AstSimple p) {
-					name = p.name;
+				if (s.declaration instanceof NameDeclaration n) {
+					name = n.name;
 				} else {
 					throw new ParseError(pos, ParseErrorType.DESTRUCT_NOT_SUPPORTED);
 				}
@@ -495,7 +504,7 @@ public class ParserJS implements Parser {
 	}
 
 	private Interpretable exitStatement(PositionedToken pos, ExitType type) {
-		var stmt = findStop(pos, current.isIdentifier() ? name(ParseErrorType.EXP_VAR_NAME) : "", type);
+		var stmt = findStop(pos, current.isIdentifier() ? varIdentifier() : "", type);
 		ignoreSemi();
 		return (type == ExitType.BREAK ? new AstBreak(stmt) : new AstContinue(stmt)).pos(pos);
 	}
@@ -505,85 +514,109 @@ public class ParserJS implements Parser {
 	}
 
 	private Interpretable varDeclaration(DeclaringToken type, TokenPosSupplier pos) {
-		var list = new ArrayList<AstDeclaration>(1);
+		var list = new ArrayList<AstDeclareStatement.Part>(1);
 
 		do {
-			list.add(varParam());
+			var decl = destructDeclaration();
+
+			if (advanceIf(SymbolTokenJS.SET)) {
+				list.add(new AstDeclareStatement.Part(decl, expression()));
+			} else {
+				list.add(new AstDeclareStatement.Part(decl, Special.UNDEFINED));
+			}
 		} while (ignoreComma());
 
 		// ignoreSemi();
 
 		if (list.size() == 1) {
-			return new AstSingleDeclareStatement(type, list.get(0)).pos(pos);
+			return new AstSingleDeclareStatement(type, list.get(0).declaration, list.get(0).value).pos(pos);
 		}
 
-		return new AstMultiDeclareStatement(type, list.toArray(Empty.AST_DECLARATIONS)).pos(pos);
+		return new AstMultiDeclareStatement(type, list.toArray(AstDeclareStatement.Part.EMPTY)).pos(pos);
 	}
 
-	private AstDeclaration varParam() {
-		if (current.is(SymbolTokenJS.LC) || current.is(SymbolTokenJS.LS)) {
-			var decl = new AstDeclaration.AstDestructured();
-			decl.part = destructured();
-			consume(SymbolTokenJS.SET, ParseErrorType.EXP_TOKEN.format(SymbolTokenJS.SET));
-			decl.of = expression();
-			return decl;
-		} else {
-			var decl = new AstDeclaration.AstSimple(name(ParseErrorType.EXP_VAR_NAME));
-
-			if (advanceIf(SymbolTokenJS.COL)) {
-				decl.type = type();
+	private AstDeclaration destructDeclaration() {
+		if (advanceIf(SymbolTokenJS.LC)) { // { x }
+			if (advanceIf(SymbolTokenJS.RC)) { // {}
+				return DestructuredObject.EMPTY_OBJECT;
 			}
 
-			if (advanceIf(SymbolTokenJS.SET)) {
-				decl.initialValue = expression();
-			}
-
-			return decl;
-		}
-	}
-
-	private AstDeclaration.Destructured destructured() {
-		if (advanceIf(SymbolTokenJS.LC)) {
-			var list = new ArrayList<AstDeclaration.Destructured>(2);
+			ignoreComma();
+			var parts = new ArrayList<AstDeclaration>(3);
 			var rest = "";
+			var ignoredRest = new HashSet<String>();
 
-			while (!current.is(SymbolTokenJS.RC)) {
-				if (advanceIf(SymbolTokenJS.TDOT)) {
-					rest = name(ParseErrorType.EXP_VAR_NAME);
-					// ...rest can only be last destruct item in list
+			while (true) {
+				if (advanceIf(SymbolTokenJS.RC)) {
+					break;
+				} else if (advanceIf(SymbolTokenJS.TDOT)) { // ...rest
+					rest = varIdentifier();
 					consume(SymbolTokenJS.RC, ParseErrorType.EXP_RC_BLOCK);
 					break;
 				} else {
-					// list.add(destructuredPart());
-				}
+					var n = new DestructuredObjectName(varIdentifier());
 
-				if (current.is(SymbolTokenJS.DOT)) {
-					advance();
-					rest = name(ParseErrorType.EXP_VAR_NAME);
-					consume(SymbolTokenJS.RC, ParseErrorType.EXP_RC_BLOCK);
+					if (advanceIf(SymbolTokenJS.COL)) { // x:
+						if (current.is(SymbolTokenJS.LC) || current.is(SymbolTokenJS.LS)) { // x: { y } | x: [ y ]
+							parts.add(new NestedDestructuredPart(n.name, destructDeclaration()));
+							ignoreComma();
+							continue;
+						}
+
+						n.rename = varIdentifier(); // x: y
+					}
+
+					if (advanceIf(SymbolTokenJS.SET)) { // x = default
+						n.defaultValue = expression();
+					}
+
+					parts.add(n);
+					ignoredRest.add(n.name);
+					ignoreComma();
+				}
+			}
+
+			return new DestructuredObject(parts.toArray(AstDeclaration.EMPTY), rest, Set.copyOf(ignoredRest));
+		} else if (advanceIf(SymbolTokenJS.LS)) { // [ x ]
+			if (advanceIf(SymbolTokenJS.RS)) { // []
+				return DestructuredArray.EMPTY_ARRAY;
+			}
+
+			var parts = new ArrayList<AstDeclaration>(3);
+			var rest = "";
+			var index = 0;
+
+			while (true) {
+				if (advanceIf(SymbolTokenJS.RS)) {
 					break;
+				} else if (advanceIf(SymbolTokenJS.TDOT)) {
+					rest = varIdentifier();
+					consume(SymbolTokenJS.RS, ParseErrorType.EXP_RS_ARRAY);
+					break;
+				} else if (advanceIf(SymbolTokenJS.COMMA)) {
+					index++;
+				} else if (advanceIf(SymbolTokenJS.LS)) {
+					throw new WIPFeatureError().pos(current); // nested array destruct
 				} else {
-					consume(SymbolTokenJS.RC, ParseErrorType.EXP_RC_BLOCK);
-					break;
+					var name = varIdentifier();
+					parts.add(new DestructuredArrayName(name, index));
 				}
 			}
 
-			return new AstDeclaration.DestructuredObject(list.toArray(AstDeclaration.Destructured.EMPTY), rest);
-		} else if (advanceIf(SymbolTokenJS.LS)) {
-			throw new WIPFeatureError();
-		}
+			return new DestructuredArray(parts.toArray(AstDeclaration.EMPTY), rest, index);
+		} else {
+			var decl = new NameDeclaration(varIdentifier()); // x
 
-		var name = name(ParseErrorType.EXP_VAR_NAME);
+			if (advanceIf(SymbolTokenJS.COL)) { // x:
+				if (current.is(SymbolTokenJS.LC) || current.is(SymbolTokenJS.LS)) { // x: { y } | x: [ y ]
+					return new NestedDestructuredPart(decl.name, destructDeclaration());
+				}
 
-		if (advanceIf(SymbolTokenJS.COL)) {
-			if (current.is(SymbolTokenJS.LC) || current.is(SymbolTokenJS.LS)) {
-				return new AstDeclaration.NestedDestructured(name, destructured());
-			} else {
-				return new AstDeclaration.DestructuredObjectPart(name, name(ParseErrorType.EXP_VAR_NAME));
+				decl.type = type(); // x: string
 			}
-		}
 
-		return new AstDeclaration.DestructuredObjectPart(name, "");
+			return decl;
+		}
 	}
 
 	private Interpretable whileStatement(PositionedToken pos, String label) {
@@ -619,7 +652,7 @@ public class ParserJS implements Parser {
 
 		if (advanceIf(KeywordTokenJS.CATCH)) {
 			consume(SymbolTokenJS.LP, ParseErrorType.EXP_LP_ARGS);
-			var name = name(ParseErrorType.EXP_PARAM_NAME);
+			var name = identifier(ParseErrorType.EXP_PARAM_NAME);
 			consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_ARGS);
 			catchBlock = new AstTry.AstCatch(name, statementBody());
 		}
@@ -931,7 +964,7 @@ public class ParserJS implements Parser {
 	}
 
 	private AstParam param() {
-		var param = new AstParam(name(ParseErrorType.EXP_PARAM_NAME));
+		var param = new AstParam(identifier(ParseErrorType.EXP_PARAM_NAME));
 
 		if (advanceIf(SymbolTokenJS.COL)) {
 			param.type = type();
@@ -959,10 +992,10 @@ public class ParserJS implements Parser {
 				call.hasNew = newToken != null;
 				expr = call;
 			} else if (advanceIf(SymbolTokenJS.DOT)) {
-				var name = name(ParseErrorType.EXP_NAME_DOT.format(current));
+				var name = identifier(ParseErrorType.EXP_NAME_DOT.format(current));
 				expr = namedGet(expr, name, pos);
 			} else if (advanceIf(SymbolTokenJS.OC)) {
-				var name = name(ParseErrorType.EXP_NAME_OC);
+				var name = identifier(ParseErrorType.EXP_NAME_OC);
 				expr = new AstGetByNameOptional(expr, name).pos(pos);
 			} else if (advanceIf(SymbolTokenJS.ADD1)) {
 				var ast = new AstAdd1R();
@@ -1043,7 +1076,7 @@ public class ParserJS implements Parser {
 		} else if (advanceIf(KeywordTokenJS.FUNCTION)) {
 			return functionExpression(funcFlags);
 		} else if (current.isIdentifier()) { // handle all keywords before this
-			var name = name(ParseErrorType.EXP_VAR_NAME);
+			var name = varIdentifier();
 
 			if (advanceIf(SymbolTokenJS.ARROW)) {
 				funcFlags |= AstFunction.Mod.ARROW;
@@ -1098,7 +1131,7 @@ public class ParserJS implements Parser {
 					}
 				}
 
-				var name = current.token instanceof CharSequence str ? str.toString() : name(ParseErrorType.EXP_VAR_NAME);
+				var name = current.token instanceof CharSequence str ? str.toString() : varIdentifier();
 
 				if (current.is(SymbolTokenJS.LP)) {
 					var func = function(null, null, flags);
@@ -1163,7 +1196,7 @@ public class ParserJS implements Parser {
 		String funcName = null;
 
 		if (current.isIdentifier()) {
-			funcName = name(ParseErrorType.EXP_FUNC_NAME);
+			funcName = identifier(ParseErrorType.EXP_FUNC_NAME);
 		}
 
 		var func = function(null, null, flags);
@@ -1195,10 +1228,14 @@ public class ParserJS implements Parser {
 		return false;
 	}
 
-	private String name(ParseErrorMessage error) {
+	private String identifier(ParseErrorMessage error) {
 		var s = current.identifier(error);
 		advance();
 		return s;
+	}
+
+	private String varIdentifier() {
+		return identifier(ParseErrorType.EXP_VAR_NAME);
 	}
 
 	private void consume(Token token, ParseErrorMessage error) {

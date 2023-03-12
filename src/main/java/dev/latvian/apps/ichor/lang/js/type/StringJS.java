@@ -137,6 +137,11 @@ public class StringJS extends Prototype<String> {
 	}
 
 	@Override
+	public int getLength(Context cx, Scope scope, Object self) {
+		return ((CharSequence) self).length();
+	}
+
+	@Override
 	public Collection<?> keys(Context cx, Scope scope, String self) {
 		if (self.isEmpty()) {
 			return List.of();

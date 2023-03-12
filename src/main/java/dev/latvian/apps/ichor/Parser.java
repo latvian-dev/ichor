@@ -16,6 +16,6 @@ public interface Parser {
 	}
 
 	default Object optimize(Object o) {
-		return o instanceof Evaluable eval ? eval.optimize(this) : o;
+		return o instanceof Optimizable optimizable ? optimizable.optimize(this) : o;
 	}
 }

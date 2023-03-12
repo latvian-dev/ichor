@@ -60,7 +60,7 @@ public class SlotArrayMap extends ArrayList<Slot> implements SlotMap {
 
 	@Override
 	public SlotMap upgradeSlotMap() {
-		if (size() == 16) {
+		if (size() == 32) {
 			var map = new SlotHashMap();
 
 			for (var slot : this) {

@@ -32,8 +32,4 @@ public interface Evaluable {
 		var d = evalDouble(cx, scope);
 		return !Double.isNaN(d) && d != 0D;
 	}
-
-	default Object optimize(Parser parser) {
-		return this;
-	}
 }

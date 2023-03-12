@@ -78,6 +78,11 @@ public class SetJS extends Prototype<Set> {
 	}
 
 	@Override
+	public int getLength(Context cx, Scope scope, Object self) {
+		return ((Set) self).size();
+	}
+
+	@Override
 	public Collection<?> entries(Context cx, Scope scope, Set self) {
 		if (self.isEmpty()) {
 			return List.of();
