@@ -1,8 +1,11 @@
 package dev.latvian.apps.ichor.token;
 
+import org.jetbrains.annotations.Nullable;
+
 public class KeywordToken extends IdentifierToken {
 	private boolean isIdentifier;
 	private boolean isLiteralPre;
+	private Token insertToken;
 
 	public KeywordToken(String name) {
 		super(name);
@@ -23,6 +26,17 @@ public class KeywordToken extends IdentifierToken {
 	@Override
 	public boolean isLiteralPre() {
 		return isLiteralPre;
+	}
+
+	public KeywordToken insertToken(Token token) {
+		insertToken = token;
+		return this;
+	}
+
+	@Override
+	@Nullable
+	public Token getTokenBeforeNewline() {
+		return insertToken;
 	}
 
 	public KeywordToken literalPre() {

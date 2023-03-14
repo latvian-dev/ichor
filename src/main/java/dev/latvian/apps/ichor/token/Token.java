@@ -12,6 +12,11 @@ public interface Token {
 	}
 
 	@Nullable
+	default Token getTokenBeforeNewline() {
+		return null;
+	}
+
+	@Nullable
 	default Evaluable toEvaluable(Parser parser, TokenPos pos) {
 		return null;
 	}

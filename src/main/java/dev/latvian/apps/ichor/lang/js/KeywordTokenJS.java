@@ -38,17 +38,17 @@ public interface KeywordTokenJS {
 	DeclaringToken CONST = (DeclaringToken) cache(new DeclaringToken("const", Slot.IMMUTABLE));
 	DeclaringToken VAR = (DeclaringToken) cache(new DeclaringToken("var", Slot.DEFAULT));
 
-	Token ARGUMENTS = cache("arguments");
+	Token ARGUMENTS = cache("arguments").identifier();
 	Token AS = cache("as").literalPre(); // TODO
 	Token ASYNC = cache("async");
 	Token AWAIT = cache("await").literalPre();
-	Token BREAK = cache("break").literalPre();
+	Token BREAK = cache("break").literalPre().insertToken(SymbolTokenJS.SEMI);
 	Token CASE = cache("case").literalPre();
 	Token CATCH = cache("catch");
 	Token CLASS = cache("class").identifier();
-	Token CONTINUE = cache("continue").literalPre();
+	Token CONTINUE = cache("continue").literalPre().insertToken(SymbolTokenJS.SEMI);
 	Token DEBUGGER = cache("debugger").identifier();
-	Token DEFAULT = cache("default");
+	Token DEFAULT = cache("default").identifier();
 	Token DELETE = cache("delete").literalPre();
 	Token DO = cache("do");
 	Token ELSE = cache("else");
@@ -69,12 +69,12 @@ public interface KeywordTokenJS {
 	Token PRIVATE = cache("private").identifier(); // TODO
 	Token PROTECTED = cache("protected").identifier(); // TODO
 	Token PUBLIC = cache("public").identifier(); // TODO
-	Token RETURN = cache("return").literalPre();
+	Token RETURN = cache("return").literalPre().insertToken(SymbolTokenJS.SEMI);
 	Token SET = cache("set").identifier(); // TODO
 	Token STATIC = cache("static").identifier(); // TODO
-	Token SUPER = cache("super"); // TODO
+	Token SUPER = cache("super").identifier();
 	Token SWITCH = cache("switch");
-	Token THIS = cache("this"); // TODO
+	Token THIS = cache("this").identifier();
 	Token THROW = cache("throw").literalPre();
 	Token TRY = cache("try");
 	Token TYPEOF = cache("typeof").literalPre();

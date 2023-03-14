@@ -9,6 +9,7 @@ import dev.latvian.apps.ichor.slot.Slot;
 import dev.latvian.apps.ichor.slot.SlotMap;
 import dev.latvian.apps.ichor.util.AssignType;
 import dev.latvian.apps.ichor.util.ClassPrototype;
+import dev.latvian.apps.ichor.util.ScopeWrapper;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
@@ -19,8 +20,8 @@ public class Scope {
 	public SlotMap members;
 	private int depth;
 	public Object scopeOwner;
-	public Scope scopeThis;
-	public Scope scopeSuper;
+	public Object scopeThis;
+	public Object scopeSuper;
 	public Object[] scopeArguments;
 
 	protected Scope(Scope parent) {
@@ -84,7 +85,7 @@ public class Scope {
 
 	public void setScopeThis(Scope o) {
 		scopeSuper = scopeThis;
-		scopeThis = o;
+		scopeThis = new ScopeWrapper(o);
 	}
 
 	public boolean setMember(String name, @Nullable Object value) {
@@ -158,7 +159,12 @@ public class Scope {
 		}
 		while (s != null);
 
-		throw new ScopeMemberNotFoundError(name, this);
+		return switch (name) {
+			case "this" -> scopeThis;
+			case "super" -> scopeSuper;
+			case "arguments" -> scopeArguments;
+			default -> throw new ScopeMemberNotFoundError(name, this);
+		};
 	}
 
 	public AssignType hasMember(String name) {
@@ -175,7 +181,10 @@ public class Scope {
 		}
 		while (s != null);
 
-		return AssignType.NONE;
+		return switch (name) {
+			case "this", "super", "arguments" -> AssignType.IMMUTABLE;
+			default -> AssignType.NONE;
+		};
 	}
 
 	public Scope push() {

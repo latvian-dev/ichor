@@ -746,7 +746,7 @@ public class InterpreterTests {
 	@Test
 	public void declareDestructObjNested() {
 		testInterpreter("""
-				const obj = {a: 1, b: {c: 2}, d: ['a', 'b', 'c']}
+				const obj = {"a": 1, b: {c: 2}, d: ['a', 'b', 'c']}
 				const { b: { c: x }} = obj
 				console.log(x)
 				""", """

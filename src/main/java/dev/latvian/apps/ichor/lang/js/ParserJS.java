@@ -6,6 +6,7 @@ import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.RootScope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.Ast;
+import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.ast.expression.AstAwait;
 import dev.latvian.apps.ichor.ast.expression.AstCall;
 import dev.latvian.apps.ichor.ast.expression.AstClassFunction;
@@ -22,10 +23,8 @@ import dev.latvian.apps.ichor.ast.expression.AstMap;
 import dev.latvian.apps.ichor.ast.expression.AstParam;
 import dev.latvian.apps.ichor.ast.expression.AstSet;
 import dev.latvian.apps.ichor.ast.expression.AstSpread;
-import dev.latvian.apps.ichor.ast.expression.AstSuperExpression;
 import dev.latvian.apps.ichor.ast.expression.AstTemplateLiteral;
 import dev.latvian.apps.ichor.ast.expression.AstTernary;
-import dev.latvian.apps.ichor.ast.expression.AstThisExpression;
 import dev.latvian.apps.ichor.ast.expression.AstType;
 import dev.latvian.apps.ichor.ast.expression.unary.AstAdd1R;
 import dev.latvian.apps.ichor.ast.expression.unary.AstSub1R;
@@ -65,12 +64,12 @@ import dev.latvian.apps.ichor.error.ParseErrorMessage;
 import dev.latvian.apps.ichor.error.ParseErrorType;
 import dev.latvian.apps.ichor.error.WIPFeatureError;
 import dev.latvian.apps.ichor.exit.ExitType;
-import dev.latvian.apps.ichor.lang.js.ast.AstArguments;
 import dev.latvian.apps.ichor.lang.js.ast.AstClassPrototype;
 import dev.latvian.apps.ichor.lang.js.ast.AstDebugger;
 import dev.latvian.apps.ichor.lang.js.ast.AstObjectPrototype;
 import dev.latvian.apps.ichor.lang.js.ast.AstTypeOf;
 import dev.latvian.apps.ichor.token.DeclaringToken;
+import dev.latvian.apps.ichor.token.KeywordToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
 import dev.latvian.apps.ichor.token.Token;
 import dev.latvian.apps.ichor.token.TokenPosSupplier;
@@ -140,7 +139,7 @@ public class ParserJS implements Parser {
 	public Interpretable parse() {
 		var list = new ArrayList<Interpretable>();
 
-		while (current.exists()) {
+		while (current != null && current.exists()) {
 			list.add(declaration());
 		}
 
@@ -386,29 +385,22 @@ public class ParserJS implements Parser {
 			initializer = expressionStatement(false);
 		}
 
-		// var prev = previous();
-		// var curr = current();
-		// var next = peek();
-
 		if (advanceIf(FOR_OF_IN_TOKENS)) {
-			String name;
+			var assignToken = KeywordTokenJS.LET;
+			AstDeclaration declaration;
 
 			if (initializer instanceof AstSingleDeclareStatement s) {
-				if (s.declaration instanceof NameDeclaration n) {
-					name = n.name;
-				} else {
-					throw new ParseError(pos, ParseErrorType.DESTRUCT_NOT_SUPPORTED);
-				}
-			} else if (initializer instanceof AstExpressionStatement stmt && stmt.expression instanceof AstSet set && set.get instanceof AstGetScopeMember member) {
-				name = member.name;
+				assignToken = s.assignToken;
+				declaration = s.declaration;
 			} else {
-				throw new ParseError(pos, ParseErrorType.EXP_INIT);
+				throw new ParseError(pos, ParseErrorType.UNSUPPORTED_FOR_DECL);
 			}
 
 			boolean of = current.prev.is(KeywordTokenJS.OF);
 			AstForOf ast = (of ? new AstForOf() : new AstForIn()).pos(pos);
 			ast.label = label;
-			ast.name = name;
+			ast.assignToken = assignToken;
+			ast.declaration = declaration;
 			ast.from = expression();
 
 			consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_FOR);
@@ -1067,13 +1059,7 @@ public class ParserJS implements Parser {
 			funcFlags |= AstFunction.Mod.ASYNC;
 		}
 
-		if (advanceIf(KeywordTokenJS.THIS)) {
-			return new AstThisExpression().pos(pos);
-		} else if (advanceIf(KeywordTokenJS.SUPER)) {
-			return new AstSuperExpression().pos(pos);
-		} else if (advanceIf(KeywordTokenJS.ARGUMENTS)) {
-			return new AstArguments().pos(pos);
-		} else if (advanceIf(KeywordTokenJS.FUNCTION)) {
+		if (advanceIf(KeywordTokenJS.FUNCTION)) {
 			return functionExpression(funcFlags);
 		} else if (current.isIdentifier()) { // handle all keywords before this
 			var name = varIdentifier();
@@ -1131,7 +1117,7 @@ public class ParserJS implements Parser {
 					}
 				}
 
-				var name = current.token instanceof CharSequence str ? str.toString() : varIdentifier();
+				var name = keyIdentifier();
 
 				if (current.is(SymbolTokenJS.LP)) {
 					var func = function(null, null, flags);
@@ -1235,7 +1221,17 @@ public class ParserJS implements Parser {
 	}
 
 	private String varIdentifier() {
-		return identifier(ParseErrorType.EXP_VAR_NAME);
+		return identifier(ParseErrorType.EXP_VAR_NAME.format(current.token));
+	}
+
+	private String keyIdentifier() {
+		if (Special.isInvalid(current.token) || current.token instanceof CharSequence || current.token instanceof Boolean || current.token instanceof KeywordToken) {
+			return String.valueOf(advance().token);
+		} else if (current.token instanceof Number) {
+			return AstStringBuilder.wrapNumber(advance().token);
+		} else {
+			return varIdentifier();
+		}
 	}
 
 	private void consume(Token token, ParseErrorMessage error) {

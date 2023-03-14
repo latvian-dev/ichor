@@ -12,7 +12,7 @@ public enum ParseErrorType implements ParseErrorMessage {
 	EXP_CLASS_NAME("Expected class name"),
 	EXP_PARAM_NAME("Expected parameter name"),
 	EXP_TYPE_NAME("Expected type name"),
-	EXP_VAR_NAME("Expected variable name"),
+	EXP_VAR_NAME("Expected variable name, got '%s' instead"),
 	EXP_LC_BLOCK("Expected '{' before block"),
 	EXP_RC_BLOCK("Expected '}' after block"),
 	EXP_RC_OBJECT("Expected '}' after object"),
@@ -49,9 +49,7 @@ public enum ParseErrorType implements ParseErrorMessage {
 	UNKNOWN_LABEL("Label '%s' for %s statement not found"),
 	EXIT_NOT_SUPPORTED("%s statement not supported here"),
 	UNREACHABLE_STATEMENT("Unreachable statement"),
-	DESTRUCT_NOT_SUPPORTED("Destructured param not supported here yet"),
-	INVALID_THIS("Missing identifier after 'this'"),
-	INVALID_SUPER("Missing identifier after 'super'"),
+	UNSUPPORTED_FOR_DECL("Unsupported declaration statement in for-of/for-in"),
 
 	;
 

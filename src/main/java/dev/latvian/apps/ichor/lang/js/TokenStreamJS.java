@@ -368,6 +368,24 @@ public class TokenStreamJS implements TokenStream {
 		};
 	}
 
+	private void insertToken(PositionedToken newCurrent) {
+		if (rootToken == null) {
+			tokenCount = 1;
+			rootToken = newCurrent;
+			currentToken = newCurrent;
+			newCurrent.prev = PositionedToken.NONE;
+			newCurrent.next = PositionedToken.NONE;
+		} else {
+			tokenCount++;
+			var prev = currentToken;
+			prev.next = newCurrent;
+
+			currentToken = newCurrent;
+			currentToken.prev = prev;
+			currentToken.next = PositionedToken.NONE;
+		}
+	}
+
 	public PositionedToken getRootToken() {
 		if (rootToken != null) {
 			return rootToken;
@@ -383,21 +401,15 @@ public class TokenStreamJS implements TokenStream {
 			try {
 				var newCurrent = new PositionedToken(readToken(), new TokenPos(tokenSource, prevRow, prevCol));
 
-				if (rootToken == null) {
-					tokenCount = 1;
-					rootToken = newCurrent;
-					currentToken = newCurrent;
-					newCurrent.prev = PositionedToken.NONE;
-					newCurrent.next = PositionedToken.NONE;
-				} else {
-					tokenCount++;
-					var prev = currentToken;
-					prev.next = newCurrent;
+				if (prevRow != row && currentToken != null && currentToken.token instanceof Token tk) {
+					var tbn = tk.getTokenBeforeNewline();
 
-					currentToken = newCurrent;
-					currentToken.prev = prev;
-					currentToken.next = PositionedToken.NONE;
+					if (tbn != null && tbn != newCurrent.token) {
+						insertToken(new PositionedToken(tbn, new TokenPos(tokenSource, prevRow, prevCol)));
+					}
 				}
+
+				insertToken(newCurrent);
 			} catch (EndOfFileExit exit) {
 				if (currentDepth != null) {
 					throw error("Expected '" + currentDepth + "' to be closed!");

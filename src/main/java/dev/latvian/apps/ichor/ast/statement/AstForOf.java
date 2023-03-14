@@ -5,15 +5,18 @@ import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
+import dev.latvian.apps.ichor.ast.statement.decl.AstDeclaration;
 import dev.latvian.apps.ichor.exit.BreakExit;
 import dev.latvian.apps.ichor.exit.ContinueExit;
+import dev.latvian.apps.ichor.token.DeclaringToken;
 import dev.latvian.apps.ichor.util.IchorUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 
 public class AstForOf extends AstLabeledStatement {
-	public String name;
+	public DeclaringToken assignToken;
+	public AstDeclaration declaration;
 	public Object from;
 	public Interpretable body;
 
@@ -29,8 +32,12 @@ public class AstForOf extends AstLabeledStatement {
 		}
 
 		builder.append("for(");
-		builder.append(name);
+		builder.append(assignToken);
+		builder.append(' ');
+		builder.append(declaration);
+		builder.append(' ');
 		builder.append(appendKeyword());
+		builder.append(' ');
 		builder.appendValue(from);
 
 		builder.append(')');
@@ -52,7 +59,7 @@ public class AstForOf extends AstLabeledStatement {
 
 			try {
 				var s = scope.push();
-				s.addMutable(name, it);
+				declaration.declare(cx, s, assignToken.flags, it);
 				body.interpretSafe(cx, s);
 			} catch (BreakExit exit) {
 				if (exit.stop == this) {
