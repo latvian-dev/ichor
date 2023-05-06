@@ -10,15 +10,16 @@ import dev.latvian.apps.ichor.util.FunctionInstance;
 
 public class AstFunction extends AstExpression implements Comparable<AstFunction> {
 	public interface Mod {
-		int ARROW = 1;
-		int CLASS = 2;
-		int STATIC = 4;
-		int SET = 8;
-		int GET = 16;
-		int CONSTRUCTOR = 32;
-		int ASYNC = 64;
-		int VARARGS = 128;
-		int STATEMENT = 256;
+		int ARROW = 1 << 0;
+		int CLASS = 1 << 1;
+		int STATIC = 1 << 2;
+		int SET = 1 << 3;
+		int GET = 1 << 4;
+		int CONSTRUCTOR = 1 << 5;
+		int ASYNC = 1 << 6;
+		int VARARGS = 1 << 7;
+		int STATEMENT = 1 << 8;
+		int GENERATOR = 1 << 9;
 	}
 
 	public final AstParam[] params;

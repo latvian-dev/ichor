@@ -13,6 +13,8 @@
 *.iml
 .idea
 /run
+/parser_file_tests
+/test262
 
 # gradle
 /build

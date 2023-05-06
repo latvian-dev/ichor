@@ -80,5 +80,5 @@ public interface KeywordTokenJS {
 	Token TYPEOF = cache("typeof").literalPre();
 	Token VOID = cache("void").literalPre().identifier(); // TODO
 	Token WHILE = cache("while");
-	Token YIELD = cache("yield").identifier(); // TODO
+	Token YIELD = cache("yield").literalPre().identifier(); // TODO
 }

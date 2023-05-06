@@ -35,6 +35,7 @@ import dev.latvian.apps.ichor.ast.statement.AstContinue;
 import dev.latvian.apps.ichor.ast.statement.AstDeclareStatement;
 import dev.latvian.apps.ichor.ast.statement.AstDoWhile;
 import dev.latvian.apps.ichor.ast.statement.AstEmptyBlock;
+import dev.latvian.apps.ichor.ast.statement.AstExport;
 import dev.latvian.apps.ichor.ast.statement.AstExpressionStatement;
 import dev.latvian.apps.ichor.ast.statement.AstFor;
 import dev.latvian.apps.ichor.ast.statement.AstForIn;
@@ -68,6 +69,7 @@ import dev.latvian.apps.ichor.lang.js.ast.AstClassPrototype;
 import dev.latvian.apps.ichor.lang.js.ast.AstDebugger;
 import dev.latvian.apps.ichor.lang.js.ast.AstObjectPrototype;
 import dev.latvian.apps.ichor.lang.js.ast.AstTypeOf;
+import dev.latvian.apps.ichor.lang.js.ast.AstYield;
 import dev.latvian.apps.ichor.token.DeclaringToken;
 import dev.latvian.apps.ichor.token.KeywordToken;
 import dev.latvian.apps.ichor.token.PositionedToken;
@@ -151,6 +153,10 @@ public class ParserJS implements Parser {
 	private Interpretable declaration() {
 		var pos = current;
 
+		if (advanceIf(KeywordTokenJS.EXPORT)) {
+			return new AstExport(declaration()).pos(pos);
+		}
+
 		int funcFlags = 0;
 
 		if (advanceIf(KeywordTokenJS.ASYNC)) {
@@ -161,13 +167,18 @@ public class ParserJS implements Parser {
 			return classDeclaration(pos);
 		} else if (advanceIf(KeywordTokenJS.FUNCTION)) {
 			funcFlags |= AstFunction.Mod.STATEMENT;
+
+			if (advanceIf(SymbolTokenJS.MUL)) {
+				funcFlags |= AstFunction.Mod.GENERATOR;
+			}
+
 			var name = identifier(ParseErrorType.EXP_FUNC_NAME);
 			var func = function(null, null, funcFlags);
 			func.functionName = name;
 			ignoreSemi();
 			return new AstFunctionDeclareStatement(func).pos(pos);
 		} else if (advanceIf(VAR_TOKENS)) {
-			var v = varDeclaration(pos);
+			var v = varDeclaration(current.prev);
 			ignoreSemi();
 			return v;
 		} else {
@@ -355,6 +366,8 @@ public class ParserJS implements Parser {
 			return switchStatement(pos);
 		} else if (advanceIf(KeywordTokenJS.THROW)) {
 			return throwStatement(pos);
+		} else if (advanceIf(KeywordTokenJS.YIELD)) {
+			return yieldStatement(pos);
 		} else if (current.is(SymbolTokenJS.LC)) {
 			return block(false, label);
 		} else if ((current.is(KeywordTokenJS.THIS) || current.is(KeywordTokenJS.SUPER)) && current.next.is(SymbolTokenJS.LP)) {
@@ -374,7 +387,7 @@ public class ParserJS implements Parser {
 
 		Interpretable initializer;
 
-		if (advanceIf(SymbolTokenJS.SEMI)) {
+		if (current.is(SymbolTokenJS.SEMI)) {
 			initializer = new AstEmptyBlock(false).pos(pos);
 		} else if (advanceIf(VAR_TOKENS)) {
 			initializer = varDeclaration(current.prev);
@@ -704,6 +717,19 @@ public class ParserJS implements Parser {
 		consume(SymbolTokenJS.RP, ParseErrorType.EXP_RP_ARGS);
 		ignoreSemi();
 		return new AstThrow(exception).pos(pos);
+	}
+
+	private Interpretable yieldStatement(PositionedToken pos) {
+		boolean generator = advanceIf(SymbolTokenJS.MUL);
+
+		Object value = Special.UNDEFINED;
+
+		if (!current.is(SymbolTokenJS.SEMI) && !current.is(SymbolTokenJS.RC)) {
+			value = expression();
+		}
+
+		ignoreSemi();
+		return new AstYield(generator, value).pos(pos);
 	}
 
 	private Interpretable expressionStatement(boolean ignoreSemi) {
@@ -1123,7 +1149,7 @@ public class ParserJS implements Parser {
 					var func = function(null, null, flags);
 					func.functionName = name;
 					map.put(name, func);
-				} else if (current.is(SymbolTokenJS.COMMA)) {
+				} else if (current.is(SymbolTokenJS.COMMA) || current.is(SymbolTokenJS.RC)) {
 					map.put(name, new AstGetScopeMember(name).pos(current.prev));
 				} else {
 					consume(SymbolTokenJS.COL, ParseErrorType.EXP_COL_OBJECT);
@@ -1173,6 +1199,10 @@ public class ParserJS implements Parser {
 	}
 
 	private Evaluable functionExpression(int flags) {
+		if (advanceIf(SymbolTokenJS.MUL)) {
+			flags |= AstFunction.Mod.GENERATOR;
+		}
+
 		if (advanceIf(KeywordTokenJS.GET)) {
 			flags |= AstFunction.Mod.GET;
 		} else if (advanceIf(KeywordTokenJS.SET)) {

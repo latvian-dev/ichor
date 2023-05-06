@@ -128,7 +128,13 @@ public class TokenStreamJS implements TokenStream {
 				if (c == '\\') {
 					read();
 					char n = read();
-					sb.append(n == '\n' ? '\n' : n == 'u' ? readUnicode() : readEscape(n));
+
+					if (n == '\\') {
+						sb.append('\\');
+						sb.append('\\');
+					} else {
+						sb.append(n == '\n' ? '\n' : readEscape(n));
+					}
 				} else if (c == '`' || c == '$' && peek(2) == '{') {
 					break;
 				} else {
@@ -206,7 +212,7 @@ public class TokenStreamJS implements TokenStream {
 
 			return Pattern.compile(sbP.toString(), flags);
 		} else if (s == SymbolTokenJS.DOT && isDigit(peek(1))) {
-			return readNumber(); // fix this
+			return readNumber(t); // fix this
 		} else if (s == SymbolTokenJS.SSTRING || s == SymbolTokenJS.DSTRING) {
 			var sb = new StringBuilder();
 
@@ -214,8 +220,7 @@ public class TokenStreamJS implements TokenStream {
 				char c = read();
 
 				if (c == '\\') {
-					char n = read();
-					sb.append(n == 'u' ? readUnicode() : readEscape(n));
+					sb.append(readEscape(read()));
 				} else if (c == t) {
 					break;
 				} else if (c == '\n') {
@@ -266,7 +271,7 @@ public class TokenStreamJS implements TokenStream {
 
 	private Object readLiteral(char t) {
 		if (isDigit(t)) {
-			return readNumber();
+			return readNumber(t);
 		} else if (Character.isJavaIdentifierStart(t)) {
 			int p = pos - 1;
 			int len = 1;
@@ -290,7 +295,7 @@ public class TokenStreamJS implements TokenStream {
 		}
 	}
 
-	private Number readNumber() {
+	private Number readNumber(char init) {
 		// TODO: Support for exp, hex, oct, bin, bigint
 		// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#numeric_literals
 
@@ -335,20 +340,32 @@ public class TokenStreamJS implements TokenStream {
 		return num;
 	}
 
-	private char readUnicode() {
-		char[] chars = new char[4];
+	private int readHex() {
+		char c = read();
 
-		for (int i = 0; i < 4; i++) {
-			char c = read();
-
-			if (!isHex(c)) {
-				throw error("Invalid unicode character: " + c);
-			}
-
-			chars[i] = c;
+		if (c >= '0' && c <= '9') {
+			return c - '0';
+		} else if (c >= 'a' && c <= 'f') {
+			return c - 'a' + 10;
+		} else if (c >= 'A' && c <= 'F') {
+			return c - 'A' + 10;
+		} else {
+			throw error("Invalid hex code: " + c);
 		}
+	}
 
-		return (char) Integer.parseInt(new String(chars), 16);
+	private int readX() {
+		int a = readHex();
+		int b = readHex();
+		return (a << 4) + b;
+	}
+
+	private int readU() {
+		int a = readHex();
+		int b = readHex();
+		int c = readHex();
+		int d = readHex();
+		return (a << 12) + (b << 8) + (c << 4) + d;
 	}
 
 	private char readEscape(char c) {
@@ -363,6 +380,25 @@ public class TokenStreamJS implements TokenStream {
 			case 'b' -> '\b';
 			case 'f' -> '\f';
 			case 'r' -> '\r';
+			case 'e' -> '\u001B';
+			case 'x', 'X' -> (char) readX();
+			case 'u', 'U' -> (char) readU();
+			case '0', '1', '2', '3', '4', '5', '6', '7' -> {
+				int num = 0;
+
+				do {
+					num *= 8;
+					num += c - '0';
+					c = read();
+				}
+				while (c >= '0' && c <= '7');
+
+				if (num > 255) {
+					throw error("Invalid escape character: '" + c + "'");
+				}
+
+				yield (char) num;
+			}
 			// case 'v' -> '\v';
 			default -> throw error("Invalid escape character: '" + c + "'");
 		};

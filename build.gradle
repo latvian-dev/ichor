@@ -25,6 +25,7 @@ dependencies {
 	compileOnly('org.jetbrains:annotations:23.0.0')
 	testImplementation('org.junit.jupiter:junit-jupiter-api:5.9.0')
 	testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.9.0')
+	testImplementation('junit:junit:4.13.2')
 }
 
 processResources {
@@ -55,7 +56,7 @@ publishing {
 	repositories {
 		if (ENV.SAPS_TOKEN) {
 			maven {
-				url "https://maven.saps.dev/minecraft"
+				url "https://maven.saps.dev/releases"
 				credentials {
 					username = "latvian"
 					password = "${ENV.SAPS_TOKEN}"
