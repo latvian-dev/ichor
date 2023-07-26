@@ -28,11 +28,9 @@ dependencies {
 	testImplementation('junit:junit:4.13.2')
 }
 
-processResources {
-	inputs.property "version", project.version
-
-	filesMatching("ichor.json") {
-		expand "version": project.version
+jar {
+	manifest {
+		attributes 'Implementation-Version': archiveVersion
 	}
 }
 
@@ -42,7 +40,10 @@ test {
 
 task sourceJar(type: Jar) {
 	archiveClassifier = "sources"
+	from sourceSets.main.allSource
 }
+
+tasks.build.dependsOn tasks.sourceJar
 
 publishing {
 	publications {

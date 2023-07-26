@@ -22,12 +22,15 @@ public abstract class Context {
 	private long interpretingTimeout;
 	private long tokenStreamTimeout;
 	private Remapper remapper;
+	private ClassLoader classLoader;
 
 	public Context() {
 		classPrototypes = new IdentityHashMap<>();
 		maxScopeDepth = 1000;
 		interpretingTimeout = 30000L;
 		tokenStreamTimeout = 5000L;
+		remapper = null;
+		classLoader = null;
 
 		registerPrototype(new JavaClassPrototype(this));
 		registerPrototype(new AnnotatedElementPrototype(this));
@@ -72,6 +75,15 @@ public abstract class Context {
 
 	public void setRemapper(Remapper r) {
 		remapper = r;
+	}
+
+	@Nullable
+	public ClassLoader getClassLoader() {
+		return classLoader;
+	}
+
+	public void setClassLoader(ClassLoader cl) {
+		classLoader = cl;
 	}
 
 	public Object eval(Scope scope, Object o) {

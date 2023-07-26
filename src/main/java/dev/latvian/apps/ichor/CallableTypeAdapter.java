@@ -14,7 +14,7 @@ public interface CallableTypeAdapter extends Callable, TypeAdapter, InvocationHa
 	@Override
 	@SuppressWarnings("unchecked")
 	default <T> T adapt(Context cx, Scope scope, Class<T> type) {
-		return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, this);
+		return (T) Proxy.newProxyInstance(cx.getClassLoader() == null ? type.getClassLoader() : cx.getClassLoader(), new Class[]{type}, this);
 	}
 
 	@Override
