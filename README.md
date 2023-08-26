@@ -8,9 +8,9 @@ Ichor is a WIP language interpreter for Java that supports JavaScript, TypeScrip
 
 It's loosely based on concepts of [Crafting Interpreters' JLox](https://github.com/munificent/craftinginterpreters) and [Mozilla's Rhino](https://github.com/mozilla/rhino).
 
-Discord Server: [discord.gg/latviandev](https://discord.gg/latviandev)
+Discord Server: [discord.gg/lat](https://discord.gg/lat)
 
-[![](https://discordapp.com/api/guilds/303440391124942858/widget.png?style=banner2)](https://discord.gg/latviandev)
+[![](https://kubejs.com/discord.png)](https://discord.gg/lat)
 
 # Supported Languages
 

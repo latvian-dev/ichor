@@ -8,7 +8,6 @@ import dev.latvian.apps.ichor.lang.js.ParserJS;
 import dev.latvian.apps.ichor.lang.js.TokenStreamJS;
 import dev.latvian.apps.ichor.util.IchorUtils;
 import dev.latvian.apps.ichor.util.NamedTokenSource;
-import org.junit.Ignore;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.MethodOrderer;
@@ -56,7 +55,7 @@ public class ParserTests {
 
 	@TestFactory
 	@SuppressWarnings("resource")
-	@Ignore
+	// @Ignore
 	public Stream<DynamicTest> fileTests() throws IOException {
 		var root = Path.of("parser_file_tests");
 

@@ -1,3 +1,5 @@
+import java.time.Instant
+
 plugins {
 	id 'java'
 	id 'maven-publish'
@@ -7,15 +9,9 @@ sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
 
 def ENV = System.getenv()
-version = "${project_version}.${ENV.GITHUB_RUN_NUMBER ?: '9999'}"
+version = "${project_version}-${ENV.GITHUB_RUN_NUMBER ? 'build.' + ENV.GITHUB_RUN_NUMBER : 'local.' + Instant.now().epochSecond}"
 archivesBaseName = 'ichor'
 group = 'dev.latvian.apps'
-
-compileJava.options.encoding = 'UTF-8'
-
-tasks.withType(JavaCompile) {
-	options.encoding = 'UTF-8'
-}
 
 repositories {
 	mavenCentral()
@@ -24,7 +20,7 @@ repositories {
 dependencies {
 	compileOnly('org.jetbrains:annotations:23.0.0')
 	testImplementation('org.junit.jupiter:junit-jupiter-api:5.9.0')
-	testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.9.0')
+	testImplementation('org.junit.jupiter:junit-jupiter-engine:5.9.0')
 	testImplementation('junit:junit:4.13.2')
 }
 
@@ -38,23 +34,35 @@ test {
 	useJUnitPlatform()
 }
 
-task sourceJar(type: Jar) {
-	archiveClassifier = "sources"
-	from sourceSets.main.allSource
+compileJava {
+	options.encoding = "UTF-8"
+	options.release.set(17)
 }
 
-tasks.build.dependsOn tasks.sourceJar
+java {
+	sourceCompatibility = targetCompatibility = '17'
+	withSourcesJar()
+}
 
 publishing {
 	publications {
 		mavenIchor(MavenPublication) {
 			artifactId = 'ichor'
 			from components.java
-			artifact sourceJar
 		}
 	}
 
 	repositories {
+		if (ENV.MAVEN_TOKEN) {
+			maven {
+				url "https://maven.latvian.dev/releases"
+				credentials {
+					username = "lat"
+					password = "${ENV.MAVEN_TOKEN}"
+				}
+			}
+		}
+
 		if (ENV.SAPS_TOKEN) {
 			maven {
 				url "https://maven.saps.dev/releases"
