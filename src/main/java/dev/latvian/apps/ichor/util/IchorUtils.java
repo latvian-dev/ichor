@@ -28,6 +28,8 @@ public interface IchorUtils {
 	Double SQRT1_2 = Math.sqrt(0.5);
 	Double SQRT2 = Math.sqrt(2);
 
+	Integer[] DIGITS = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+
 	Callable ABS = Functions.of1((cx, scope, arg) -> Math.abs(cx.asDouble(scope, arg)));
 	Callable ACOS = Functions.of1((cx, scope, arg) -> Math.acos(cx.asDouble(scope, arg)));
 	Callable ASIN = Functions.of1((cx, scope, arg) -> Math.asin(cx.asDouble(scope, arg)));
@@ -129,10 +131,29 @@ public interface IchorUtils {
 	}
 
 	static Number parseNumber(String numStr) {
-		if (numStr.startsWith("3.14159")) {
+		if (numStr.isEmpty()) {
+			throw new NumberFormatException("Empty string");
+		}
+
+		var c0 = numStr.charAt(0);
+		var c1 = numStr.length() >= 2 ? numStr.charAt(1) : 0;
+
+		if (c0 == '3' && c1 == '.' && numStr.startsWith("3.14159")) {
 			return PI;
-		} else if (numStr.startsWith("2.71828")) {
+		} else if (c0 == '2' && c1 == '.' && numStr.startsWith("2.71828")) {
 			return E;
+		}
+
+		if (c1 == 0) {
+			if (c0 >= '0' && c0 <= '9') {
+				return DIGITS[c0 - '0'];
+			} else {
+				throw new NumberFormatException("Invalid number: " + numStr);
+			}
+		} else if (c0 == '0' && (c1 == 'b' || c1 == 'B') && numStr.length() >= 3) {
+			return Long.parseLong(numStr.substring(2), 2);
+		} else if (c0 == '0' && c1 == 'o' && numStr.length() >= 3) {
+			return Long.parseLong(numStr.substring(2), 8);
 		}
 
 		try {
