@@ -37,10 +37,6 @@ public final class TestConsole {
 		return "TestConsoleImpl";
 	}
 
-	public int getTestBean() {
-		return 30;
-	}
-
 	public String getLastLine() {
 		return lastLine;
 	}

@@ -4,25 +4,71 @@ import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.CastError;
 import dev.latvian.apps.ichor.error.InternalScriptError;
 import dev.latvian.apps.ichor.java.AnnotatedElementPrototype;
+import dev.latvian.apps.ichor.java.BooleanPrototype;
 import dev.latvian.apps.ichor.java.JavaClassPrototype;
 import dev.latvian.apps.ichor.prototype.Prototype;
+import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
+import dev.latvian.apps.ichor.type.ArrayJS;
+import dev.latvian.apps.ichor.type.CollectionJS;
+import dev.latvian.apps.ichor.type.IterableJS;
+import dev.latvian.apps.ichor.type.ListJS;
+import dev.latvian.apps.ichor.type.MapJS;
+import dev.latvian.apps.ichor.type.MathJS;
+import dev.latvian.apps.ichor.type.NumberJS;
+import dev.latvian.apps.ichor.type.ObjectJS;
+import dev.latvian.apps.ichor.type.RegExpJS;
+import dev.latvian.apps.ichor.type.SetJS;
+import dev.latvian.apps.ichor.type.StringJS;
 import dev.latvian.apps.ichor.util.IchorUtils;
 import dev.latvian.apps.ichor.util.JavaArray;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
-public abstract class Context {
+public class Context {
 	private final Map<Class<?>, Prototype<?>> classPrototypes;
 	private int maxScopeDepth;
 	private long interpretingTimeout;
 	private long tokenStreamTimeout;
 	private Remapper remapper;
 	private ClassLoader classLoader;
+	private Executor timeoutExecutor, timeoutExecutorAfter;
+	private Consumer<Scope> debuggerCallback;
+
+	public final Prototype<?> objectPrototype,
+			arrayPrototype,
+			classPrototype,
+			stringPrototype,
+			numberPrototype,
+			booleanPrototype,
+			jsObjectPrototype,
+			jsArrayPrototype,
+			jsMathPrototype,
+			jsMapPrototype,
+			jsSetPrototype,
+			regExpPrototype,
+			listPrototype,
+			collectionPrototype,
+			iterablePrototype;
+
+	public final List<Prototype<?>> safePrototypes;
 
 	public Context() {
 		classPrototypes = new IdentityHashMap<>();
@@ -31,13 +77,42 @@ public abstract class Context {
 		tokenStreamTimeout = 5000L;
 		remapper = null;
 		classLoader = null;
+		timeoutExecutor = null;
+		timeoutExecutorAfter = null;
+
+		objectPrototype = new Prototype<>(this, Object.class);
+		arrayPrototype = new Prototype<>(this, Object[].class);
+		classPrototype = new Prototype<>(this, Class.class);
+		stringPrototype = new StringJS(this);
+		numberPrototype = new NumberJS(this);
+		booleanPrototype = new BooleanPrototype(this);
+		jsObjectPrototype = new ObjectJS(this);
+		jsArrayPrototype = new ArrayJS(this);
+		jsMathPrototype = new MathJS(this);
+		jsMapPrototype = new MapJS(this);
+		jsSetPrototype = new SetJS(this);
+		regExpPrototype = new RegExpJS(this);
+		listPrototype = new ListJS(this);
+		collectionPrototype = new CollectionJS(this);
+		iterablePrototype = new IterableJS(this);
+
+		safePrototypes = new ArrayList<>();
+		safePrototypes.add(stringPrototype);
+		safePrototypes.add(numberPrototype);
+		safePrototypes.add(booleanPrototype);
+		safePrototypes.add(jsObjectPrototype);
+		safePrototypes.add(jsArrayPrototype);
+		safePrototypes.add(jsMathPrototype);
+		safePrototypes.add(jsMapPrototype);
+		safePrototypes.add(jsSetPrototype);
+		safePrototypes.add(regExpPrototype);
 
 		registerPrototype(new JavaClassPrototype(this));
 		registerPrototype(new AnnotatedElementPrototype(this));
 	}
 
 	public List<Prototype<?>> getSafePrototypes() {
-		return Collections.emptyList();
+		return safePrototypes;
 	}
 
 	public void registerPrototype(Prototype<?> prototype) {
@@ -84,6 +159,38 @@ public abstract class Context {
 
 	public void setClassLoader(ClassLoader cl) {
 		classLoader = cl;
+	}
+
+	@Nullable
+	public Executor getTimeoutExecutor() {
+		if (timeoutExecutor == null) {
+			timeoutExecutor = CompletableFuture.completedFuture(null).defaultExecutor();
+		}
+
+		return timeoutExecutor;
+	}
+
+	public void setTimeoutExecutor(Executor executor) {
+		timeoutExecutor = executor;
+	}
+
+	@Nullable
+	public Executor getTimeoutExecutorAfter() {
+		return timeoutExecutorAfter;
+	}
+
+	public void setTimeoutExecutorAfter(Executor executor) {
+		timeoutExecutorAfter = executor;
+	}
+
+	public void setDebuggerCallback(Consumer<Scope> callback) {
+		debuggerCallback = callback;
+	}
+
+	public void onDebugger(Scope scope) {
+		if (debuggerCallback != null) {
+			debuggerCallback.accept(scope);
+		}
 	}
 
 	public Object eval(Scope scope, Object o) {
@@ -295,7 +402,7 @@ public abstract class Context {
 	public Object as(Scope scope, Object o, @Nullable Class<?> toType) {
 		if (Special.isInvalid(o)) {
 			return null;
-		} else if (toType == null || toType == Void.TYPE || toType == Object.class || toType == o.getClass() || toType.isInstance(o)) {
+		} else if (toType == null || toType == Void.TYPE || toType == Object.class || toType.isInstance(o)) {
 			return o;
 		} else if (toType == String.class || toType == CharSequence.class) {
 			return asString(scope, o, false);
@@ -345,10 +452,52 @@ public abstract class Context {
 	}
 
 	public Prototype<?> getPrototype(Scope scope, Object o) {
+		if (o == null) {
+			return Special.NULL.prototype;
+		} else if (o instanceof PrototypeSupplier s) {
+			return s.getPrototype(this, scope);
+		} else if (o instanceof Boolean) {
+			return booleanPrototype;
+		} else if (o instanceof Number) {
+			return numberPrototype;
+		} else if (o instanceof CharSequence) {
+			return stringPrototype;
+		} else if (o instanceof Class) {
+			return classPrototype;
+		} else if (o instanceof Pattern) {
+			return regExpPrototype;
+		} else if (o.getClass().isArray()) {
+			return arrayPrototype;
+		}
+
 		return getClassPrototype(o.getClass());
 	}
 
 	public Prototype<?> getClassPrototype(Class<?> c) {
+		if (c == Boolean.class) {
+			return booleanPrototype;
+		} else if (c == Number.class) {
+			return numberPrototype;
+		} else if (c == String.class) {
+			return stringPrototype;
+		} else if (c == Class.class) {
+			return classPrototype;
+		} else if (c == Map.class || c == HashMap.class || c == LinkedHashMap.class || c == IdentityHashMap.class || c == EnumMap.class) {
+			return jsMapPrototype;
+		} else if (c == Set.class || c == HashSet.class || c == LinkedHashSet.class || c == EnumSet.class) {
+			return jsSetPrototype;
+		} else if (c == List.class || c == ArrayList.class || c == LinkedList.class) {
+			return listPrototype;
+		} else if (c == Collection.class) {
+			return collectionPrototype;
+		} else if (c == Iterable.class) {
+			return iterablePrototype;
+		} else if (c == Pattern.class) {
+			return regExpPrototype;
+		} else if (c.isArray()) {
+			return arrayPrototype;
+		}
+
 		var p = classPrototypes.get(c);
 
 		if (p == null) {

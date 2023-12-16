@@ -1,4 +1,4 @@
-package dev.latvian.apps.ichor.lang.js;
+package dev.latvian.apps.ichor.token;
 
 import dev.latvian.apps.ichor.ast.expression.binary.AstAdd;
 import dev.latvian.apps.ichor.ast.expression.binary.AstAnd;
@@ -31,12 +31,9 @@ import dev.latvian.apps.ichor.ast.expression.unary.AstNot;
 import dev.latvian.apps.ichor.ast.expression.unary.AstPositive;
 import dev.latvian.apps.ichor.ast.expression.unary.AstSub1L;
 import dev.latvian.apps.ichor.ast.expression.unary.AstUnary;
-import dev.latvian.apps.ichor.token.PositionedToken;
-import dev.latvian.apps.ichor.token.Token;
-import dev.latvian.apps.ichor.token.TokenStream;
 import org.jetbrains.annotations.Nullable;
 
-public enum SymbolTokenJS implements Token {
+public enum Symbol implements Token {
 	DOT("."), // dot
 	DDOT(".."), // double dot
 	TDOT("..."), // triple dot
@@ -121,7 +118,7 @@ public enum SymbolTokenJS implements Token {
 
 	public final String name;
 
-	SymbolTokenJS(String name) {
+	Symbol(String name) {
 		this.name = name;
 	}
 
@@ -131,7 +128,7 @@ public enum SymbolTokenJS implements Token {
 	}
 
 	@Nullable
-	public static SymbolTokenJS read(TokenStream s, char t) {
+	public static Symbol read(TokenStream s, char t) {
 		return switch (t) {
 			case '.' -> s.readIf('.') ? s.readIf('.') ? TDOT : DDOT : DOT;
 			case ',' -> COMMA;

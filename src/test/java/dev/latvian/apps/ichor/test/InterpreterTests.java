@@ -1,14 +1,11 @@
-package dev.latvian.apps.ichor.test.js;
+package dev.latvian.apps.ichor.test;
 
+import dev.latvian.apps.ichor.Context;
+import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.RootScope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.ScopeExit;
-import dev.latvian.apps.ichor.lang.js.ContextJS;
-import dev.latvian.apps.ichor.lang.js.ParserJS;
-import dev.latvian.apps.ichor.lang.js.TokenStreamJS;
-import dev.latvian.apps.ichor.test.AdvancedTestUtils;
-import dev.latvian.apps.ichor.test.ReflectionExample;
-import dev.latvian.apps.ichor.test.TestConsole;
+import dev.latvian.apps.ichor.token.TokenStream;
 import dev.latvian.apps.ichor.util.Empty;
 import dev.latvian.apps.ichor.util.IchorUtils;
 import dev.latvian.apps.ichor.util.NamedTokenSource;
@@ -23,10 +20,10 @@ import java.util.function.Consumer;
 // @Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class InterpreterTests {
-	public static ContextJS context;
+	public static Context context;
 
 	static {
-		context = new ContextJS();
+		context = new Context();
 		context.setInterpretingTimeout(1500L);
 		context.setTokenStreamTimeout(1500L);
 	}
@@ -49,9 +46,9 @@ public class InterpreterTests {
 		rootScope.addImmutable("Advanced", new AdvancedTestUtils(console));
 		rootScopeCallback.accept(rootScope);
 
-		var tokenStream = new TokenStreamJS(context, new NamedTokenSource(filename), input);
+		var tokenStream = new TokenStream(context, new NamedTokenSource(filename), input);
 		var rootToken = tokenStream.getRootToken();
-		var parser = new ParserJS(context, rootScope, rootToken);
+		var parser = new Parser(context, rootScope, rootToken);
 		var ast = parser.parse();
 		var astStr = ast.toString();
 
@@ -253,7 +250,7 @@ public class InterpreterTests {
 				console.log('B')
 				console.log('C')
 				console.log(console.lastLine)
-				console.log(console.testBean === 30)
+				console.log(Advanced.bean === 30)
 				""", """
 				A
 				B

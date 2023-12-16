@@ -37,9 +37,15 @@ public final class AdvancedTestUtils {
 
 	public void testFloatSupplier(FloatSupplier func) {
 		console.log("Float value: " + AstStringBuilder.wrapNumber(func.supplyFloat()));
+		System.out.printf("Func object: %s #%08X\n", func, func.hashCode());
+		System.out.printf("Func class: %s #%08X\n", func.getClass().getName(), func.getClass().hashCode());
 	}
 
 	public void testMap(Map<String, Object> map) {
 		console.log("Map: " + map);
+	}
+
+	public int getBean() {
+		return 30;
 	}
 }

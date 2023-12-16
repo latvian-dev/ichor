@@ -76,7 +76,7 @@ public class AstCall extends AstExpression {
 			throw new CallError(function, func, cx.getPrototype(scope, func));
 		}
 
-		var args = ((Callable) func).convertArgs(cx, scope, arguments);
+		var args = ((Callable) func).evalArgs(cx, scope, arguments);
 		var r = ((Callable) func).call(cx, scope, args, hasNew);
 
 		if (r == Special.NOT_FOUND) {

@@ -1,4 +1,4 @@
-package dev.latvian.apps.ichor.test.js;
+package dev.latvian.apps.ichor.test;
 
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -229,11 +229,35 @@ public class AdvancedInterpreterTests {
 		InterpreterTests.testInterpreter("""
 				Advanced.testFloat(5.3, console)
 				Advanced.testFloat(Advanced.short1)
+				Advanced.testFloatSupplier(() => Advanced.short1)
 				Advanced.testFloatSupplier(() => Advanced.short2)
+								
+				for(let i = 0; i < 3; i++) {
+				  Advanced.testFloatSupplier(() => Advanced.short2)
+				}
 				""", """
 				Float value: 5.3
 				Float value: 30
+				Float value: 30
 				Float value: 40
+				Float value: 40
+				Float value: 40
+				Float value: 40
+				""");
+	}
+
+	@Test
+	public void numberCopy() {
+		InterpreterTests.testInterpreter("""
+				let a = 10
+				let supp = () => a
+				Advanced.testFloatSupplier(supp)
+				a++
+								
+				Advanced.testFloatSupplier(supp)
+				""", """
+				Float value: 10
+				Float value: 11
 				""");
 	}
 

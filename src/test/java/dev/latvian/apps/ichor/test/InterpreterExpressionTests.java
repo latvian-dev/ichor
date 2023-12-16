@@ -1,4 +1,4 @@
-package dev.latvian.apps.ichor.test.js;
+package dev.latvian.apps.ichor.test;
 
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;

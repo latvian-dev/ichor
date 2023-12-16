@@ -5,13 +5,13 @@ import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.ast.expression.AstFunction;
-import dev.latvian.apps.ichor.lang.js.KeywordTokenJS;
+import dev.latvian.apps.ichor.token.Keyword;
 
 public class AstFunctionDeclareStatement extends AstDeclareStatement {
 	public final AstFunction function;
 
 	public AstFunctionDeclareStatement(AstFunction function) {
-		super(KeywordTokenJS.CONST);
+		super(Keyword.CONST);
 		this.function = function;
 	}
 

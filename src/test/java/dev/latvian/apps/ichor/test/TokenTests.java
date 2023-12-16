@@ -1,9 +1,9 @@
-package dev.latvian.apps.ichor.test.js;
+package dev.latvian.apps.ichor.test;
 
+import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.error.TokenStreamError;
-import dev.latvian.apps.ichor.lang.js.ContextJS;
-import dev.latvian.apps.ichor.lang.js.TokenStreamJS;
 import dev.latvian.apps.ichor.token.IdentifierToken;
+import dev.latvian.apps.ichor.token.TokenStream;
 import dev.latvian.apps.ichor.util.NamedTokenSource;
 import dev.latvian.apps.ichor.util.PrintWrapper;
 import org.junit.jupiter.api.Assertions;
@@ -15,9 +15,9 @@ import org.junit.jupiter.api.function.Executable;
 
 import java.util.Arrays;
 
-import static dev.latvian.apps.ichor.lang.js.KeywordTokenJS.*;
-import static dev.latvian.apps.ichor.lang.js.SymbolTokenJS.SET;
-import static dev.latvian.apps.ichor.lang.js.SymbolTokenJS.*;
+import static dev.latvian.apps.ichor.token.Keyword.*;
+import static dev.latvian.apps.ichor.token.Symbol.SET;
+import static dev.latvian.apps.ichor.token.Symbol.*;
 
 @Timeout(value = 3, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
 @TestMethodOrder(MethodOrderer.MethodName.class)
@@ -29,8 +29,8 @@ public class TokenTests {
 	private static void testTokenStream(String input, Object... match) {
 		System.out.println("--- Token Test ---");
 		System.out.println("Input: " + input);
-		var cx = new ContextJS();
-		var tokenStream = new TokenStreamJS(cx, new NamedTokenSource(""), input);
+		var cx = new Context();
+		var tokenStream = new TokenStream(cx, new NamedTokenSource(""), input);
 
 		var current = tokenStream.getRootToken();
 

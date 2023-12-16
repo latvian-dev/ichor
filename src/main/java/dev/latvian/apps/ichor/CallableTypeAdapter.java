@@ -18,10 +18,7 @@ public interface CallableTypeAdapter extends Callable, TypeAdapter, InvocationHa
 	}
 
 	@Override
-	default Object invoke(Object proxy, Method method, Object[] args) {
-		var cx = getEvalContext();
-		var scope = getEvalScope();
-
+	default Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 		if (method.getDeclaringClass() == Object.class) {
 			return switch (method.getName()) {
 				case "toString" -> toString();
@@ -31,6 +28,12 @@ public interface CallableTypeAdapter extends Callable, TypeAdapter, InvocationHa
 			};
 		}
 
+		if (method.isDefault()) {
+			return InvocationHandler.invokeDefault(proxy, method, args);
+		}
+
+		var cx = getEvalContext();
+		var scope = getEvalScope();
 		return cx.as(scope, call(cx, scope, args == null ? Empty.OBJECTS : args, false), method.getReturnType());
 	}
 }

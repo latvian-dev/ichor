@@ -1,14 +1,13 @@
-package dev.latvian.apps.ichor.lang.js.type;
+package dev.latvian.apps.ichor.type;
 
 import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
-import dev.latvian.apps.ichor.lang.js.ContextJS;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.IchorUtils;
 import org.jetbrains.annotations.Nullable;
 
 public class MathJS extends Prototype<MathJS> {
-	public MathJS(ContextJS cx) {
+	public MathJS(Context cx) {
 		super(cx, "Math", MathJS.class);
 	}
 

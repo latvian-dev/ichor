@@ -6,7 +6,7 @@ import dev.latvian.apps.ichor.util.Empty;
 public interface Callable {
 	Object call(Context cx, Scope scope, Object[] args, boolean hasNew);
 
-	default Object[] convertArgs(Context cx, Scope scope, Object[] arguments) {
+	default Object[] evalArgs(Context cx, Scope scope, Object[] arguments) {
 		if (arguments.length == 0) {
 			return Empty.OBJECTS;
 		}
