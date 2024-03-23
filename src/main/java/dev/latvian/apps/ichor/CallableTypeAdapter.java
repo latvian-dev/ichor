@@ -7,14 +7,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 public interface CallableTypeAdapter extends Callable, TypeAdapter, InvocationHandler {
-	Context getEvalContext();
-
 	Scope getEvalScope();
 
 	@Override
 	@SuppressWarnings("unchecked")
-	default <T> T adapt(Context cx, Scope scope, Class<T> type) {
-		return (T) Proxy.newProxyInstance(cx.getClassLoader() == null ? type.getClassLoader() : cx.getClassLoader(), new Class[]{type}, this);
+	default <T> T adapt(Scope scope, Class<T> type) {
+		return (T) Proxy.newProxyInstance(scope.root.context.getClassLoader() == null ? type.getClassLoader() : scope.root.context.getClassLoader(), new Class[]{type}, this);
 	}
 
 	@Override
@@ -32,8 +30,7 @@ public interface CallableTypeAdapter extends Callable, TypeAdapter, InvocationHa
 			return InvocationHandler.invokeDefault(proxy, method, args);
 		}
 
-		var cx = getEvalContext();
 		var scope = getEvalScope();
-		return cx.as(scope, call(cx, scope, args == null ? Empty.OBJECTS : args, false), method.getReturnType());
+		return scope.as(call(scope, args == null ? Empty.OBJECTS : args, false), method.getReturnType());
 	}
 }

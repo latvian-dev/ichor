@@ -1,7 +1,6 @@
 package dev.latvian.apps.ichor.type;
 
 import dev.latvian.apps.ichor.Callable;
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.Functions;
@@ -13,24 +12,24 @@ import java.util.List;
 
 @SuppressWarnings({"rawtypes"})
 public class IterableJS extends Prototype<Iterable> {
-	public static final Functions.Bound<Iterable> FOR_EACH = (cx, scope, self, args) -> {
+	public static final Functions.Bound<Iterable> FOR_EACH = (scope, self, args) -> {
 		var func = (Callable) args[0];
 		int i = 0;
 
 		for (var o : self) {
-			func.call(cx, scope, new Object[]{o, i, self}, false);
+			func.call(scope, new Object[]{o, i, self}, false);
 			i++;
 		}
 
 		return self;
 	};
 
-	public IterableJS(Context cx) {
+	public IterableJS(Scope cx) {
 		super(cx, Iterable.class);
 	}
 
 	@Override
-	public boolean asString(Context cx, Scope scope, Iterable self, StringBuilder builder, boolean escape) {
+	public boolean asString(Scope scope, Iterable self, StringBuilder builder, boolean escape) {
 		builder.append('[');
 
 		boolean first = true;
@@ -43,7 +42,7 @@ public class IterableJS extends Prototype<Iterable> {
 				builder.append(' ');
 			}
 
-			cx.asString(scope, o, builder, true);
+			scope.asString(o, builder, true);
 		}
 
 		builder.append(']');
@@ -52,7 +51,7 @@ public class IterableJS extends Prototype<Iterable> {
 
 	@Override
 	@Nullable
-	public Object getLocal(Context cx, Scope scope, Iterable self, String name) {
+	public Object getLocal(Scope scope, Iterable self, String name) {
 		return switch (name) {
 			case "length" -> {
 				int i = 0;
@@ -62,12 +61,12 @@ public class IterableJS extends Prototype<Iterable> {
 				yield i;
 			}
 			case "forEach" -> FOR_EACH.with(self);
-			default -> super.getLocal(cx, scope, self, name);
+			default -> super.getLocal(scope, self, name);
 		};
 	}
 
 	@Override
-	public Collection<?> keys(Context cx, Scope scope, Iterable self) {
+	public Collection<?> keys(Scope scope, Iterable self) {
 		var keys = new ArrayList<Integer>();
 
 		int i = 0;
@@ -80,7 +79,7 @@ public class IterableJS extends Prototype<Iterable> {
 	}
 
 	@Override
-	public Collection<?> values(Context cx, Scope scope, Iterable self) {
+	public Collection<?> values(Scope scope, Iterable self) {
 		var values = new ArrayList<>();
 
 		for (var o : self) {
@@ -91,7 +90,7 @@ public class IterableJS extends Prototype<Iterable> {
 	}
 
 	@Override
-	public Collection<?> entries(Context cx, Scope scope, Iterable self) {
+	public Collection<?> entries(Scope scope, Iterable self) {
 		var entries = new ArrayList<List<Object>>();
 
 		int i = 0;

@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -21,8 +20,8 @@ public class AstThrow extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Context cx, Scope scope) {
-		var e = cx.eval(scope, exception);
+	public void interpret(Scope scope) {
+		var e = scope.eval(exception);
 
 		if (e instanceof Throwable t) {
 			throw new ScriptThrowError(t).pos(this);

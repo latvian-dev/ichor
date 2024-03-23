@@ -1,122 +1,25 @@
 package dev.latvian.apps.ichor;
 
-import dev.latvian.apps.ichor.ast.AstStringBuilder;
-import dev.latvian.apps.ichor.error.CastError;
-import dev.latvian.apps.ichor.error.InternalScriptError;
-import dev.latvian.apps.ichor.java.AnnotatedElementPrototype;
-import dev.latvian.apps.ichor.java.BooleanPrototype;
-import dev.latvian.apps.ichor.java.JavaClassPrototype;
-import dev.latvian.apps.ichor.prototype.Prototype;
-import dev.latvian.apps.ichor.prototype.PrototypeSupplier;
-import dev.latvian.apps.ichor.type.ArrayJS;
-import dev.latvian.apps.ichor.type.CollectionJS;
-import dev.latvian.apps.ichor.type.IterableJS;
-import dev.latvian.apps.ichor.type.ListJS;
-import dev.latvian.apps.ichor.type.MapJS;
-import dev.latvian.apps.ichor.type.MathJS;
-import dev.latvian.apps.ichor.type.NumberJS;
-import dev.latvian.apps.ichor.type.ObjectJS;
-import dev.latvian.apps.ichor.type.RegExpJS;
-import dev.latvian.apps.ichor.type.SetJS;
-import dev.latvian.apps.ichor.type.StringJS;
-import dev.latvian.apps.ichor.util.IchorUtils;
-import dev.latvian.apps.ichor.util.JavaArray;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.function.Consumer;
-import java.util.regex.Pattern;
 
 public class Context {
-	private final Map<Class<?>, Prototype<?>> classPrototypes;
 	private int maxScopeDepth;
 	private long interpretingTimeout;
 	private long tokenStreamTimeout;
-	private Remapper remapper;
 	private ClassLoader classLoader;
 	private Executor timeoutExecutor, timeoutExecutorAfter;
-	private Consumer<Scope> debuggerCallback;
-
-	public final Prototype<?> objectPrototype,
-			arrayPrototype,
-			classPrototype,
-			stringPrototype,
-			numberPrototype,
-			booleanPrototype,
-			jsObjectPrototype,
-			jsArrayPrototype,
-			jsMathPrototype,
-			jsMapPrototype,
-			jsSetPrototype,
-			regExpPrototype,
-			listPrototype,
-			collectionPrototype,
-			iterablePrototype;
-
-	public final List<Prototype<?>> safePrototypes;
+	private DebuggerCallback debuggerCallback;
 
 	public Context() {
-		classPrototypes = new IdentityHashMap<>();
 		maxScopeDepth = 1000;
 		interpretingTimeout = 30000L;
 		tokenStreamTimeout = 5000L;
-		remapper = null;
 		classLoader = null;
 		timeoutExecutor = null;
 		timeoutExecutorAfter = null;
-
-		objectPrototype = new Prototype<>(this, Object.class);
-		arrayPrototype = new Prototype<>(this, Object[].class);
-		classPrototype = new Prototype<>(this, Class.class);
-		stringPrototype = new StringJS(this);
-		numberPrototype = new NumberJS(this);
-		booleanPrototype = new BooleanPrototype(this);
-		jsObjectPrototype = new ObjectJS(this);
-		jsArrayPrototype = new ArrayJS(this);
-		jsMathPrototype = new MathJS(this);
-		jsMapPrototype = new MapJS(this);
-		jsSetPrototype = new SetJS(this);
-		regExpPrototype = new RegExpJS(this);
-		listPrototype = new ListJS(this);
-		collectionPrototype = new CollectionJS(this);
-		iterablePrototype = new IterableJS(this);
-
-		safePrototypes = new ArrayList<>();
-		safePrototypes.add(stringPrototype);
-		safePrototypes.add(numberPrototype);
-		safePrototypes.add(booleanPrototype);
-		safePrototypes.add(jsObjectPrototype);
-		safePrototypes.add(jsArrayPrototype);
-		safePrototypes.add(jsMathPrototype);
-		safePrototypes.add(jsMapPrototype);
-		safePrototypes.add(jsSetPrototype);
-		safePrototypes.add(regExpPrototype);
-
-		registerPrototype(new JavaClassPrototype(this));
-		registerPrototype(new AnnotatedElementPrototype(this));
-	}
-
-	public List<Prototype<?>> getSafePrototypes() {
-		return safePrototypes;
-	}
-
-	public void registerPrototype(Prototype<?> prototype) {
-		classPrototypes.put(prototype.type, prototype);
 	}
 
 	public int getMaxScopeDepth() {
@@ -141,15 +44,6 @@ public class Context {
 
 	public void setTokenStreamTimeout(long tokenStreamTimeout) {
 		this.tokenStreamTimeout = tokenStreamTimeout;
-	}
-
-	@Nullable
-	public Remapper getRemapper() {
-		return remapper;
-	}
-
-	public void setRemapper(Remapper r) {
-		remapper = r;
 	}
 
 	@Nullable
@@ -183,357 +77,18 @@ public class Context {
 		timeoutExecutorAfter = executor;
 	}
 
-	public void setDebuggerCallback(Consumer<Scope> callback) {
+	public void setDebuggerCallback(DebuggerCallback callback) {
 		debuggerCallback = callback;
 	}
 
 	public void onDebugger(Scope scope) {
 		if (debuggerCallback != null) {
-			debuggerCallback.accept(scope);
+			debuggerCallback.onDebugger(scope);
 		}
-	}
-
-	public Object eval(Scope scope, Object o) {
-		if (o == Special.UNDEFINED || o instanceof Callable) {
-			return o;
-		} else if (o instanceof Evaluable eval) {
-			return eval.eval(this, scope);
-		} else {
-			return o;
-		}
-	}
-
-	public void asString(Scope scope, Object o, StringBuilder builder, boolean escape) {
-		if (o == null) {
-			builder.append("null");
-		} else if (o instanceof Number) {
-			AstStringBuilder.wrapNumber(o, builder);
-		} else if (o instanceof Character || o instanceof CharSequence) {
-			if (escape) {
-				AstStringBuilder.wrapString(o, builder);
-			} else {
-				builder.append(o);
-			}
-		} else if (o instanceof Boolean || o instanceof Special) {
-			builder.append(o);
-		} else if (o instanceof Evaluable eval) {
-			eval.evalString(this, scope, builder);
-		} else {
-			var p = getPrototype(scope, o);
-
-			if (o == p || !p.asString(this, scope, p.cast(o), builder, escape)) {
-				builder.append(o);
-			}
-		}
-	}
-
-	public String asString(Scope scope, Object o, boolean escape) {
-		if (o == null) {
-			return "null";
-		} else if (o instanceof Number) {
-			return AstStringBuilder.wrapNumber(o);
-		} else if (o instanceof Character || o instanceof CharSequence) {
-			if (escape) {
-				var builder = new StringBuilder();
-				AstStringBuilder.wrapString(o, builder);
-				return builder.toString();
-			} else {
-				return o.toString();
-			}
-		} else if (o instanceof Boolean || o instanceof Special) {
-			return o.toString();
-		} else if (o instanceof Evaluable eval) {
-			var builder = new StringBuilder();
-			eval.evalString(this, scope, builder);
-			return builder.toString();
-		} else {
-			var p = getPrototype(scope, o);
-
-			if (o == p) {
-				return o.toString();
-			}
-
-			var builder = new StringBuilder();
-
-			if (!p.asString(this, scope, p.cast(o), builder, escape)) {
-				return o.toString();
-			}
-
-			return builder.toString();
-		}
-	}
-
-	private Number asNumber0(Scope scope, Object o) {
-		var p = getPrototype(scope, o);
-		var n = o == p ? null : p.asNumber(this, scope, p.cast(o));
-		return n == null ? IchorUtils.ONE : n;
-	}
-
-	public Number asNumber(Scope scope, Object o) {
-		if (Special.isInvalid(o)) {
-			return IchorUtils.NaN;
-		} else if (o instanceof Number) {
-			return (Number) o;
-		} else if (o instanceof Boolean) {
-			return (Boolean) o ? IchorUtils.ONE : IchorUtils.ZERO;
-		} else if (o instanceof CharSequence) {
-			try {
-				return IchorUtils.parseNumber(o.toString());
-			} catch (Exception ex) {
-				return IchorUtils.NaN;
-			}
-		} else if (o instanceof Evaluable) {
-			return ((Evaluable) o).evalDouble(this, scope);
-		}
-
-		return asNumber0(scope, o);
-	}
-
-	public double asDouble(Scope scope, Object o) {
-		if (Special.isInvalid(o)) {
-			return Double.NaN;
-		} else if (o instanceof Number) {
-			return ((Number) o).doubleValue();
-		} else if (o instanceof Boolean) {
-			return (Boolean) o ? 1D : 0D;
-		} else if (o instanceof CharSequence) {
-			try {
-				return IchorUtils.parseNumber(o.toString()).doubleValue();
-			} catch (Exception ex) {
-				return Double.NaN;
-			}
-		} else if (o instanceof Evaluable) {
-			return ((Evaluable) o).evalDouble(this, scope);
-		}
-
-		return asNumber0(scope, o).doubleValue();
-	}
-
-	public int asInt(Scope scope, Object o) {
-		if (Special.isInvalid(o)) {
-			return 0;
-		} else if (o instanceof Number) {
-			return ((Number) o).intValue();
-		} else if (o instanceof Boolean) {
-			return (Boolean) o ? 1 : 0;
-		} else if (o instanceof CharSequence) {
-			try {
-				return IchorUtils.parseNumber(o.toString()).intValue();
-			} catch (Exception ex) {
-				throw new InternalScriptError(ex);
-			}
-		} else if (o instanceof Evaluable) {
-			return ((Evaluable) o).evalInt(this, scope);
-		}
-
-		return asNumber0(scope, o).intValue();
-	}
-
-	public long asLong(Scope scope, Object o) {
-		if (Special.isInvalid(o)) {
-			return 0L;
-		} else if (o instanceof Number) {
-			return ((Number) o).longValue();
-		} else if (o instanceof Boolean) {
-			return (Boolean) o ? 1L : 0L;
-		} else if (o instanceof CharSequence) {
-			try {
-				return IchorUtils.parseNumber(o.toString()).longValue();
-			} catch (Exception ex) {
-				throw new InternalScriptError(ex);
-			}
-		} else if (o instanceof Evaluable) {
-			// add evalLong
-			return ((Evaluable) o).evalInt(this, scope);
-		}
-
-		return asNumber0(scope, o).longValue();
-	}
-
-	public boolean asBoolean(Scope scope, Object o) {
-		if (o instanceof Boolean) {
-			return (Boolean) o;
-		} else if (Special.isInvalid(o)) {
-			return false;
-		} else if (o instanceof Number) {
-			return ((Number) o).doubleValue() != 0D;
-		} else if (o instanceof CharSequence) {
-			return !o.toString().isEmpty();
-		} else if (o instanceof Evaluable) {
-			return ((Evaluable) o).evalBoolean(this, scope);
-		}
-
-		var p = getPrototype(scope, o);
-		var n = o == p ? null : p.asBoolean(this, scope, p.cast(o));
-		return n == null ? Boolean.TRUE : n;
-	}
-
-	public char asChar(Scope scope, Object o) {
-		if (o instanceof Character) {
-			return (Character) o;
-		} else if (o instanceof CharSequence) {
-			return ((CharSequence) o).charAt(0);
-		} else if (o instanceof Number) {
-			return (char) ((Number) o).intValue();
-		} else if (o instanceof Evaluable) {
-			var builder = new StringBuilder();
-			((Evaluable) o).evalString(this, scope, builder);
-			return builder.charAt(0);
-		}
-
-		throw new CastError(o, "Character");
-	}
-
-	@SuppressWarnings("rawtypes")
-	public Class asClass(Scope scope, Object o) {
-		return o instanceof Class s ? s : (Class) as(scope, o, Class.class);
-	}
-
-	@SuppressWarnings("rawtypes")
-	public Map asMap(Scope scope, Object o) {
-		return o instanceof Map s ? s : (Map) as(scope, o, Map.class);
-	}
-
-	@SuppressWarnings("rawtypes")
-	public List asList(Scope scope, Object o) {
-		return o instanceof List s ? s : o != null ? o.getClass().isArray() ? JavaArray.of(o) : (List) as(scope, o, List.class) : null;
-	}
-
-	public Object as(Scope scope, Object o, @Nullable Class<?> toType) {
-		if (Special.isInvalid(o)) {
-			return null;
-		} else if (toType == null || toType == Void.TYPE || toType == Object.class || toType.isInstance(o)) {
-			return o;
-		} else if (toType == String.class || toType == CharSequence.class) {
-			return asString(scope, o, false);
-		} else if (toType == Number.class) {
-			return asNumber(scope, o);
-		} else if (toType == Boolean.class || toType == Boolean.TYPE) {
-			return asBoolean(scope, o);
-		} else if (toType == Character.class || toType == Character.TYPE) {
-			return asChar(scope, o);
-		} else if (toType == Byte.class || toType == Byte.TYPE) {
-			return asNumber(scope, o).byteValue();
-		} else if (toType == Short.class || toType == Short.TYPE) {
-			return asNumber(scope, o).shortValue();
-		} else if (toType == Integer.class || toType == Integer.TYPE) {
-			return asInt(scope, o);
-		} else if (toType == Long.class || toType == Long.TYPE) {
-			return asLong(scope, o);
-		} else if (toType == Float.class || toType == Float.TYPE) {
-			return asNumber(scope, o).floatValue();
-		} else if (toType == Double.class || toType == Double.TYPE) {
-			return asDouble(scope, o);
-		} else if (o instanceof TypeAdapter typeAdapter && typeAdapter.canAdapt(this, toType)) {
-			return typeAdapter.adapt(this, scope, toType);
-		}
-
-		var c = customAs(scope, o, toType);
-
-		if (c != Special.NOT_FOUND) {
-			return c;
-		}
-
-		var p = getPrototype(scope, o);
-		var a = p.adapt(this, scope, p.cast(o), toType);
-
-		if (a != Special.NOT_FOUND) {
-			return a;
-		} else if (o instanceof Iterable<?> itr && toType.isArray()) {
-			return JavaArray.adaptToArray(this, scope, itr, toType);
-		} else {
-			throw new CastError(o, toType.getName());
-		}
-	}
-
-	@Nullable
-	protected Object customAs(Scope scope, Object o, Class<?> toType) {
-		return Special.NOT_FOUND;
-	}
-
-	public Prototype<?> getPrototype(Scope scope, Object o) {
-		if (o == null) {
-			return Special.NULL.prototype;
-		} else if (o instanceof PrototypeSupplier s) {
-			return s.getPrototype(this, scope);
-		} else if (o instanceof Boolean) {
-			return booleanPrototype;
-		} else if (o instanceof Number) {
-			return numberPrototype;
-		} else if (o instanceof CharSequence) {
-			return stringPrototype;
-		} else if (o instanceof Class) {
-			return classPrototype;
-		} else if (o instanceof Pattern) {
-			return regExpPrototype;
-		} else if (o.getClass().isArray()) {
-			return arrayPrototype;
-		}
-
-		return getClassPrototype(o.getClass());
-	}
-
-	public Prototype<?> getClassPrototype(Class<?> c) {
-		if (c == Boolean.class) {
-			return booleanPrototype;
-		} else if (c == Number.class) {
-			return numberPrototype;
-		} else if (c == String.class) {
-			return stringPrototype;
-		} else if (c == Class.class) {
-			return classPrototype;
-		} else if (c == Map.class || c == HashMap.class || c == LinkedHashMap.class || c == IdentityHashMap.class || c == EnumMap.class) {
-			return jsMapPrototype;
-		} else if (c == Set.class || c == HashSet.class || c == LinkedHashSet.class || c == EnumSet.class) {
-			return jsSetPrototype;
-		} else if (c == List.class || c == ArrayList.class || c == LinkedList.class) {
-			return listPrototype;
-		} else if (c == Collection.class) {
-			return collectionPrototype;
-		} else if (c == Iterable.class) {
-			return iterablePrototype;
-		} else if (c == Pattern.class) {
-			return regExpPrototype;
-		} else if (c.isArray()) {
-			return arrayPrototype;
-		}
-
-		var p = classPrototypes.get(c);
-
-		if (p == null) {
-			p = new Prototype<>(this, c);
-			classPrototypes.put(c, p);
-		}
-
-		return p;
 	}
 
 	@Override
 	public String toString() {
 		return "Context";
-	}
-
-	public boolean equals(Scope scope, Object left, Object right, boolean shallow) {
-		if (left == right) {
-			return true;
-		} else if (left instanceof Number l && right instanceof Number r) {
-			return Math.abs(l.doubleValue() - r.doubleValue()) < 0.00001D;
-		} else if (left instanceof CharSequence || left instanceof Character || right instanceof CharSequence || right instanceof Character) {
-			return asString(scope, left, false).equals(asString(scope, right, false));
-		} else {
-			var p = getPrototype(scope, left);
-			return p.equals(this, scope, p.cast(left), right, shallow);
-		}
-	}
-
-	public int compareTo(Scope scope, Object left, Object right) {
-		if (left == right || Objects.equals(left, right)) {
-			return 0;
-		} else if (left instanceof Number l && right instanceof Number r) {
-			return Math.abs(l.doubleValue() - r.doubleValue()) < 0.00001D ? 0 : Double.compare(l.doubleValue(), r.doubleValue());
-		} else {
-			var p = getPrototype(scope, right);
-			return p.compareTo(this, scope, p.cast(left), right);
-		}
 	}
 }

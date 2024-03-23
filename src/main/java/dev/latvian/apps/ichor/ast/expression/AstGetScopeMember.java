@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
@@ -19,17 +18,17 @@ public class AstGetScopeMember extends AstGetBase {
 	}
 
 	@Override
-	public Object eval(Context cx, Scope scope) {
+	public Object eval(Scope scope) {
 		return scope.getMember(name);
 	}
 
 	@Override
-	public void set(Context cx, Scope scope, Object value) {
+	public void set(Scope scope, Object value) {
 		scope.setMember(name, value);
 	}
 
 	@Override
-	public boolean delete(Context cx, Scope scope) {
+	public boolean delete(Scope scope) {
 		scope.deleteDeclaredMember(name);
 		return true;
 	}

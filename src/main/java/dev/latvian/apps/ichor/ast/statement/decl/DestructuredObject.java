@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement.decl;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
@@ -36,16 +35,16 @@ public record DestructuredObject(AstDeclaration[] parts, String rest, Set<String
 	}
 
 	@Override
-	public void declare(Context cx, Scope scope, byte flags, Object value) {
-		var p = cx.getPrototype(scope, value);
+	public void declare(Scope scope, byte flags, Object value) {
+		var p = scope.getPrototype(value);
 
 		for (var decl : parts) {
-			decl.declare(cx, scope, flags, value);
+			decl.declare(scope, flags, value);
 		}
 
 		if (!rest.isEmpty()) {
 			// TODO: special case Map for efficiency
-			var keys = p.keys(cx, scope, p.cast(value));
+			var keys = p.keys(scope, p.cast(value));
 
 			if (keys != null) {
 				var restObj = new LinkedHashMap<String, Object>(keys.size() - ignoredRest.size());
@@ -54,7 +53,7 @@ public record DestructuredObject(AstDeclaration[] parts, String rest, Set<String
 					var ks = k.toString();
 
 					if (!ignoredRest.contains(ks)) {
-						restObj.put(ks, p.getInternal(cx, scope, value, ks));
+						restObj.put(ks, p.getInternal(scope, value, ks));
 					}
 				}
 

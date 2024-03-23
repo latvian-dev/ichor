@@ -1,7 +1,6 @@
 package dev.latvian.apps.ichor.util;
 
 import dev.latvian.apps.ichor.CallableTypeAdapter;
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.expression.AstFunction;
@@ -13,17 +12,15 @@ import java.util.concurrent.CompletableFuture;
 
 public class FunctionInstance implements CallableTypeAdapter {
 	public final AstFunction function;
-	public final Context evalContext;
 	public final Scope evalScope;
 
-	public FunctionInstance(AstFunction function, Context evalContext, Scope evalScope) {
+	public FunctionInstance(AstFunction function, Scope evalScope) {
 		this.function = function;
-		this.evalContext = evalContext;
 		this.evalScope = evalScope;
 	}
 
 	@Override
-	public Object call(Context cx, Scope callScope, Object[] args, boolean hasNew) {
+	public Object call(Scope callScope, Object[] args, boolean hasNew) {
 		if (hasNew) {
 			throw new ConstructorError(null);
 		} else if (args.length < function.requiredParams) {
@@ -46,7 +43,7 @@ public class FunctionInstance implements CallableTypeAdapter {
 					if (function.params[i].defaultValue == Special.UNDEFINED) {
 						value = Special.UNDEFINED;
 					} else {
-						value = evalContext.eval(s, function.params[i].defaultValue);
+						value = s.eval(function.params[i].defaultValue);
 					}
 				} else {
 					value = args[i];
@@ -56,7 +53,7 @@ public class FunctionInstance implements CallableTypeAdapter {
 				s.addMutable(function.params[i].name, value);
 			}
 
-			function.body.interpretSafe(evalContext, s);
+			function.body.interpretSafe(s);
 		} catch (ReturnExit exit) {
 			if (function.hasMod(AstFunction.Mod.ASYNC)) {
 				return CompletableFuture.completedFuture(exit.value);
@@ -66,11 +63,6 @@ public class FunctionInstance implements CallableTypeAdapter {
 		}
 
 		return Special.UNDEFINED;
-	}
-
-	@Override
-	public Context getEvalContext() {
-		return evalContext;
 	}
 
 	@Override

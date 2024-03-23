@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -22,8 +21,8 @@ public class AstTernary extends AstExpression {
 	}
 
 	@Override
-	public Object eval(Context cx, Scope scope) {
-		return cx.asBoolean(scope, condition) ? cx.eval(scope, ifTrue) : cx.eval(scope, ifFalse);
+	public Object eval(Scope scope) {
+		return scope.asBoolean(condition) ? scope.eval(ifTrue) : scope.eval(ifFalse);
 	}
 
 	@Override

@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.token;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.error.TokenStreamError;
 import dev.latvian.apps.ichor.exit.EndOfFileExit;
 import dev.latvian.apps.ichor.util.IchorUtils;
@@ -30,19 +29,19 @@ public class TokenStream {
 	private final long timeout;
 	private long timeoutTime;
 
-	public TokenStream(Context cx, TokenSource source, String string) {
-		tokenSource = source;
-		input = string.toCharArray();
-		lines = string.split("\n");
-		pos = 0;
-		row = 1;
-		col = 1;
-		numberTokenCache = new HashMap<>();
-		nameTokenCache = new HashMap<>();
-		depth = new Stack<>();
-		currentDepth = null;
-		timeout = cx.getTokenStreamTimeout();
-		timeoutTime = 0L;
+	public TokenStream(long timeout, TokenSource source, String string) {
+		this.tokenSource = source;
+		this.input = string.toCharArray();
+		this.lines = string.split("\n");
+		this.pos = 0;
+		this.row = 1;
+		this.col = 1;
+		this.numberTokenCache = new HashMap<>();
+		this.nameTokenCache = new HashMap<>();
+		this.depth = new Stack<>();
+		this.currentDepth = null;
+		this.timeout = timeout;
+		this.timeoutTime = 0L;
 	}
 
 	private Token makeName(String s) {

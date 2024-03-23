@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement.decl;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -28,9 +27,9 @@ public final class DestructuredObjectName implements AstDeclaration {
 	}
 
 	@Override
-	public void declare(Context cx, Scope scope, byte flags, Object value) {
-		var p = cx.getPrototype(scope, value);
-		var v = p.getInternal(cx, scope, value, name);
+	public void declare(Scope scope, byte flags, Object value) {
+		var p = scope.getPrototype(value);
+		var v = p.getInternal(scope, value, name);
 
 		if (v != Special.NOT_FOUND) {
 			scope.add(rename, v, flags);

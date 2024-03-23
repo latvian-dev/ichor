@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.type;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -14,17 +13,17 @@ import java.util.List;
 import java.util.Map;
 
 public class MapJS extends Prototype<Map<?, ?>> {
-	public MapJS(Context cx) {
+	public MapJS(Scope cx) {
 		super(cx, "Map", Map.class);
 	}
 
 	@Override
-	public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
+	public Object call(Scope scope, Object[] args, boolean hasNew) {
 		return new LinkedHashMap<>();
 	}
 
 	@Override
-	public boolean asString(Context cx, Scope scope, Map<?, ?> self, StringBuilder builder, boolean escape) {
+	public boolean asString(Scope scope, Map<?, ?> self, StringBuilder builder, boolean escape) {
 		builder.append('{');
 
 		boolean first = true;
@@ -40,7 +39,7 @@ public class MapJS extends Prototype<Map<?, ?>> {
 			AstStringBuilder.wrapKey(String.valueOf(entry.getKey()), builder);
 			builder.append(':');
 			builder.append(' ');
-			cx.asString(scope, entry.getValue(), builder, true);
+			scope.asString(entry.getValue(), builder, true);
 		}
 
 		builder.append('}');
@@ -49,44 +48,44 @@ public class MapJS extends Prototype<Map<?, ?>> {
 
 	@Override
 	@Nullable
-	public Object getLocal(Context cx, Scope scope, Map<?, ?> self, String name) {
+	public Object getLocal(Scope scope, Map<?, ?> self, String name) {
 		var o = self.get(name);
 
 		if (o != null) {
 			return o == Special.NULL ? null : o;
 		}
 
-		return super.getLocal(cx, scope, self, name);
+		return super.getLocal(scope, self, name);
 	}
 
 	@Override
-	public int getLength(Context cx, Scope scope, Object self) {
+	public int getLength(Scope scope, Object self) {
 		return ((Map<?, ?>) self).size();
 	}
 
 	@Override
-	public boolean setLocal(Context cx, Scope scope, Map<?, ?> self, String name, @Nullable Object value) {
+	public boolean setLocal(Scope scope, Map<?, ?> self, String name, @Nullable Object value) {
 		self.put(cast(name), cast(value == null ? Special.NULL : value)); // FIXME: Casting
 		return true;
 	}
 
 	@Override
-	public boolean deleteLocal(Context cx, Scope scope, Map<?, ?> self, String name) {
+	public boolean deleteLocal(Scope scope, Map<?, ?> self, String name) {
 		return self.remove(name) != null;
 	}
 
 	@Override
-	public Collection<?> keys(Context cx, Scope scope, Map<?, ?> self) {
+	public Collection<?> keys(Scope scope, Map<?, ?> self) {
 		return self.keySet();
 	}
 
 	@Override
-	public Collection<?> values(Context cx, Scope scope, Map<?, ?> self) {
+	public Collection<?> values(Scope scope, Map<?, ?> self) {
 		return self.values();
 	}
 
 	@Override
-	public Collection<?> entries(Context cx, Scope scope, Map<?, ?> self) {
+	public Collection<?> entries(Scope scope, Map<?, ?> self) {
 		if (self.isEmpty()) {
 			return List.of();
 		} else if (self.size() == 1) {

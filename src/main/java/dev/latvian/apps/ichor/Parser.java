@@ -110,22 +110,16 @@ public class Parser {
 			Keyword.IN
 	};
 
-	private final Context context;
 	private final RootScope rootScope;
 	private PositionedToken current;
 	private final Stack<LabeledStatement> labeledStatements;
 	private final Map<String, AstType.Generic> genericTypeCache;
 
-	public Parser(Context cx, RootScope scope, PositionedToken r) {
-		context = cx;
+	public Parser(RootScope scope, PositionedToken r) {
 		rootScope = scope;
 		current = r;
 		labeledStatements = new Stack<>();
 		genericTypeCache = new HashMap<>();
-	}
-
-	public Context getContext() {
-		return context;
 	}
 
 	public RootScope getRootScope() {

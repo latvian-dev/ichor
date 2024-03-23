@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -20,8 +19,8 @@ public class AstDelete extends AstExpression {
 	}
 
 	@Override
-	public Object eval(Context cx, Scope scope) {
-		return get.delete(cx, scope);
+	public Object eval(Scope scope) {
+		return get.delete(scope);
 	}
 
 	@Override

@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression.unary;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -13,18 +12,18 @@ public class AstPositive extends AstUnary {
 	}
 
 	@Override
-	public Object eval(Context cx, Scope scope) {
-		return evalDouble(cx, scope);
+	public Object eval(Scope scope) {
+		return evalDouble(scope);
 	}
 
 	@Override
-	public double evalDouble(Context cx, Scope scope) {
-		return cx.asDouble(scope, node);
+	public double evalDouble(Scope scope) {
+		return scope.asDouble(node);
 	}
 
 	@Override
-	public int evalInt(Context cx, Scope scope) {
-		return cx.asInt(scope, node);
+	public int evalInt(Scope scope) {
+		return scope.asInt(node);
 	}
 
 	@Override

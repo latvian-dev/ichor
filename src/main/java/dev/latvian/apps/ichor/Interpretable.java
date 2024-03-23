@@ -9,11 +9,11 @@ import dev.latvian.apps.ichor.token.TokenPosSupplier;
 public interface Interpretable {
 	Interpretable[] EMPTY_INTERPRETABLE_ARRAY = new Interpretable[0];
 
-	void interpret(Context cx, Scope scope);
+	void interpret(Scope scope);
 
-	default void interpretSafe(Context cx, Scope scope) {
+	default void interpretSafe(Scope scope) {
 		try {
-			interpret(cx, scope);
+			interpret(scope);
 		} catch (ScopeExit pass) {
 			throw pass;
 		} catch (IchorError pass) {

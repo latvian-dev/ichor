@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.java;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.expression.AstCall;
 import dev.latvian.apps.ichor.error.InternalScriptError;
@@ -94,7 +93,7 @@ public final class JavaMembers {
 		}
 	}
 
-	public Object call(Context cx, Scope scope, Object[] args, @Nullable Object self) {
+	public Object call(Scope scope, Object[] args, @Nullable Object self) {
 		if (methods == null) {
 			throw new AstCall.CallError(this, this, prototype);
 		}
@@ -110,7 +109,7 @@ public final class JavaMembers {
 						var args1 = new Object[m.signature.types.length];
 
 						for (int i = 0; i < args1.length; i++) {
-							args1[i] = cx.as(scope, args[i], m.signature.types[i]);
+							args1[i] = scope.as(args[i], m.signature.types[i]);
 						}
 
 						return m.method.invoke(self, args1);

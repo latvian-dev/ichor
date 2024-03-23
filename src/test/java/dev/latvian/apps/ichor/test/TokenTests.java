@@ -30,7 +30,7 @@ public class TokenTests {
 		System.out.println("--- Token Test ---");
 		System.out.println("Input: " + input);
 		var cx = new Context();
-		var tokenStream = new TokenStream(cx, new NamedTokenSource(""), input);
+		var tokenStream = new TokenStream(cx.getTokenStreamTimeout(), new NamedTokenSource(""), input);
 
 		var current = tokenStream.getRootToken();
 

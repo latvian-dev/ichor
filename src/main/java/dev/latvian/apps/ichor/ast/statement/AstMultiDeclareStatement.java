@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -31,9 +30,9 @@ public class AstMultiDeclareStatement extends AstDeclareStatement {
 	}
 
 	@Override
-	public void interpret(Context cx, Scope scope) {
+	public void interpret(Scope scope) {
 		for (var p : parts) {
-			p.declaration.declare(cx, scope, assignToken.flags, cx.eval(scope, p.value));
+			p.declaration.declare(scope, assignToken.flags, scope.eval(p.value));
 		}
 	}
 

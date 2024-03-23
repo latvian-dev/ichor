@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
@@ -50,17 +49,17 @@ public class AstForOf extends AstLabeledStatement {
 	}
 
 	@Override
-	public void interpret(Context cx, Scope scope) {
-		var self = cx.eval(scope, from);
-		var itr = getIterable(cx, scope, self);
+	public void interpret(Scope scope) {
+		var self = scope.eval(from);
+		var itr = getIterable(scope, self);
 
 		while (itr != null && itr.hasNext()) {
 			var it = itr.next();
 
 			try {
 				var s = scope.push();
-				declaration.declare(cx, s, assignToken.flags, it);
-				body.interpretSafe(cx, s);
+				declaration.declare(s, assignToken.flags, it);
+				body.interpretSafe(s);
 			} catch (BreakExit exit) {
 				if (exit.stop == this) {
 					break;
@@ -76,15 +75,15 @@ public class AstForOf extends AstLabeledStatement {
 	}
 
 	@Nullable
-	protected Iterator<?> getIterable(Context cx, Scope scope, Object self) {
+	protected Iterator<?> getIterable(Scope scope, Object self) {
 		var itr = IchorUtils.iteratorOf(self);
 
 		if (itr != null) {
 			return itr;
 		}
 
-		var p = cx.getPrototype(scope, self);
-		return IchorUtils.iteratorOf(p.values(cx, scope, p.cast(self)));
+		var p = scope.getPrototype(self);
+		return IchorUtils.iteratorOf(p.values(scope, p.cast(self)));
 	}
 
 	@Override

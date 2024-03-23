@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import org.jetbrains.annotations.Nullable;
@@ -13,8 +12,8 @@ public abstract class AstGetFrom extends AstGetBase {
 	}
 
 	@Nullable
-	public Object evalSelf(Context cx, Scope scope) {
-		return cx.eval(scope, from);
+	public Object evalSelf(Scope scope) {
+		return scope.eval(from);
 	}
 
 	@Override

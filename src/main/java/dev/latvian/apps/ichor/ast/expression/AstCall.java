@@ -1,7 +1,6 @@
 package dev.latvian.apps.ichor.ast.expression;
 
 import dev.latvian.apps.ichor.Callable;
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
@@ -67,20 +66,20 @@ public class AstCall extends AstExpression {
 	}
 
 	@Override
-	public Object eval(Context cx, Scope scope) {
-		var func = cx.eval(scope, function);
+	public Object eval(Scope scope) {
+		var func = scope.eval(function);
 
 		if (Special.isInvalid(func)) {
 			throw new FunctionNotFoundError(function);
 		} else if (!(func instanceof Callable)) {
-			throw new CallError(function, func, cx.getPrototype(scope, func));
+			throw new CallError(function, func, scope.getPrototype(func));
 		}
 
-		var args = ((Callable) func).evalArgs(cx, scope, arguments);
-		var r = ((Callable) func).call(cx, scope, args, hasNew);
+		var args = ((Callable) func).evalArgs(scope, arguments);
+		var r = ((Callable) func).call(scope, args, hasNew);
 
 		if (r == Special.NOT_FOUND) {
-			throw new CallError(function, func, cx.getPrototype(scope, func));
+			throw new CallError(function, func, scope.getPrototype(func));
 		}
 
 		return r;
@@ -122,13 +121,13 @@ public class AstCall extends AstExpression {
 		}
 
 		@Override
-		public Object eval(Context cx, Scope scope) {
-			return cx.asString(scope, from, false);
+		public Object eval(Scope scope) {
+			return scope.asString(from, false);
 		}
 
 		@Override
-		public void evalString(Context cx, Scope scope, StringBuilder builder) {
-			cx.asString(scope, from, builder, false);
+		public void evalString(Scope scope, StringBuilder builder) {
+			scope.asString(from, builder, false);
 		}
 
 		@Override
@@ -146,18 +145,18 @@ public class AstCall extends AstExpression {
 		}
 
 		@Override
-		public Object eval(Context cx, Scope scope) {
-			return evalInt(cx, scope);
+		public Object eval(Scope scope) {
+			return evalInt(scope);
 		}
 
 		@Override
-		public double evalDouble(Context cx, Scope scope) {
-			return evalInt(cx, scope);
+		public double evalDouble(Scope scope) {
+			return evalInt(scope);
 		}
 
 		@Override
-		public int evalInt(Context cx, Scope scope) {
-			return Objects.hashCode(cx.eval(scope, from));
+		public int evalInt(Scope scope) {
+			return Objects.hashCode(scope.eval(from));
 		}
 
 		@Override

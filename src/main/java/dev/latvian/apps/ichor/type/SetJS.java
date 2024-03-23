@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.type;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.prototype.Prototype;
@@ -15,19 +14,19 @@ import java.util.Set;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class SetJS extends Prototype<Set> {
-	public static final Functions.Bound<Set> ADD = (cx, scope, self, args) -> {
+	public static final Functions.Bound<Set> ADD = (scope, self, args) -> {
 		self.add(args[0]);
 		return self;
 	};
 
-	public static final Functions.Bound<Set> CLEAR = (cx, scope, self, args) -> {
+	public static final Functions.Bound<Set> CLEAR = (scope, self, args) -> {
 		self.clear();
 		return Special.UNDEFINED;
 	};
 
-	public static final Functions.Bound<Set> DELETE = (cx, scope, self, args) -> self.remove(args[0]);
+	public static final Functions.Bound<Set> DELETE = (scope, self, args) -> self.remove(args[0]);
 
-	public static final Functions.Bound<Set> ENTRIES = (cx, scope, self, args) -> {
+	public static final Functions.Bound<Set> ENTRIES = (scope, self, args) -> {
 		var entries = new List[self.size()];
 		int i = 0;
 
@@ -39,31 +38,31 @@ public class SetJS extends Prototype<Set> {
 		return Arrays.asList(entries).iterator();
 	};
 
-	public static final Functions.Bound<Set> HAS = (cx, scope, self, args) -> self.contains(args[0]);
-	public static final Functions.Bound<Set> VALUES = (cx, scope, self, args) -> self.iterator();
+	public static final Functions.Bound<Set> HAS = (scope, self, args) -> self.contains(args[0]);
+	public static final Functions.Bound<Set> VALUES = (scope, self, args) -> self.iterator();
 
-	public SetJS(Context cx) {
+	public SetJS(Scope cx) {
 		super(cx, "Set", Set.class);
 	}
 
 	@Override
-	public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
+	public Object call(Scope scope, Object[] args, boolean hasNew) {
 		return new LinkedHashSet<>();
 	}
 
 	@Override
-	public Collection<?> keys(Context cx, Scope scope, Set self) {
+	public Collection<?> keys(Scope scope, Set self) {
 		return self;
 	}
 
 	@Override
-	public Collection<?> values(Context cx, Scope scope, Set self) {
+	public Collection<?> values(Scope scope, Set self) {
 		return self;
 	}
 
 	@Override
 	@Nullable
-	public Object getLocal(Context cx, Scope scope, Set self, String name) {
+	public Object getLocal(Scope scope, Set self, String name) {
 		return switch (name) {
 			case "length", "size" -> self.size();
 			case "add" -> ADD.with(self);
@@ -73,17 +72,17 @@ public class SetJS extends Prototype<Set> {
 			case "has" -> HAS.with(self);
 			case "keys", "values" -> VALUES.with(self);
 			case "forEach" -> IterableJS.FOR_EACH.with(self);
-			default -> super.getStatic(cx, scope, name);
+			default -> super.getStatic(scope, name);
 		};
 	}
 
 	@Override
-	public int getLength(Context cx, Scope scope, Object self) {
+	public int getLength(Scope scope, Object self) {
 		return ((Set) self).size();
 	}
 
 	@Override
-	public Collection<?> entries(Context cx, Scope scope, Set self) {
+	public Collection<?> entries(Scope scope, Set self) {
 		if (self.isEmpty()) {
 			return List.of();
 		} else if (self.size() == 1) {

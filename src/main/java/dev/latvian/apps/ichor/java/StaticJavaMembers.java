@@ -1,7 +1,6 @@
 package dev.latvian.apps.ichor.java;
 
 import dev.latvian.apps.ichor.CallableTypeAdapter;
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.error.InternalScriptError;
@@ -10,15 +9,10 @@ import dev.latvian.apps.ichor.util.Empty;
 import org.jetbrains.annotations.Nullable;
 
 public record StaticJavaMembers(JavaMembers members) implements PrototypeStaticProperty {
-	public record CallWrapper(Context evalContext, Scope evalScope, JavaMembers members) implements CallableTypeAdapter {
+	public record CallWrapper(Scope evalScope, JavaMembers members) implements CallableTypeAdapter {
 		@Override
-		public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-			return members.call(cx, scope, args, null);
-		}
-
-		@Override
-		public Context getEvalContext() {
-			return evalContext;
+		public Object call(Scope scope, Object[] args, boolean hasNew) {
+			return members.call(scope, args, null);
 		}
 
 		@Override
@@ -38,7 +32,7 @@ public record StaticJavaMembers(JavaMembers members) implements PrototypeStaticP
 	}
 
 	@Override
-	public Object get(Context cx, Scope scope) {
+	public Object get(Scope scope) {
 		try {
 			if (members.beanGet != null) {
 				return members.beanGet.invoke(null, Empty.OBJECTS);
@@ -52,22 +46,22 @@ public record StaticJavaMembers(JavaMembers members) implements PrototypeStaticP
 		}
 
 		if (members.methods != null) {
-			return new CallWrapper(cx, scope, members);
+			return new CallWrapper(scope, members);
 		}
 
 		return Special.NOT_FOUND;
 	}
 
 	@Override
-	public boolean set(Context cx, Scope scope, @Nullable Object value) {
+	public boolean set(Scope scope, @Nullable Object value) {
 		try {
 			if (members.beanSet != null) {
-				members.beanSet.invoke(null, cx.as(scope, value, members.beanSetType));
+				members.beanSet.invoke(null, scope.as(value, members.beanSetType));
 				return true;
 			}
 
 			if (members.field != null) {
-				members.field.set(null, cx.as(scope, value, members.field.getType()));
+				members.field.set(null, scope.as(value, members.field.getType()));
 				return true;
 			}
 		} catch (Exception ex) {

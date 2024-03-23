@@ -16,13 +16,15 @@ public class Special implements Token, Evaluable, PrototypeSupplier {
 	}
 
 	public final Prototype<?> prototype;
+	public final ScriptValue scriptValue;
 
 	private Special(String name) {
-		prototype = new Prototype<>(null, name, Void.TYPE);
+		this.prototype = new Prototype<>(null, name, Void.TYPE);
+		this.scriptValue = new ScriptValue(null, prototype);
 	}
 
 	@Override
-	public Prototype<?> getPrototype(Context cx, Scope scope) {
+	public Prototype<?> getPrototype(Scope scope) {
 		return prototype;
 	}
 
@@ -42,22 +44,22 @@ public class Special implements Token, Evaluable, PrototypeSupplier {
 	}
 
 	@Override
-	public Object eval(Context cx, Scope scope) {
+	public Object eval(Scope scope) {
 		return this == UNDEFINED ? this : null;
 	}
 
 	@Override
-	public boolean evalBoolean(Context cx, Scope scope) {
+	public boolean evalBoolean(Scope scope) {
 		return false;
 	}
 
 	@Override
-	public double evalDouble(Context cx, Scope scope) {
+	public double evalDouble(Scope scope) {
 		return Double.NaN;
 	}
 
 	@Override
-	public int evalInt(Context cx, Scope scope) {
+	public int evalInt(Scope scope) {
 		return 0;
 	}
 

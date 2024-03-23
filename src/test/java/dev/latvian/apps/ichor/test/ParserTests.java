@@ -32,9 +32,9 @@ public class ParserTests {
 
 		System.out.println("Expected: " + match);
 		var cx = new Context();
-		var tokenStream = new TokenStream(cx, new NamedTokenSource(filename), input);
+		var tokenStream = new TokenStream(cx.getTokenStreamTimeout(), new NamedTokenSource(filename), input);
 		var rootToken = tokenStream.getRootToken();
-		var parser = new Parser(cx, new RootScope(cx), rootToken);
+		var parser = new Parser(new RootScope(cx), rootToken);
 		var ast = parser.parse();
 
 		var sb = new AstStringBuilder();

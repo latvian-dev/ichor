@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement.decl;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.ast.expression.AstType;
@@ -30,9 +29,9 @@ public class NameDeclaration implements AstDeclaration {
 	}
 
 	@Override
-	public void declare(Context cx, Scope scope, byte flags, Object value) {
+	public void declare(Scope scope, byte flags, Object value) {
 		if (type != null) {
-			scope.add(name, type.cast(cx, scope, value), flags);
+			scope.add(name, type.cast(scope, value), flags);
 		} else {
 			scope.add(name, value, flags);
 		}

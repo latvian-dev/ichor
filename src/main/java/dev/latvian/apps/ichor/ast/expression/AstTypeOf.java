@@ -1,7 +1,6 @@
 package dev.latvian.apps.ichor.ast.expression;
 
 import dev.latvian.apps.ichor.Callable;
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
@@ -17,8 +16,8 @@ public class AstTypeOf extends AstExpression {
 	}
 
 	@Override
-	public Object eval(Context cx, Scope scope) {
-		var o = cx.eval(scope, of);
+	public Object eval(Scope scope) {
+		var o = scope.eval(of);
 
 		if (o == Special.UNDEFINED) {
 			return "undefined";

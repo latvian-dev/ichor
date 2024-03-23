@@ -46,9 +46,9 @@ public class InterpreterTests {
 		rootScope.addImmutable("Advanced", new AdvancedTestUtils(console));
 		rootScopeCallback.accept(rootScope);
 
-		var tokenStream = new TokenStream(context, new NamedTokenSource(filename), input);
+		var tokenStream = new TokenStream(context.getTokenStreamTimeout(), new NamedTokenSource(filename), input);
 		var rootToken = tokenStream.getRootToken();
-		var parser = new Parser(context, rootScope, rootToken);
+		var parser = new Parser(rootScope, rootToken);
 		var ast = parser.parse();
 		var astStr = ast.toString();
 
@@ -57,7 +57,7 @@ public class InterpreterTests {
 		System.out.println();
 
 		try {
-			ast.interpretSafe(context, rootScope);
+			ast.interpretSafe(rootScope);
 		} catch (ScopeExit ex) {
 			throw ex;
 		} catch (Throwable ex) {
@@ -749,6 +749,22 @@ public class InterpreterTests {
 				""", """
 				2
 				""");
+	}
+
+	@Test
+	public void referenceEdit() {
+		testInterpreter("""
+						let foo = {bar: 2}
+						let baz = foo.bar
+						baz = 1
+						console.log(foo)
+						let baz2 = foo
+						baz2.bar = 1
+						console.log(foo)""",
+				"""
+						{bar: 2}
+						{bar: 1}
+						""");
 	}
 
 	@Test

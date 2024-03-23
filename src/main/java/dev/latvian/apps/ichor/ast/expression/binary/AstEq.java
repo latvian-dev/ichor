@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression.binary;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 
 public class AstEq extends AstBinaryBoolean {
@@ -10,7 +9,7 @@ public class AstEq extends AstBinaryBoolean {
 	}
 
 	@Override
-	public boolean evalBoolean(Context cx, Scope scope) {
-		return cx.equals(scope, cx.eval(scope, left), cx.eval(scope, right), false);
+	public boolean evalBoolean(Scope scope) {
+		return scope.equals(scope.eval(left), scope.eval(right), false);
 	}
 }

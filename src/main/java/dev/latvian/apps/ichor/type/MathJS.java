@@ -1,19 +1,18 @@
 package dev.latvian.apps.ichor.type;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.IchorUtils;
 import org.jetbrains.annotations.Nullable;
 
 public class MathJS extends Prototype<MathJS> {
-	public MathJS(Context cx) {
+	public MathJS(Scope cx) {
 		super(cx, "Math", MathJS.class);
 	}
 
 	@Override
 	@Nullable
-	public Object getStatic(Context cx, Scope scope, String name) {
+	public Object getStatic(Scope scope, String name) {
 		return switch (name) {
 			case "PI" -> IchorUtils.PI;
 			case "E" -> IchorUtils.E;
@@ -58,7 +57,7 @@ public class MathJS extends Prototype<MathJS> {
 			case "log2" -> IchorUtils.LOG2;
 			case "fround" -> IchorUtils.FROUND;
 			case "clz32" -> IchorUtils.CLZ32;
-			default -> super.getStatic(cx, scope, name);
+			default -> super.getStatic(scope, name);
 		};
 	}
 }

@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -28,8 +27,8 @@ public class AstSingleDeclareStatement extends AstDeclareStatement {
 	}
 
 	@Override
-	public void interpret(Context cx, Scope scope) {
-		declaration.declare(cx, scope, assignToken.flags, cx.eval(scope, value));
+	public void interpret(Scope scope) {
+		declaration.declare(scope, assignToken.flags, scope.eval(value));
 	}
 
 	@Override

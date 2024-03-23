@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
@@ -42,14 +41,14 @@ public class AstIf extends AstLabeledStatement {
 	}
 
 	@Override
-	public void interpret(Context cx, Scope scope) {
+	public void interpret(Scope scope) {
 		try {
-			if (cx.asBoolean(scope, condition)) {
+			if (scope.asBoolean(condition)) {
 				if (trueBody != null) {
-					trueBody.interpretSafe(cx, scope);
+					trueBody.interpretSafe(scope);
 				}
 			} else if (falseBody != null) {
-				falseBody.interpretSafe(cx, scope);
+				falseBody.interpretSafe(scope);
 			}
 		} catch (BreakExit exit) {
 			if (exit.stop != this) {

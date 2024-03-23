@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.type;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.error.ArgumentCountMismatchError;
 import dev.latvian.apps.ichor.prototype.Prototype;
@@ -8,12 +7,12 @@ import dev.latvian.apps.ichor.prototype.Prototype;
 import java.util.regex.Pattern;
 
 public class RegExpJS extends Prototype<Pattern> {
-	public RegExpJS(Context cx) {
+	public RegExpJS(Scope cx) {
 		super(cx, "RegExp", Pattern.class);
 	}
 
 	@Override
-	public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
+	public Object call(Scope scope, Object[] args, boolean hasNew) {
 		if (args.length == 0) {
 			throw new ArgumentCountMismatchError(1, 0);
 		}
@@ -21,7 +20,7 @@ public class RegExpJS extends Prototype<Pattern> {
 		int flags = 0;
 
 		if (args.length >= 2) {
-			for (char c : cx.asString(scope, args[1], false).toCharArray()) {
+			for (char c : scope.asString(args[1], false).toCharArray()) {
 				switch (c) {
 					case 'd' -> flags |= Pattern.UNIX_LINES;
 					case 'i' -> flags |= Pattern.CASE_INSENSITIVE;
@@ -35,11 +34,11 @@ public class RegExpJS extends Prototype<Pattern> {
 			}
 		}
 
-		return Pattern.compile(cx.asString(scope, args[0], false), flags);
+		return Pattern.compile(scope.asString(args[0], false), flags);
 	}
 
 	@Override
-	public boolean asString(Context cx, Scope scope, Pattern self, StringBuilder builder, boolean escape) {
+	public boolean asString(Scope scope, Pattern self, StringBuilder builder, boolean escape) {
 		builder.append('/');
 		builder.append(self.pattern());
 		builder.append('/');

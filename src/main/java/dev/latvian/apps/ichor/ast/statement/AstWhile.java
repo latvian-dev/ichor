@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
@@ -26,11 +25,11 @@ public class AstWhile extends AstLabeledStatement {
 	}
 
 	@Override
-	public void interpret(Context cx, Scope scope) {
-		while (cx.asBoolean(scope, condition)) {
+	public void interpret(Scope scope) {
+		while (scope.asBoolean(condition)) {
 			if (body != null) {
 				try {
-					body.interpretSafe(cx, scope);
+					body.interpretSafe(scope);
 				} catch (BreakExit exit) {
 					if (exit.stop == this) {
 						break;

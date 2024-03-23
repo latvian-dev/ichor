@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement.decl;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -13,9 +12,9 @@ public record DestructuredArrayName(String name, int index) implements AstDeclar
 	}
 
 	@Override
-	public void declare(Context cx, Scope scope, byte flags, Object value) {
-		var p = cx.getPrototype(scope, value);
-		var v = p.getLocal(cx, scope, p.cast(value), index);
+	public void declare(Scope scope, byte flags, Object value) {
+		var p = scope.getPrototype(value);
+		var v = p.getLocal(scope, p.cast(value), index);
 
 		if (v != Special.NOT_FOUND) {
 			scope.add(name, v, flags);

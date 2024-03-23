@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.type;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import org.jetbrains.annotations.Nullable;
@@ -11,27 +10,27 @@ import java.util.List;
 
 @SuppressWarnings({"rawtypes"})
 public class CollectionJS extends Prototype<Collection> {
-	public CollectionJS(Context cx) {
+	public CollectionJS(Scope cx) {
 		super(cx, Collection.class);
 	}
 
 	@Override
 	@Nullable
-	public Object getLocal(Context cx, Scope scope, Collection self, String name) {
+	public Object getLocal(Scope scope, Collection self, String name) {
 		return switch (name) {
 			case "length" -> self.size();
 			case "forEach" -> IterableJS.FOR_EACH.with(self);
-			default -> super.getLocal(cx, scope, self, name);
+			default -> super.getLocal(scope, self, name);
 		};
 	}
 
 	@Override
-	public int getLength(Context cx, Scope scope, Object self) {
+	public int getLength(Scope scope, Object self) {
 		return ((Collection) self).size();
 	}
 
 	@Override
-	public Collection<?> keys(Context cx, Scope scope, Collection self) {
+	public Collection<?> keys(Scope scope, Collection self) {
 		var keys = new Object[self.size()];
 
 		for (int i = 0; i < self.size(); i++) {
@@ -42,12 +41,12 @@ public class CollectionJS extends Prototype<Collection> {
 	}
 
 	@Override
-	public Collection<?> values(Context cx, Scope scope, Collection self) {
+	public Collection<?> values(Scope scope, Collection self) {
 		return self;
 	}
 
 	@Override
-	public Collection<?> entries(Context cx, Scope scope, Collection self) {
+	public Collection<?> entries(Scope scope, Collection self) {
 		var entries = new Object[self.size()];
 
 		int i = 0;

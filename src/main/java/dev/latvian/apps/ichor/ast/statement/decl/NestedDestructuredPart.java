@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement.decl;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -23,12 +22,12 @@ public final class NestedDestructuredPart implements AstDeclaration {
 	}
 
 	@Override
-	public void declare(Context cx, Scope scope, byte flags, Object value) {
-		var p = cx.getPrototype(scope, value);
-		var o = p.getInternal(cx, scope, value, name);
+	public void declare(Scope scope, byte flags, Object value) {
+		var p = scope.getPrototype(value);
+		var o = p.getInternal(scope, value, name);
 
 		if (o != Special.NOT_FOUND) {
-			part.declare(cx, scope, flags, o);
+			part.declare(scope, flags, o);
 		} else {
 			throw new NamedMemberNotFoundError(name, p, value);
 		}

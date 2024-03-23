@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
@@ -53,11 +52,11 @@ public class AstSwitch extends AstStatement implements LabeledStatement {
 	}
 
 	@Override
-	public void interpret(Context cx, Scope scope) {
+	public void interpret(Scope scope) {
 		for (AstCase c : cases) {
-			if (cx.equals(scope, expression, c.value, true)) {
+			if (scope.equals(expression, c.value, true)) {
 				try {
-					c.body.interpretSafe(cx, scope);
+					c.body.interpretSafe(scope);
 				} catch (BreakExit exit) {
 					if (exit.stop == this) {
 						return;
@@ -70,7 +69,7 @@ public class AstSwitch extends AstStatement implements LabeledStatement {
 
 		if (defaultCase != null) {
 			try {
-				defaultCase.body.interpretSafe(cx, scope);
+				defaultCase.body.interpretSafe(scope);
 			} catch (BreakExit ignored) {
 			}
 		}

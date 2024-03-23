@@ -11,11 +11,10 @@ import java.lang.annotation.Target;
  * If added to a member (field or method), they will act as undefined / non-existant.<br>
  * If added to a class, all members will be hidden.<br>
  * If added to a constructor, new Type() will be hidden.<br>
- * If added to a package, all classes, members and constructors will be hidden.<br>
- * For fields <code>transient</code> keyword can be used instead of this annotation.
+ * For fields <code>transient</code> keyword can (and is encouraged to) be used instead of this annotation.
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.PACKAGE})
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.CONSTRUCTOR})
 public @interface Hidden {
 }

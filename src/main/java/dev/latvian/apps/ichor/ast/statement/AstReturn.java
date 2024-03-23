@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
@@ -21,8 +20,8 @@ public class AstReturn extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Context cx, Scope scope) {
-		var result = cx.eval(scope, value);
+	public void interpret(Scope scope) {
+		var result = scope.eval(value);
 		throw result == Special.UNDEFINED ? ReturnExit.DEFAULT_RETURN : new ReturnExit(result);
 	}
 

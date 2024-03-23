@@ -1,7 +1,6 @@
 package dev.latvian.apps.ichor.type;
 
 import dev.latvian.apps.ichor.Callable;
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.prototype.Prototype;
 import dev.latvian.apps.ichor.util.Functions;
@@ -11,10 +10,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 public class ObjectJS extends Prototype<ObjectJS> {
-	public static final Callable ASSIGN = Functions.of2((cx, scope, arg1, arg2) -> {
-		var o = cx.asMap(scope, arg1);
+	public static final Callable ASSIGN = Functions.of2((scope, arg1, arg2) -> {
+		var o = scope.asMap(arg1);
 		//noinspection unchecked
-		o.putAll(cx.asMap(scope, arg2));
+		o.putAll(scope.asMap(arg2));
 		return o;
 	});
 
@@ -22,38 +21,38 @@ public class ObjectJS extends Prototype<ObjectJS> {
 	public static final Callable DEFINE_PROPERTIES = Functions.WIP;
 	public static final Callable DEFINE_PROPERTY = Functions.WIP;
 
-	public static final Callable ENTRIES = Functions.of1((cx, scope, arg) -> {
-		var p = cx.getPrototype(scope, arg);
-		var c = p.entries(cx, scope, p.cast(arg));
+	public static final Callable ENTRIES = Functions.of1((scope, arg) -> {
+		var p = scope.getPrototype(arg);
+		var c = p.entries(scope, p.cast(arg));
 		return c == null ? List.of() : c;
 	});
 
-	public static final Callable KEYS = Functions.of1((cx, scope, arg) -> {
-		var p = cx.getPrototype(scope, arg);
-		var c = p.keys(cx, scope, p.cast(arg));
+	public static final Callable KEYS = Functions.of1((scope, arg) -> {
+		var p = scope.getPrototype(arg);
+		var c = p.keys(scope, p.cast(arg));
 		return c == null ? List.of() : c;
 	});
 
-	public static final Callable VALUES = Functions.of1((cx, scope, arg) -> {
-		var p = cx.getPrototype(scope, arg);
-		var c = p.values(cx, scope, p.cast(arg));
+	public static final Callable VALUES = Functions.of1((scope, arg) -> {
+		var p = scope.getPrototype(arg);
+		var c = p.values(scope, p.cast(arg));
 		return c == null ? List.of() : c;
 	});
 
-	public static final Callable GET_PROTOTYPE_OF = Functions.of1(Context::getPrototype);
+	public static final Callable GET_PROTOTYPE_OF = Functions.of1(Scope::getPrototype);
 
-	public ObjectJS(Context cx) {
+	public ObjectJS(Scope cx) {
 		super(cx, "Object", ObjectJS.class);
 	}
 
 	@Override
-	public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
+	public Object call(Scope scope, Object[] args, boolean hasNew) {
 		return new LinkedHashMap<>();
 	}
 
 	@Override
 	@Nullable
-	public Object getStatic(Context cx, Scope scope, String name) {
+	public Object getStatic(Scope scope, String name) {
 		return switch (name) {
 			case "assign" -> ASSIGN;
 			case "create" -> CREATE;
@@ -63,7 +62,7 @@ public class ObjectJS extends Prototype<ObjectJS> {
 			case "keys" -> KEYS;
 			case "values" -> VALUES;
 			case "getPrototypeOf" -> GET_PROTOTYPE_OF;
-			default -> super.getStatic(cx, scope, name);
+			default -> super.getStatic(scope, name);
 		};
 	}
 }

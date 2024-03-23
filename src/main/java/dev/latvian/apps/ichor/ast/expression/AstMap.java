@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
@@ -69,14 +68,14 @@ public class AstMap extends AstExpression {
 	}
 
 	@Override
-	public Object eval(Context cx, Scope scope) {
+	public Object eval(Scope scope) {
 		var map = new LinkedHashMap<>(values.size());
 
 		for (var entry : values.entrySet()) {
 			var o = entry.getValue();
 
 			if (o instanceof AstSpread spread) {
-				var s = cx.eval(scope, spread.value);
+				var s = scope.eval(spread.value);
 
 				if (s instanceof Map<?, ?> map1) {
 					map.putAll(map1);
@@ -84,7 +83,7 @@ public class AstMap extends AstExpression {
 					throw new SpreadError().pos(pos);
 				}
 			} else {
-				map.put(entry.getKey(), cx.eval(scope, o));
+				map.put(entry.getKey(), scope.eval(o));
 			}
 		}
 

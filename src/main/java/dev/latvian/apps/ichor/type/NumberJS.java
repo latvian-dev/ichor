@@ -1,7 +1,6 @@
 package dev.latvian.apps.ichor.type;
 
 import dev.latvian.apps.ichor.Callable;
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.prototype.Prototype;
@@ -14,49 +13,49 @@ import java.util.Collection;
 import java.util.List;
 
 public class NumberJS extends Prototype<Number> {
-	private static final Callable IS_FINITE = Functions.of1((cx, scope, arg) -> {
-		double d = cx.asDouble(scope, arg);
+	private static final Callable IS_FINITE = Functions.of1((scope, arg) -> {
+		double d = scope.asDouble(arg);
 		return !Double.isInfinite(d) && !Double.isNaN(d);
 	});
 
-	private static final Callable IS_NAN = Functions.of1((cx, scope, arg) -> Double.isNaN(cx.asDouble(scope, arg)));
+	private static final Callable IS_NAN = Functions.of1((scope, arg) -> Double.isNaN(scope.asDouble(arg)));
 
-	private static final Callable IS_INTEGER = Functions.of1((cx, scope, arg) -> {
-		double d = cx.asDouble(scope, arg);
+	private static final Callable IS_INTEGER = Functions.of1((scope, arg) -> {
+		double d = scope.asDouble(arg);
 		return !Double.isInfinite(d) && !Double.isNaN(d) && (Math.floor(d) == d);
 	});
 
-	private static final Callable IS_SAFE_INTEGER = Functions.of1((cx, scope, arg) -> {
-		double d = cx.asDouble(scope, arg);
+	private static final Callable IS_SAFE_INTEGER = Functions.of1((scope, arg) -> {
+		double d = scope.asDouble(arg);
 		return !Double.isInfinite(d) && !Double.isNaN(d) && (d <= IchorUtils.MAX_SAFE_INTEGER) && (d >= IchorUtils.MIN_SAFE_INTEGER) && (Math.floor(d) == d);
 	});
 
-	private static final Callable PARSE_FLOAT = Functions.of1(Context::asDouble);
-	private static final Callable PARSE_INT = Functions.of1(Context::asInt);
+	private static final Callable PARSE_FLOAT = Functions.of1(Scope::asDouble);
+	private static final Callable PARSE_INT = Functions.of1(Scope::asInt);
 
-	private static final Functions.Bound<Number> TO_FIXED = (cx, scope, num, args) -> AstStringBuilder.wrapNumber(num); // FIXME
-	private static final Functions.Bound<Number> TO_EXPONENTIAL = (cx, scope, num, args) -> AstStringBuilder.wrapNumber(num); // FIXME
-	private static final Functions.Bound<Number> TO_PRECISION = (cx, scope, num, args) -> AstStringBuilder.wrapNumber(num); // FIXME
-	private static final Functions.Bound<Number> TO_BYTE = (cx, scope, num, args) -> num.byteValue();
-	private static final Functions.Bound<Number> TO_SHORT = (cx, scope, num, args) -> num.shortValue();
-	private static final Functions.Bound<Number> TO_INT = (cx, scope, num, args) -> num.intValue();
-	private static final Functions.Bound<Number> TO_LONG = (cx, scope, num, args) -> num.longValue();
-	private static final Functions.Bound<Number> TO_FLOAT = (cx, scope, num, args) -> num.floatValue();
-	private static final Functions.Bound<Number> TO_DOUBLE = (cx, scope, num, args) -> num.doubleValue();
-	private static final Functions.Bound<Number> TO_CHAR = (cx, scope, num, args) -> (char) num.intValue();
+	private static final Functions.Bound<Number> TO_FIXED = (scope, num, args) -> AstStringBuilder.wrapNumber(num); // FIXME
+	private static final Functions.Bound<Number> TO_EXPONENTIAL = (scope, num, args) -> AstStringBuilder.wrapNumber(num); // FIXME
+	private static final Functions.Bound<Number> TO_PRECISION = (scope, num, args) -> AstStringBuilder.wrapNumber(num); // FIXME
+	private static final Functions.Bound<Number> TO_BYTE = (scope, num, args) -> num.byteValue();
+	private static final Functions.Bound<Number> TO_SHORT = (scope, num, args) -> num.shortValue();
+	private static final Functions.Bound<Number> TO_INT = (scope, num, args) -> num.intValue();
+	private static final Functions.Bound<Number> TO_LONG = (scope, num, args) -> num.longValue();
+	private static final Functions.Bound<Number> TO_FLOAT = (scope, num, args) -> num.floatValue();
+	private static final Functions.Bound<Number> TO_DOUBLE = (scope, num, args) -> num.doubleValue();
+	private static final Functions.Bound<Number> TO_CHAR = (scope, num, args) -> (char) num.intValue();
 
-	public NumberJS(Context cx) {
+	public NumberJS(Scope cx) {
 		super(cx, "Number", Number.class);
 	}
 
 	@Override
-	public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-		return args.length == 0 ? IchorUtils.NaN : cx.asNumber(scope, args[0]);
+	public Object call(Scope scope, Object[] args, boolean hasNew) {
+		return args.length == 0 ? IchorUtils.NaN : scope.asNumber(args[0]);
 	}
 
 	@Override
 	@Nullable
-	public Object getStatic(Context cx, Scope scope, String name) {
+	public Object getStatic(Scope scope, String name) {
 		return switch (name) {
 			case "NaN" -> IchorUtils.NaN;
 			case "POSITIVE_INFINITY" -> IchorUtils.POSITIVE_INFINITY;
@@ -72,13 +71,13 @@ public class NumberJS extends Prototype<Number> {
 			case "isSafeInteger" -> IS_SAFE_INTEGER;
 			case "parseFloat" -> PARSE_FLOAT;
 			case "parseInt" -> PARSE_INT;
-			default -> super.getStatic(cx, scope, name);
+			default -> super.getStatic(scope, name);
 		};
 	}
 
 	@Override
 	@Nullable
-	public Object getLocal(Context cx, Scope scope, Number self, String name) {
+	public Object getLocal(Scope scope, Number self, String name) {
 		return switch (name) {
 			case "millis", "ms" -> Duration.ofMillis(self.longValue());
 			case "seconds", "s" -> Duration.ofSeconds(self.longValue());
@@ -95,38 +94,38 @@ public class NumberJS extends Prototype<Number> {
 			case "toFloat" -> TO_FLOAT.with(self);
 			case "toDouble" -> TO_DOUBLE.with(self);
 			case "toChar" -> TO_CHAR.with(self);
-			default -> super.getLocal(cx, scope, self, name);
+			default -> super.getLocal(scope, self, name);
 		};
 	}
 
 	@Override
-	public Collection<?> keys(Context cx, Scope scope, Number self) {
+	public Collection<?> keys(Scope scope, Number self) {
 		return List.of();
 	}
 
 	@Override
-	public Collection<?> values(Context cx, Scope scope, Number self) {
+	public Collection<?> values(Scope scope, Number self) {
 		return List.of();
 	}
 
 	@Override
-	public Collection<?> entries(Context cx, Scope scope, Number self) {
+	public Collection<?> entries(Scope scope, Number self) {
 		return List.of();
 	}
 
 	@Override
-	public boolean asString(Context cx, Scope scope, Number self, StringBuilder builder, boolean escape) {
+	public boolean asString(Scope scope, Number self, StringBuilder builder, boolean escape) {
 		AstStringBuilder.wrapNumber(self, builder);
 		return true;
 	}
 
 	@Override
-	public Number asNumber(Context cx, Scope scope, Number self) {
+	public Number asNumber(Scope scope, Number self) {
 		return self;
 	}
 
 	@Override
-	public Boolean asBoolean(Context cx, Scope scope, Number self) {
+	public Boolean asBoolean(Scope scope, Number self) {
 		return self.doubleValue() != 0D;
 	}
 }

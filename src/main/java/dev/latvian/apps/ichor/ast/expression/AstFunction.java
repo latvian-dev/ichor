@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
@@ -89,8 +88,8 @@ public class AstFunction extends AstExpression implements Comparable<AstFunction
 	}
 
 	@Override
-	public FunctionInstance eval(Context cx, Scope scope) {
-		return new FunctionInstance(this, cx, scope);
+	public FunctionInstance eval(Scope scope) {
+		return new FunctionInstance(this, scope);
 	}
 
 	@Override

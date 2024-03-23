@@ -1,7 +1,6 @@
 package dev.latvian.apps.ichor.type;
 
 import dev.latvian.apps.ichor.Callable;
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.error.ScriptError;
@@ -25,17 +24,17 @@ public class StringJS extends Prototype<String> {
 		}
 	}
 
-	private static final Callable RAW = Functions.ofN((cx, scope, args) -> {
+	private static final Callable RAW = Functions.ofN((scope, args) -> {
 		var sb = new StringBuilder();
 
 		for (var o : JavaArray.of(args[0])) {
-			sb.append(cx.asString(scope, o, false));
+			sb.append(scope.asString(o, false));
 		}
 
 		return sb.toString();
 	});
 
-	private static final Callable FROM_CHAR_CODE = Functions.ofN((cx, scope, args) -> {
+	private static final Callable FROM_CHAR_CODE = Functions.ofN((scope, args) -> {
 		int n = args.length;
 
 		if (n < 1) {
@@ -45,13 +44,13 @@ public class StringJS extends Prototype<String> {
 		var chars = new char[n];
 
 		for (int i = 0; i != n; ++i) {
-			chars[i] = cx.asChar(scope, args[i]);
+			chars[i] = scope.asChar(args[i]);
 		}
 
 		return new String(chars);
 	});
 
-	private static final Callable FROM_CODE_POINT = Functions.ofN((cx, scope, args) -> {
+	private static final Callable FROM_CODE_POINT = Functions.ofN((scope, args) -> {
 		int n = args.length;
 
 		if (n < 1) {
@@ -61,10 +60,10 @@ public class StringJS extends Prototype<String> {
 		var codePoints = new int[n];
 
 		for (int i = 0; i != n; i++) {
-			int codePoint = cx.asInt(scope, args[i]);
+			int codePoint = scope.asInt(args[i]);
 
 			if (!Character.isValidCodePoint(codePoint)) {
-				throw new InvalidCodePointError(cx.asString(scope, args[i], true));
+				throw new InvalidCodePointError(scope.asString(args[i], true));
 			}
 
 			codePoints[i] = codePoint;
@@ -73,33 +72,33 @@ public class StringJS extends Prototype<String> {
 		return new String(codePoints, 0, n);
 	});
 
-	private static final Functions.Bound<String> CHAR_AT = (cx, scope, str, args) -> str.charAt(cx.asInt(scope, args[0]));
-	private static final Functions.Bound<String> TRIM = (cx, scope, str, args) -> str.trim();
+	private static final Functions.Bound<String> CHAR_AT = (scope, str, args) -> str.charAt(scope.asInt(args[0]));
+	private static final Functions.Bound<String> TRIM = (scope, str, args) -> str.trim();
 
-	public StringJS(Context cx) {
-		super(cx, "String", String.class);
+	public StringJS(Scope scope) {
+		super(scope, "String", String.class);
 	}
 
 	@Override
-	public Object call(Context cx, Scope scope, Object[] args, boolean hasNew) {
-		return args.length == 0 ? "" : cx.asString(scope, args[0], false);
+	public Object call(Scope scope, Object[] args, boolean hasNew) {
+		return args.length == 0 ? "" : scope.asString(args[0], false);
 	}
 
 	@Override
 	@Nullable
-	public Object getStatic(Context cx, Scope scope, String name) {
+	public Object getStatic(Scope scope, String name) {
 		return switch (name) {
 			case "raw" -> RAW;
 			case "fromCharCode" -> FROM_CHAR_CODE;
 			case "fromCodePoint" -> FROM_CODE_POINT;
-			default -> super.getStatic(cx, scope, name);
+			default -> super.getStatic(scope, name);
 		};
 	}
 
 	@Override
 	@Nullable
 	@SuppressWarnings("DuplicateBranchesInSwitch")
-	public Object getLocal(Context cx, Scope scope, String self, String name) {
+	public Object getLocal(Scope scope, String self, String name) {
 		return switch (name) {
 			case "length" -> self.length();
 			case "charAt" -> CHAR_AT.with(self);
@@ -132,17 +131,17 @@ public class StringJS extends Prototype<String> {
 			case "padEnd" -> Functions.WIP;
 			case "trimStart" -> Functions.WIP;
 			case "trimEnd" -> Functions.WIP;
-			default -> super.getLocal(cx, scope, self, name);
+			default -> super.getLocal(scope, self, name);
 		};
 	}
 
 	@Override
-	public int getLength(Context cx, Scope scope, Object self) {
+	public int getLength(Scope scope, Object self) {
 		return ((CharSequence) self).length();
 	}
 
 	@Override
-	public Collection<?> keys(Context cx, Scope scope, String self) {
+	public Collection<?> keys(Scope scope, String self) {
 		if (self.isEmpty()) {
 			return List.of();
 		}
@@ -157,7 +156,7 @@ public class StringJS extends Prototype<String> {
 	}
 
 	@Override
-	public Collection<?> values(Context cx, Scope scope, String self) {
+	public Collection<?> values(Scope scope, String self) {
 		if (self.isEmpty()) {
 			return List.of();
 		}
@@ -172,7 +171,7 @@ public class StringJS extends Prototype<String> {
 	}
 
 	@Override
-	public Collection<?> entries(Context cx, Scope scope, String self) {
+	public Collection<?> entries(Scope scope, String self) {
 		if (self.isEmpty()) {
 			return List.of();
 		}
@@ -187,7 +186,7 @@ public class StringJS extends Prototype<String> {
 	}
 
 	@Override
-	public boolean asString(Context cx, Scope scope, String self, StringBuilder builder, boolean escape) {
+	public boolean asString(Scope scope, String self, StringBuilder builder, boolean escape) {
 		if (escape) {
 			AstStringBuilder.wrapString(self, builder);
 		} else {
@@ -198,7 +197,7 @@ public class StringJS extends Prototype<String> {
 	}
 
 	@Override
-	public Number asNumber(Context cx, Scope scope, String self) {
+	public Number asNumber(Scope scope, String self) {
 		try {
 			return IchorUtils.parseNumber(self);
 		} catch (NumberFormatException ex) {
@@ -207,7 +206,7 @@ public class StringJS extends Prototype<String> {
 	}
 
 	@Override
-	public Boolean asBoolean(Context cx, Scope scope, String self) {
+	public Boolean asBoolean(Scope scope, String self) {
 		return !self.isEmpty();
 	}
 }

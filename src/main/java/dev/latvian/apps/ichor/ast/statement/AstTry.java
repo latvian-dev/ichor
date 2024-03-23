@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
@@ -49,20 +48,20 @@ public class AstTry extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Context cx, Scope scope) {
+	public void interpret(Scope scope) {
 		try {
 			if (tryBlock != null) {
-				tryBlock.interpretSafe(cx, scope);
+				tryBlock.interpretSafe(scope);
 			}
 		} catch (Exception ex) {
 			if (catchBlock != null && catchBlock.body != null) {
 				var s = scope.push();
 				s.addMutable(catchBlock.name, ex);
-				catchBlock.body.interpretSafe(cx, s);
+				catchBlock.body.interpretSafe(s);
 			}
 		} finally {
 			if (finallyBlock != null) {
-				finallyBlock.interpretSafe(cx, scope);
+				finallyBlock.interpretSafe(scope);
 			}
 		}
 	}

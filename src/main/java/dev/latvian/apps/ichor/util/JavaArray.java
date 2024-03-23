@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.util;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.TypeAdapter;
 
@@ -52,7 +51,7 @@ public class JavaArray extends AbstractList<Object> implements TypeAdapter {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T adapt(Context cx, Scope scope, Class<T> type) {
+	public <T> T adapt(Scope scope, Class<T> type) {
 		if (type == array.getClass()) {
 			return (T) array;
 		} else if (type.isArray()) {
@@ -60,7 +59,7 @@ public class JavaArray extends AbstractList<Object> implements TypeAdapter {
 			var arr = Array.newInstance(cType, size());
 
 			for (int i = 0; i < size(); i++) {
-				Array.set(arr, i, cx.as(scope, get(i), cType));
+				Array.set(arr, i, scope.as(get(i), cType));
 			}
 
 			return (T) arr;
@@ -69,14 +68,14 @@ public class JavaArray extends AbstractList<Object> implements TypeAdapter {
 		return null;
 	}
 
-	public static Object adaptToArray(Context cx, Scope scope, Iterable<?> itr, Class<?> toType) {
+	public static Object adaptToArray(Scope scope, Iterable<?> itr, Class<?> toType) {
 		var cType = toType.getComponentType();
 
 		if (itr instanceof List<?> list) {
 			var arr = Array.newInstance(cType, list.size());
 
 			for (int i = 0; i < list.size(); i++) {
-				Array.set(arr, i, cx.as(scope, list.get(i), cType));
+				Array.set(arr, i, scope.as(list.get(i), cType));
 			}
 
 			return arr;
@@ -85,7 +84,7 @@ public class JavaArray extends AbstractList<Object> implements TypeAdapter {
 			int index = 0;
 
 			for (var o1 : collection) {
-				Array.set(arr, index, cx.as(scope, o1, cType));
+				Array.set(arr, index, scope.as(o1, cType));
 				index++;
 			}
 
@@ -101,7 +100,7 @@ public class JavaArray extends AbstractList<Object> implements TypeAdapter {
 			int index = 0;
 
 			for (var o1 : itr) {
-				Array.set(arr, index, cx.as(scope, o1, cType));
+				Array.set(arr, index, scope.as(o1, cType));
 				index++;
 			}
 

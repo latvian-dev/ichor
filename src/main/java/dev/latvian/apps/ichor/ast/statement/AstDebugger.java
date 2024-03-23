@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 
@@ -11,7 +10,7 @@ public class AstDebugger extends AstStatement {
 	}
 
 	@Override
-	public void interpret(Context cx, Scope scope) {
-		cx.onDebugger(scope);
+	public void interpret(Scope scope) {
+		scope.root.context.onDebugger(scope);
 	}
 }

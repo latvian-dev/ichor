@@ -1,7 +1,6 @@
 package dev.latvian.apps.ichor.ast.expression;
 
 import dev.latvian.apps.ichor.Callable;
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Evaluable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
@@ -41,9 +40,9 @@ public class AstTemplateLiteral extends AstExpression {
 	}
 
 	@Override
-	public String eval(Context cx, Scope scope) {
+	public String eval(Scope scope) {
 		if (tag != null) {
-			var func = cx.eval(scope, tag);
+			var func = scope.eval(tag);
 
 			if (func instanceof Callable c) {
 				var args = new ArrayList<>((int) Math.floor(parts.length / 2D));
@@ -54,26 +53,26 @@ public class AstTemplateLiteral extends AstExpression {
 					if (part instanceof CharSequence str) {
 						strings.add(str.toString());
 					} else {
-						args.add(cx.eval(scope, part));
+						args.add(scope.eval(part));
 					}
 				}
 
-				return cx.asString(scope, c.call(cx, scope, args.toArray(), false), false);
+				return scope.asString(c.call(scope, args.toArray(), false), false);
 			} else {
-				throw new AstCall.CallError(tag, func, cx.getPrototype(scope, func));
+				throw new AstCall.CallError(tag, func, scope.getPrototype(func));
 			}
 		}
 
 		var builder = new StringBuilder();
-		evalString(cx, scope, builder);
+		evalString(scope, builder);
 		return builder.toString();
 	}
 
 	@Override
-	public void evalString(Context cx, Scope scope, StringBuilder builder) {
+	public void evalString(Scope scope, StringBuilder builder) {
 		for (var part : parts) {
 			if (part instanceof Evaluable eval) {
-				eval.evalString(cx, scope, builder);
+				eval.evalString(scope, builder);
 			} else {
 				builder.append(part);
 			}
@@ -81,26 +80,26 @@ public class AstTemplateLiteral extends AstExpression {
 	}
 
 	@Override
-	public double evalDouble(Context cx, Scope scope) {
+	public double evalDouble(Scope scope) {
 		try {
-			return IchorUtils.parseNumber(eval(cx, scope)).doubleValue();
+			return IchorUtils.parseNumber(eval(scope)).doubleValue();
 		} catch (Exception ex) {
 			return Double.NaN;
 		}
 	}
 
 	@Override
-	public int evalInt(Context cx, Scope scope) {
+	public int evalInt(Scope scope) {
 		try {
-			return IchorUtils.parseNumber(eval(cx, scope)).intValue();
+			return IchorUtils.parseNumber(eval(scope)).intValue();
 		} catch (Exception ex) {
 			throw new InternalScriptError(ex);
 		}
 	}
 
 	@Override
-	public boolean evalBoolean(Context cx, Scope scope) {
-		return !eval(cx, scope).isEmpty();
+	public boolean evalBoolean(Scope scope) {
+		return !eval(scope).isEmpty();
 	}
 
 	@Override

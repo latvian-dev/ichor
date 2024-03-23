@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.util.IchorUtils;
 import org.jetbrains.annotations.Nullable;
@@ -17,7 +16,7 @@ public class AstForIn extends AstForOf {
 
 	@Override
 	@Nullable
-	protected Iterator<?> getIterable(Context cx, Scope scope, Object self) {
+	protected Iterator<?> getIterable(Scope scope, Object self) {
 		if (self instanceof Collection<?> c) {
 			var keys = new Object[c.size()];
 
@@ -37,8 +36,8 @@ public class AstForIn extends AstForOf {
 
 			return keys.iterator();
 		} else {
-			var p = cx.getPrototype(scope, self);
-			return IchorUtils.iteratorOf(p.keys(cx, scope, p.cast(self)));
+			var p = scope.getPrototype(self);
+			return IchorUtils.iteratorOf(p.keys(scope, p.cast(self)));
 		}
 	}
 }

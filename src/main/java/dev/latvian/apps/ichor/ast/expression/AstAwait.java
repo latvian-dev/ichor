@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
@@ -23,8 +22,8 @@ public class AstAwait extends AstExpression {
 	}
 
 	@Override
-	public Object eval(Context cx, Scope scope) {
-		var e = cx.eval(scope, future);
+	public Object eval(Scope scope) {
+		var e = scope.eval(future);
 
 		if (Special.isInvalid(e)) {
 			return e;

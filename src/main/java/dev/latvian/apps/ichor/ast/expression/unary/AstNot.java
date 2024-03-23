@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression.unary;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -13,23 +12,23 @@ public class AstNot extends AstUnary {
 	}
 
 	@Override
-	public Object eval(Context cx, Scope scope) {
-		return evalBoolean(cx, scope);
+	public Object eval(Scope scope) {
+		return evalBoolean(scope);
 	}
 
 	@Override
-	public double evalDouble(Context cx, Scope scope) {
-		return evalInt(cx, scope);
+	public double evalDouble(Scope scope) {
+		return evalInt(scope);
 	}
 
 	@Override
-	public int evalInt(Context cx, Scope scope) {
-		return cx.asBoolean(scope, node) ? 0 : 1;
+	public int evalInt(Scope scope) {
+		return scope.asBoolean(node) ? 0 : 1;
 	}
 
 	@Override
-	public boolean evalBoolean(Context cx, Scope scope) {
-		return !cx.asBoolean(scope, node);
+	public boolean evalBoolean(Scope scope) {
+		return !scope.asBoolean(node);
 	}
 
 	@Override

@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression.binary;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.error.ScriptError;
@@ -22,14 +21,14 @@ public class AstAdd extends AstBinary {
 	}
 
 	@Override
-	public Object eval(Context cx, Scope scope) {
-		var l = cx.eval(scope, left);
-		var r = cx.eval(scope, right);
+	public Object eval(Scope scope) {
+		var l = scope.eval(left);
+		var r = scope.eval(right);
 
 		if (l instanceof CharSequence || l instanceof Character || r instanceof CharSequence || r instanceof Character) {
 			var sb = new StringBuilder();
-			cx.asString(scope, l, sb, false);
-			cx.asString(scope, r, sb, false);
+			scope.asString(l, sb, false);
+			scope.asString(r, sb, false);
 			return sb.toString();
 		} else if (l instanceof Number && r instanceof Number) {
 			return ((Number) l).doubleValue() + ((Number) r).doubleValue();
@@ -39,8 +38,8 @@ public class AstAdd extends AstBinary {
 	}
 
 	@Override
-	public double evalDouble(Context cx, Scope scope) {
-		return cx.asDouble(scope, left) + cx.asDouble(scope, right);
+	public double evalDouble(Scope scope) {
+		return scope.asDouble(left) + scope.asDouble(right);
 	}
 
 	@Override

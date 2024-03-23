@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
 import dev.latvian.apps.ichor.exit.BreakExit;
@@ -28,11 +27,11 @@ public class AstDoWhile extends AstWhile {
 	}
 
 	@Override
-	public void interpret(Context cx, Scope scope) {
+	public void interpret(Scope scope) {
 		do {
 			if (body != null) {
 				try {
-					body.interpretSafe(cx, scope);
+					body.interpretSafe(scope);
 				} catch (BreakExit exit) {
 					if (exit.stop == this) {
 						break;
@@ -46,6 +45,6 @@ public class AstDoWhile extends AstWhile {
 				}
 			}
 		}
-		while (cx.asBoolean(scope, condition));
+		while (scope.asBoolean(condition));
 	}
 }

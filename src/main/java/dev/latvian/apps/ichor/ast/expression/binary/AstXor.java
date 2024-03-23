@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression.binary;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 
 public class AstXor extends AstBinary {
@@ -10,22 +9,22 @@ public class AstXor extends AstBinary {
 	}
 
 	@Override
-	public Object eval(Context cx, Scope scope) {
-		return evalInt(cx, scope);
+	public Object eval(Scope scope) {
+		return evalInt(scope);
 	}
 
 	@Override
-	public double evalDouble(Context cx, Scope scope) {
-		return evalInt(cx, scope);
+	public double evalDouble(Scope scope) {
+		return evalInt(scope);
 	}
 
 	@Override
-	public int evalInt(Context cx, Scope scope) {
-		return cx.asInt(scope, left) ^ cx.asInt(scope, right);
+	public int evalInt(Scope scope) {
+		return scope.asInt(left) ^ scope.asInt(right);
 	}
 
 	@Override
-	public boolean evalBoolean(Context cx, Scope scope) {
-		return cx.asBoolean(scope, left) ^ cx.asBoolean(scope, right);
+	public boolean evalBoolean(Scope scope) {
+		return scope.asBoolean(left) ^ scope.asBoolean(right);
 	}
 }

@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.statement;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Interpretable;
 import dev.latvian.apps.ichor.Parser;
 import dev.latvian.apps.ichor.Scope;
@@ -35,12 +34,12 @@ public class AstBlock extends AstLabeledStatement {
 	}
 
 	@Override
-	public void interpret(Context cx, Scope scope) {
+	public void interpret(Scope scope) {
 		var s = scope.push();
 
 		for (var statement : interpretable) {
 			try {
-				statement.interpretSafe(cx, s);
+				statement.interpretSafe(s);
 			} catch (BreakExit exit) {
 				if (exit.stop == this) {
 					break;

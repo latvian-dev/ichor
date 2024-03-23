@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.ast.AppendableAst;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -8,18 +7,17 @@ import dev.latvian.apps.ichor.ast.AstStringBuilder;
 public abstract class AstType implements AppendableAst {
 	@FunctionalInterface
 	public interface CastFunc {
-		CastFunc NONE = (cx, scope, from) -> from;
+		CastFunc NONE = (scope, from) -> from;
 
-		Object cast(Context cx, Scope scope, Object from);
+		Object cast(Scope scope, Object from);
 	}
 
 	public static class Generic extends AstType {
-
 		public static final Generic ANY = new Generic("any", CastFunc.NONE);
 		public static final Generic VOID = new Generic("void", CastFunc.NONE);
-		public static final Generic BOOLEAN = new Generic("boolean", Context::asBoolean);
-		public static final Generic NUMBER = new Generic("number", Context::asNumber);
-		public static final Generic STRING = new Generic("string", (cx, scope, from) -> cx.asString(scope, from, false));
+		public static final Generic BOOLEAN = new Generic("boolean", Scope::asBoolean);
+		public static final Generic NUMBER = new Generic("number", Scope::asNumber);
+		public static final Generic STRING = new Generic("string", (scope, from) -> scope.asString(from, false));
 		public static final Generic FUNCTION = new Generic("function", CastFunc.NONE);
 		public static final Generic OBJECT = new Generic("object", CastFunc.NONE);
 		public static final Generic BIGINT = new Generic("bigint", CastFunc.NONE);
@@ -39,8 +37,8 @@ public abstract class AstType implements AppendableAst {
 		}
 
 		@Override
-		public Object cast(Context cx, Scope scope, Object from) {
-			return cast.cast(cx, scope, from);
+		public Object cast(Scope scope, Object from) {
+			return cast.cast(scope, from);
 		}
 	}
 
@@ -102,7 +100,7 @@ public abstract class AstType implements AppendableAst {
 		}
 	}
 
-	public Object cast(Context cx, Scope scope, Object from) {
+	public Object cast(Scope scope, Object from) {
 		return from;
 	}
 }

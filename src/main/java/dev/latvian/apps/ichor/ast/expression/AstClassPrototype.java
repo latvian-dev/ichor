@@ -1,6 +1,5 @@
 package dev.latvian.apps.ichor.ast.expression;
 
-import dev.latvian.apps.ichor.Context;
 import dev.latvian.apps.ichor.Scope;
 import dev.latvian.apps.ichor.Special;
 import dev.latvian.apps.ichor.ast.AstStringBuilder;
@@ -14,15 +13,15 @@ public class AstClassPrototype extends AstExpression {
 	}
 
 	@Override
-	public Object eval(Context cx, Scope scope) {
-		var self = cx.eval(scope, from);
+	public Object eval(Scope scope) {
+		var self = scope.eval(from);
 
 		if (self == null) {
 			return Special.UNDEFINED;
 		} else if (self instanceof PrototypeSupplier ps) {
-			return ps.getPrototype(cx, scope);
+			return ps.getPrototype(scope);
 		} else {
-			return cx.getClassPrototype(self.getClass());
+			return scope.getClassPrototype(self.getClass());
 		}
 	}
 

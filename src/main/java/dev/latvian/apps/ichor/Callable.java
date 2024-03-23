@@ -4,9 +4,9 @@ import dev.latvian.apps.ichor.util.Empty;
 
 @FunctionalInterface
 public interface Callable {
-	Object call(Context cx, Scope scope, Object[] args, boolean hasNew);
+	Object call(Scope scope, Object[] args, boolean hasNew);
 
-	default Object[] evalArgs(Context cx, Scope scope, Object[] arguments) {
+	default Object[] evalArgs(Scope scope, Object[] arguments) {
 		if (arguments.length == 0) {
 			return Empty.OBJECTS;
 		}
@@ -14,7 +14,7 @@ public interface Callable {
 		var args = arguments;
 
 		for (int i = 0; i < args.length; i++) {
-			var a = cx.eval(scope, args[i]);
+			var a = scope.eval(args[i]);
 
 			if (a != args[i]) {
 				if (args == arguments) {
